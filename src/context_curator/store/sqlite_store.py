@@ -43,12 +43,18 @@ def _now() -> datetime:
 
 class SqliteStore(Store):
     def __init__(self, db_path: str, embedder: Embedder, allowed_prefix: str | None = None) -> None:
-        self._conn = sqlite3.connect(db_path)
+        # check_same_thread=False: v1 is single-machine; hooks each create their own
+        # connection and the MCP server is single-process. This avoids a ProgrammingError
+        # if FastMCP dispatches a sync tool handler on a worker thread.
+        self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._conn.execute(_DDL)
         self._conn.commit()
         self._embedder = embedder
         self._allowed_prefix = allowed_prefix
+
+    def close(self) -> None:
+        self._conn.close()
 
     # --- helpers -----------------------------------------------------------
     def _row_to_chunk(self, row: sqlite3.Row) -> Chunk:
@@ -128,10 +134,16 @@ class SqliteStore(Store):
         for row in rows:
             if self._is_expired(row):
                 continue
+            # Defence-in-depth: SQL LIKE treats `_`/`%` as wildcards, so a prefix
+            # containing them can over-match. Re-check scope in Python (as list/retrieve do).
+            if not is_within_scope(row["key"], self._allowed_prefix):
+                continue
             c = self._row_to_chunk(row)
             if tags is not None and not set(tags).issubset(set(c.tags)):
                 continue
             if token_budget is not None:
+                # first-fit: stop at the first chunk that would exceed the budget (intentional;
+                # M3 may revisit). Recency order means newest-first wins the budget.
                 t = estimate_tokens(c.content)
                 if used + t > token_budget:
                     break

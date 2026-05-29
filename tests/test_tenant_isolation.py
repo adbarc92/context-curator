@@ -57,3 +57,14 @@ def test_prefix_collision_does_not_leak(tmp_path, attacker):
     scoped = _scoped_store(tmp_path, "proj:acme:tenant:t1")
     for c in scoped.query("x", tags=["s"], k=1000):
         assert c.key.startswith("proj:acme:tenant:t1:")
+
+
+def test_query_scope_with_like_wildcard_in_prefix(tmp_path):
+    # An allowed_prefix containing `_` (a SQL LIKE wildcard) must not leak via LIKE
+    # over-matching. Also exercises the token_budget code path under scoping.
+    seed = SqliteStore(db_path=str(tmp_path / "cc.db"), embedder=HashingEmbedder(dim=32))
+    seed.store("proj:my_app:tenant:t1:doc", "mine", tags=["s"])
+    seed.store("proj:myXapp:tenant:t1:doc", "leak?", tags=["s"])  # 'X' matches '_' in LIKE
+    scoped = _scoped_store(tmp_path, "proj:my_app:tenant:t1")
+    keys = {c.key for c in scoped.query("x", tags=["s"], k=1000, token_budget=99999)}
+    assert keys == {"proj:my_app:tenant:t1:doc"}
