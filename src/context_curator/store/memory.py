@@ -5,10 +5,7 @@ from context_curator.embeddings import Embedder
 from context_curator.keys import is_within_scope
 from context_curator.models import Chunk, utcnow_iso
 from context_curator.store.interface import Store
-
-
-def _estimate_tokens(text: str) -> int:
-    return max(1, len(text) // 4)
+from context_curator.tokens import estimate_tokens
 
 
 class InMemoryStore(Store):
@@ -17,8 +14,9 @@ class InMemoryStore(Store):
         self._embedder = embedder
         self._allowed_prefix = allowed_prefix
 
-    def store(self, key, content, tags=None, ttl_s=86400, pin=False,
-              source="tool:read", provenance=None):
+    def store(self, key: str, content: str, tags: list[str] | None = None,
+              ttl_s: int | None = 86400, pin: bool = False,
+              source: str = "tool:read", provenance: str | None = None) -> str:
         self._data[key] = Chunk(
             key=key,
             content=content,
@@ -32,13 +30,14 @@ class InMemoryStore(Store):
         )
         return key
 
-    def retrieve(self, key):
+    def retrieve(self, key: str) -> Chunk | None:
         c = self._data.get(key)
         if c is None or not is_within_scope(key, self._allowed_prefix):
             return None
         return c
 
-    def query(self, task_context, tags=None, k=10, token_budget=None):
+    def query(self, task_context: str, tags: list[str] | None = None, k: int = 10,
+              token_budget: int | None = None) -> list[Chunk]:
         cands = [
             c for c in self._data.values()
             if is_within_scope(c.key, self._allowed_prefix)
@@ -49,7 +48,7 @@ class InMemoryStore(Store):
         if token_budget is not None:
             out, used = [], 0
             for c in cands:
-                t = _estimate_tokens(c.content)
+                t = estimate_tokens(c.content)
                 if used + t > token_budget:
                     break
                 out.append(c)
@@ -57,19 +56,19 @@ class InMemoryStore(Store):
             return out
         return cands
 
-    def list(self, prefix):
+    def list(self, prefix: str) -> list[str]:
         return [
             key for key in self._data
             if (key == prefix or key.startswith(prefix + ":"))
             and is_within_scope(key, self._allowed_prefix)
         ]
 
-    def evict(self, key):
+    def evict(self, key: str) -> bool:
         return self._data.pop(key, None) is not None
 
-    def pin(self, key):
+    def pin(self, key: str) -> bool:
         c = self._data.get(key)
         if c is None:
             return False
-        c.pin = True
+        self._data[key] = c.model_copy(update={"pin": True})
         return True

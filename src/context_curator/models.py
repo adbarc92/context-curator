@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 def utcnow_iso() -> str:
@@ -16,6 +16,8 @@ class Chunk(BaseModel):
 
     `key` is the canonical storage identifier (it subsumes §5's `id`).
     """
+
+    model_config = ConfigDict(frozen=True)
 
     key: str
     content: str

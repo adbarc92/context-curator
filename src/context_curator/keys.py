@@ -5,7 +5,10 @@ TENANT_SEGMENT = "tenant"
 
 
 def tenant_prefix(key: str) -> str | None:
-    """Return the `...:tenant:{id}` prefix of `key`, or None if it has no tenant."""
+    """Return the `...:tenant:{id}` prefix of `key`, or None if it has no tenant.
+
+    Uses the first occurrence of the `tenant` segment (outermost tenant wins).
+    """
     parts = key.split(":")
     if TENANT_SEGMENT in parts:
         i = parts.index(TENANT_SEGMENT)

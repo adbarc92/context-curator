@@ -8,7 +8,10 @@ from abc import ABC, abstractmethod
 
 
 class Embedder(ABC):
-    dim: int
+    @property
+    @abstractmethod
+    def dim(self) -> int:
+        """Embedding dimensionality."""
 
     @abstractmethod
     def embed(self, text: str) -> list[float]:
@@ -21,7 +24,11 @@ class HashingEmbedder(Embedder):
     similarity placeholder until M3 selects a real model."""
 
     def __init__(self, dim: int = 256) -> None:
-        self.dim = dim
+        self._dim = dim
+
+    @property
+    def dim(self) -> int:
+        return self._dim
 
     def embed(self, text: str) -> list[float]:
         vec = [0.0] * self.dim

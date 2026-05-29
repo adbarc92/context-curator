@@ -3,17 +3,30 @@ import pytest
 from context_curator.embeddings import HashingEmbedder
 from context_curator.store.memory import InMemoryStore
 
-
-def _memory_factory(tmp_path):
-    return InMemoryStore(embedder=HashingEmbedder(dim=64))
+SCOPE_PREFIX = "proj:a"
 
 
-# Each factory takes a tmp_path (sqlite needs it; memory ignores it) and returns a Store.
+def _memory_factory(tmp_path, allowed_prefix=None):
+    return InMemoryStore(embedder=HashingEmbedder(dim=64), allowed_prefix=allowed_prefix)
+
+
+# Each factory takes (tmp_path, allowed_prefix) and returns a Store.
 STORE_FACTORIES = [
     pytest.param(_memory_factory, id="memory"),
 ]
 
 
 @pytest.fixture(params=STORE_FACTORIES)
-def store(request, tmp_path):
-    return request.param(tmp_path)
+def store_factory(request):
+    return request.param
+
+
+@pytest.fixture
+def store(store_factory, tmp_path):
+    return store_factory(tmp_path)
+
+
+@pytest.fixture
+def scoped_store(store_factory, tmp_path):
+    """A store scoped to SCOPE_PREFIX, for scope-enforcement contract tests."""
+    return store_factory(tmp_path, allowed_prefix=SCOPE_PREFIX)

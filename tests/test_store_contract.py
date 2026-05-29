@@ -1,4 +1,3 @@
-
 from context_curator.models import Chunk
 
 
@@ -85,3 +84,29 @@ def test_query_token_budget_trims(store):
     # budget of 30 tokens => 100-char (25-token) chunks: only 1 fits
     results = store.query("anything", tags=["t"], k=10, token_budget=30)
     assert len(results) == 1
+
+
+def test_list_includes_exact_prefix_key(store):
+    store.store("shared:contracts", "root")
+    store.store("shared:contracts:a", "child")
+    assert set(store.list("shared:contracts")) == {"shared:contracts", "shared:contracts:a"}
+
+
+# --- scope-enforcement contract (scoped_store fixture, allowed_prefix=proj:a) ---
+def test_scoped_retrieve_blocks_out_of_scope(scoped_store):
+    scoped_store.store("proj:a:doc", "mine")
+    scoped_store.store("proj:b:doc", "theirs")  # writes bypass scope; reads must not
+    assert scoped_store.retrieve("proj:a:doc").content == "mine"
+    assert scoped_store.retrieve("proj:b:doc") is None
+
+
+def test_scoped_query_never_returns_out_of_scope(scoped_store):
+    scoped_store.store("proj:a:1", "mine", tags=["t"])
+    scoped_store.store("proj:b:1", "theirs", tags=["t"])
+    assert {c.key for c in scoped_store.query("x", tags=["t"], k=100)} == {"proj:a:1"}
+
+
+def test_scoped_list_never_returns_out_of_scope(scoped_store):
+    scoped_store.store("proj:a:1", "mine")
+    scoped_store.store("proj:b:1", "theirs")
+    assert scoped_store.list("proj") == ["proj:a:1"]
