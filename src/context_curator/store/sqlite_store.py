@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from context_curator.embeddings import Embedder
 from context_curator.keys import is_within_scope
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS chunks (
     ttl_s            INTEGER,                -- nullable
     provenance       TEXT,
     embedding        TEXT,                   -- JSON array
-    expires_at       TEXT                    -- precomputed, nullable; NULL when pinned or ttl_s NULL
+    expires_at       TEXT                    -- precomputed, nullable; NULL when pinned/ttl NULL
 );
 """
 
@@ -38,7 +38,7 @@ def _compute_expires_at(created_at: str, ttl_s: int | None, pin: bool) -> str | 
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class SqliteStore(Store):
