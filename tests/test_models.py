@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from context_curator.models import Chunk, utcnow_iso
 
@@ -38,4 +38,4 @@ def test_utcnow_iso_is_timezone_aware():
     ts = utcnow_iso()
     parsed = datetime.fromisoformat(ts)
     assert parsed.tzinfo is not None
-    assert parsed.tzinfo.utcoffset(parsed) == timezone.utc.utcoffset(parsed)
+    assert parsed.tzinfo.utcoffset(parsed) == UTC.utcoffset(parsed)

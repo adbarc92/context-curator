@@ -1,14 +1,14 @@
 """Chunk value schema (DESIGN.md §5)."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
 
 def utcnow_iso() -> str:
     """Timezone-aware UTC timestamp in ISO 8601."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class Chunk(BaseModel):
