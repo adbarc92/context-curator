@@ -60,7 +60,7 @@ class InMemoryStore(Store):
     def list(self, prefix):
         return [
             key for key in self._data
-            if (key == prefix or key.startswith(prefix))
+            if (key == prefix or key.startswith(prefix + ":"))
             and is_within_scope(key, self._allowed_prefix)
         ]
 

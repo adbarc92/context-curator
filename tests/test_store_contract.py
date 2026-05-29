@@ -50,6 +50,13 @@ def test_list_returns_keys_under_prefix(store):
     assert keys == {"shared:contracts:a", "shared:contracts:b"}
 
 
+def test_list_prefix_is_boundary_aware(store):
+    # a sibling key that shares a string prefix but not a path boundary must NOT match
+    store.store("shared:contracts:a", "x")
+    store.store("shared:contractsX:c", "y")  # prefix collision
+    assert set(store.list("shared:contracts")) == {"shared:contracts:a"}
+
+
 def test_query_returns_chunks_with_content(store):
     store.store("k1", "alpha", tags=["x"])
     store.store("k2", "beta", tags=["x"])
