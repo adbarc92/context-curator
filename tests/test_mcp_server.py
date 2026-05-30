@@ -1,3 +1,5 @@
+import json
+
 from context_curator.embeddings import HashingEmbedder
 from context_curator.mcp_server import build_mcp, build_store_facade
 from context_curator.store.sqlite_store import SqliteStore
@@ -14,6 +16,10 @@ def test_facade_exposes_all_cc_operations(tmp_path):
     # query
     res = facade.cc_query("auth", tags=["auth"], k=5)
     assert res and res[0]["key"] == "shared:contracts:auth"
+    json.dumps(res)  # must not raise — all fields JSON-serializable
+    # retrieve is also JSON-serializable
+    retrieved = facade.cc_retrieve("shared:contracts:auth")
+    json.dumps(retrieved)  # dict or None, must be JSON-serializable
     # list
     assert "shared:contracts:auth" in facade.cc_list("shared:contracts")
     # pin + evict

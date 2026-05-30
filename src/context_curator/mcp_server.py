@@ -7,6 +7,10 @@ results cross a process boundary."""
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from mcp.server.fastmcp import FastMCP
 
 from context_curator.embeddings import Embedder, HashingEmbedder
 from context_curator.store.interface import Store
@@ -76,7 +80,7 @@ def build_default_store() -> Store:
     return SqliteStore(db_path=db_path, embedder=embedder, allowed_prefix=allowed_prefix)
 
 
-def build_mcp():
+def build_mcp() -> FastMCP:
     """Register the facade methods as MCP tools and return the FastMCP server.
 
     Uses `mcp.tool(name=<tool_name>)(fn)` to register pre-defined facade methods
