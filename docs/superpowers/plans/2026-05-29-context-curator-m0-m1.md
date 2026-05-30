@@ -36,8 +36,9 @@ context-curator/
 ├── CLAUDE.md                              # project rule: use Context7 for lib docs
 ├── src/context_curator/
 │   ├── __init__.py
-│   ├── models.py                          # Chunk pydantic model (§5)
+│   ├── models.py                          # Chunk pydantic model (§5), frozen
 │   ├── keys.py                            # key grammar + tenant scope helpers
+│   ├── tokens.py                          # estimate_tokens() shared util
 │   ├── embeddings.py                      # Embedder ABC + HashingEmbedder
 │   ├── store/
 │   │   ├── __init__.py
@@ -577,6 +578,13 @@ def test_list_returns_keys_under_prefix(store):
     assert keys == {"shared:contracts:a", "shared:contracts:b"}
 
 
+def test_list_prefix_is_boundary_aware(store):
+    # a sibling key that shares a string prefix but not a path boundary must NOT match
+    store.store("shared:contracts:a", "x")
+    store.store("shared:contractsX:c", "y")  # prefix collision
+    assert set(store.list("shared:contracts")) == {"shared:contracts:a"}
+
+
 def test_query_returns_chunks_with_content(store):
     store.store("k1", "alpha", tags=["x"])
     store.store("k2", "beta", tags=["x"])
@@ -605,6 +613,32 @@ def test_query_token_budget_trims(store):
     # budget of 30 tokens => 100-char (25-token) chunks: only 1 fits
     results = store.query("anything", tags=["t"], k=10, token_budget=30)
     assert len(results) == 1
+
+
+def test_list_includes_exact_prefix_key(store):
+    store.store("shared:contracts", "root")
+    store.store("shared:contracts:a", "child")
+    assert set(store.list("shared:contracts")) == {"shared:contracts", "shared:contracts:a"}
+
+
+# --- scope-enforcement contract (uses the scoped_store fixture, allowed_prefix=proj:a) ---
+def test_scoped_retrieve_blocks_out_of_scope(scoped_store):
+    scoped_store.store("proj:a:doc", "mine")
+    scoped_store.store("proj:b:doc", "theirs")  # writes bypass scope; reads must not
+    assert scoped_store.retrieve("proj:a:doc").content == "mine"
+    assert scoped_store.retrieve("proj:b:doc") is None
+
+
+def test_scoped_query_never_returns_out_of_scope(scoped_store):
+    scoped_store.store("proj:a:1", "mine", tags=["t"])
+    scoped_store.store("proj:b:1", "theirs", tags=["t"])
+    assert {c.key for c in scoped_store.query("x", tags=["t"], k=100)} == {"proj:a:1"}
+
+
+def test_scoped_list_never_returns_out_of_scope(scoped_store):
+    scoped_store.store("proj:a:1", "mine")
+    scoped_store.store("proj:b:1", "theirs")
+    assert scoped_store.list("proj") == ["proj:a:1"]
 ```
 
 - [ ] **Step 4: Write `tests/conftest.py` with the parametrized `store` fixture**
@@ -617,20 +651,33 @@ import pytest
 from context_curator.embeddings import HashingEmbedder
 from context_curator.store.memory import InMemoryStore
 
-
-def _memory_factory(tmp_path):
-    return InMemoryStore(embedder=HashingEmbedder(dim=64))
+SCOPE_PREFIX = "proj:a"
 
 
-# Each factory takes a tmp_path (sqlite needs it; memory ignores it) and returns a Store.
+def _memory_factory(tmp_path, allowed_prefix=None):
+    return InMemoryStore(embedder=HashingEmbedder(dim=64), allowed_prefix=allowed_prefix)
+
+
+# Each factory takes (tmp_path, allowed_prefix) and returns a Store.
 STORE_FACTORIES = [
     pytest.param(_memory_factory, id="memory"),
 ]
 
 
 @pytest.fixture(params=STORE_FACTORIES)
-def store(request, tmp_path):
-    return request.param(tmp_path)
+def store_factory(request):
+    return request.param
+
+
+@pytest.fixture
+def store(store_factory, tmp_path):
+    return store_factory(tmp_path)
+
+
+@pytest.fixture
+def scoped_store(store_factory, tmp_path):
+    """A store scoped to SCOPE_PREFIX, for scope-enforcement contract tests."""
+    return store_factory(tmp_path, allowed_prefix=SCOPE_PREFIX)
 ```
 
 - [ ] **Step 5: Write `src/context_curator/store/memory.py` (minimal pass)**
@@ -698,7 +745,7 @@ class InMemoryStore(Store):
     def list(self, prefix):
         return [
             key for key in self._data
-            if (key == prefix or key.startswith(prefix))
+            if (key == prefix or key.startswith(prefix + ":"))
             and is_within_scope(key, self._allowed_prefix)
         ]
 
@@ -806,6 +853,7 @@ from context_curator.embeddings import Embedder
 from context_curator.keys import is_within_scope
 from context_curator.models import Chunk, utcnow_iso
 from context_curator.store.interface import Store
+from context_curator.tokens import estimate_tokens
 
 _DDL = """
 CREATE TABLE IF NOT EXISTS chunks (
@@ -824,10 +872,6 @@ CREATE TABLE IF NOT EXISTS chunks (
 """
 
 
-def _estimate_tokens(text: str) -> int:
-    return max(1, len(text) // 4)
-
-
 def _compute_expires_at(created_at: str, ttl_s: int | None, pin: bool) -> str | None:
     if pin or ttl_s is None:
         return None
@@ -843,12 +887,18 @@ def _now() -> datetime:
 
 class SqliteStore(Store):
     def __init__(self, db_path: str, embedder: Embedder, allowed_prefix: str | None = None) -> None:
-        self._conn = sqlite3.connect(db_path)
+        # check_same_thread=False: v1 is single-machine; hooks each create their own
+        # connection and the MCP server is single-process. This avoids a ProgrammingError
+        # if FastMCP dispatches a sync tool handler on a worker thread.
+        self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._conn.execute(_DDL)
         self._conn.commit()
         self._embedder = embedder
         self._allowed_prefix = allowed_prefix
+
+    def close(self) -> None:
+        self._conn.close()
 
     # --- helpers -----------------------------------------------------------
     def _row_to_chunk(self, row: sqlite3.Row) -> Chunk:
@@ -926,11 +976,17 @@ class SqliteStore(Store):
         for row in rows:
             if self._is_expired(row):
                 continue
+            # Defence-in-depth: SQL LIKE treats `_`/`%` as wildcards, so a prefix
+            # containing them can over-match. Re-check scope in Python (as list/retrieve do).
+            if not is_within_scope(row["key"], self._allowed_prefix):
+                continue
             c = self._row_to_chunk(row)
             if tags is not None and not set(tags).issubset(set(c.tags)):
                 continue
             if token_budget is not None:
-                t = _estimate_tokens(c.content)
+                # first-fit: stop at the first chunk that would exceed the budget (intentional;
+                # M3 may revisit). Recency order means newest-first wins the budget.
+                t = estimate_tokens(c.content)
                 if used + t > token_budget:
                     break
                 used += t
@@ -940,8 +996,9 @@ class SqliteStore(Store):
         return out
 
     def list(self, prefix):
+        # boundary-aware: `prefix + ":%"` so `shared:contracts` never matches `shared:contractsX`
         rows = self._conn.execute(
-            "SELECT key FROM chunks WHERE key = ? OR key LIKE ?", (prefix, prefix + "%")
+            "SELECT key FROM chunks WHERE key = ? OR key LIKE ?", (prefix, prefix + ":%")
         ).fetchall()
         return [r["key"] for r in rows if is_within_scope(r["key"], self._allowed_prefix)]
 
@@ -975,8 +1032,9 @@ Add the import and a factory, and extend `STORE_FACTORIES`:
 from context_curator.store.sqlite_store import SqliteStore
 
 
-def _sqlite_factory(tmp_path):
-    return SqliteStore(db_path=str(tmp_path / "cc.db"), embedder=HashingEmbedder(dim=64))
+def _sqlite_factory(tmp_path, allowed_prefix=None):
+    return SqliteStore(db_path=str(tmp_path / "cc.db"),
+                       embedder=HashingEmbedder(dim=64), allowed_prefix=allowed_prefix)
 
 
 STORE_FACTORIES = [
@@ -1135,6 +1193,17 @@ def test_prefix_collision_does_not_leak(tmp_path, attacker):
     scoped = _scoped_store(tmp_path, "proj:acme:tenant:t1")
     for c in scoped.query("x", tags=["s"], k=1000):
         assert c.key.startswith("proj:acme:tenant:t1:")
+
+
+def test_query_scope_with_like_wildcard_in_prefix(tmp_path):
+    # An allowed_prefix containing `_` (a SQL LIKE wildcard) must not leak via LIKE
+    # over-matching. Also exercises the token_budget code path under scoping.
+    seed = SqliteStore(db_path=str(tmp_path / "cc.db"), embedder=HashingEmbedder(dim=32))
+    seed.store("proj:my_app:tenant:t1:doc", "mine", tags=["s"])
+    seed.store("proj:myXapp:tenant:t1:doc", "leak?", tags=["s"])  # 'X' matches '_' in LIKE
+    scoped = _scoped_store(tmp_path, "proj:my_app:tenant:t1")
+    keys = {c.key for c in scoped.query("x", tags=["s"], k=1000, token_budget=99999)}
+    assert keys == {"proj:my_app:tenant:t1:doc"}
 ```
 
 - [ ] **Step 2: Run test to verify it passes**
@@ -1167,6 +1236,8 @@ Per `CLAUDE.md`, before writing MCP code, run `resolve-library-id` + `get-librar
 
 `tests/test_mcp_server.py`:
 ```python
+import json
+
 from context_curator.embeddings import HashingEmbedder
 from context_curator.mcp_server import build_store_facade
 from context_curator.store.sqlite_store import SqliteStore
@@ -1182,6 +1253,9 @@ def test_facade_exposes_all_cc_operations(tmp_path):
     # query
     res = facade.cc_query("auth", tags=["auth"], k=5)
     assert res and res[0]["key"] == "shared:contracts:auth"
+    # cross-boundary contract: facade output must be JSON-serializable
+    json.dumps(res)
+    json.dumps(facade.cc_retrieve("shared:contracts:auth"))
     # list
     assert "shared:contracts:auth" in facade.cc_list("shared:contracts")
     # pin + evict
@@ -1207,10 +1281,14 @@ results cross a process boundary."""
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
 from context_curator.embeddings import Embedder, HashingEmbedder
 from context_curator.store.interface import Store
 from context_curator.store.sqlite_store import SqliteStore
+
+if TYPE_CHECKING:
+    from mcp.server.fastmcp import FastMCP
 
 
 class _StoreFacade:
@@ -1251,7 +1329,7 @@ def build_default_store() -> Store:
     return SqliteStore(db_path=db_path, embedder=embedder, allowed_prefix=allowed_prefix)
 
 
-def build_mcp():
+def build_mcp() -> FastMCP:
     """Register the facade methods as MCP tools and return the FastMCP server.
     Confirm the FastMCP API via Context7 (CLAUDE.md) before relying on this."""
     from mcp.server.fastmcp import FastMCP
@@ -1318,3 +1396,35 @@ git commit -m "feat: add context-curator-mcp adapter exposing cc_* tools over th
 **Placeholder scan:** No TBD/TODO; every code step shows complete code; every test step shows full assertions. The one external-API caveat (FastMCP registration) is explicitly bounded with a Context7 verification step and a fallback. ✅
 
 **Note on `query` ranking:** v1 is recency-only by design (the §10.4 arm-2 baseline). M3 replaces the `sort by created_at` line with embedding-cosine scoring — the interface and stored embeddings already support it with no signature change.
+
+---
+
+## Amendments from Batch A code review (applied)
+
+These refinements were applied to the M0 code after review and are reflected in the canonical blocks above where they affect Batch B (conftest factory signature, `scoped_store` fixture, scope contract tests, `tokens.py`, the SQLite store's `estimate_tokens` import). The remaining Batch-A-local changes:
+
+1. **`Chunk` is frozen.** `models.py` adds `model_config = ConfigDict(frozen=True)` (import `ConfigDict` from `pydantic`). A value object must not be mutated in place. Consequently `InMemoryStore.pin()` replaces rather than mutates:
+   ```python
+   def pin(self, key: str) -> bool:
+       c = self._data.get(key)
+       if c is None:
+           return False
+       self._data[key] = c.model_copy(update={"pin": True})
+       return True
+   ```
+2. **`Embedder.dim` is an abstract property** (`@property @abstractmethod def dim(self) -> int: ...`) so a subclass that forgets it fails at instantiation, not at use. `HashingEmbedder` stores `self._dim` and exposes `dim` as a `@property`.
+3. **`InMemoryStore` concrete methods carry full type annotations** matching the `Store` interface (it is the reference implementation the SQLite port reads).
+4. **`src/context_curator/tokens.py`** holds the shared `estimate_tokens`:
+   ```python
+   """Token estimation. Crude heuristic for v1; replace with a real tokenizer in M3."""
+   _CHARS_PER_TOKEN = 4
+
+
+   def estimate_tokens(text: str) -> int:
+       """Rough token count (1 token ~= 4 chars)."""
+       return max(1, len(text) // _CHARS_PER_TOKEN)
+   ```
+   `InMemoryStore` imports it (its local `_estimate_tokens` is removed); `SqliteStore` imports it too.
+5. **`keys.tenant_prefix` docstring** notes it uses the first occurrence of the `tenant` segment (outermost tenant wins).
+
+**Considered and declined:** typing `created_at` as `datetime` (all writes use the single `utcnow_iso()` format, so lexicographic recency sort is correct; `str` avoids JSON-serialization friction in the MCP facade) and moving `mcp` out of production dependencies (it ships as the package's MCP server entrypoint in Task 10).
