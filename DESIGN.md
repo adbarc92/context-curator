@@ -252,11 +252,11 @@ subagent can build against it with no broader context.
 
 **Store interface** (`context-curator-mcp`):
 ```
-store(key, content, tags, ttl?, pin?) -> {key}          # embeds content at write time
+store(key, content, tags, ttl?, pin?) -> key            # embeds content at write time; returns the key
 retrieve(key) -> chunk | null
-query(task_context, tags?, k, token_budget?) -> [chunk] # ranked, WITH content+score, ≤budget
-evict(key) -> {evicted: bool}                           # removes from STORE only, not the window
-pin(key) -> {pinned: bool}
+query(task_context, tags?, k, token_budget?) -> [chunk] # ranked, WITH content (score added in M3), ≤budget
+evict(key) -> bool                                      # removes from STORE only, not the window
+pin(key) -> bool
 ```
 
 **Policy interface** (`cc-policy`):
