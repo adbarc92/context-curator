@@ -87,3 +87,26 @@ def test_orphan_tool_result_is_skipped_not_ingested():
     # the orphan ToolResult must never be ingested -> no ghost chunk in any decision
     all_selected = [s.key for d in log.decisions for s in d.selected]
     assert not any("ghost" in k for k in all_selected)
+
+
+def test_byte_identical_with_budget_and_multitool():
+    trace = (
+        TraceBuilder("s2")
+        .user("t0")
+        .tool("Read", {}).result("x" * 200)
+        .tool("Read", {}).result("y" * 200)
+        .tool("Read", {}).result("z" * 200)
+        .user("t1")
+        .build()
+    )
+
+    def eng():
+        return ReplayEngine(target=RecencyOnlyTarget(tags=["read"], token_budget=40, k=10))
+
+    assert eng().run(trace).model_dump() == eng().run(trace).model_dump()
+
+
+def test_recent_window_must_be_positive():
+    import pytest
+    with pytest.raises(ValueError):
+        ReplayEngine(target=RecencyOnlyTarget(), recent_window=0)

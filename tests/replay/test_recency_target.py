@@ -47,3 +47,9 @@ def test_empty_store_empty_decision():
     store = InMemoryStore(embedder=HashingEmbedder(dim=32))
     d = RecencyOnlyTarget(tags=["t"]).decide(_signal(), store)
     assert d.selected == [] and d.total_tokens == 0
+
+
+def test_recency_target_satisfies_replay_target_protocol():
+    from context_curator.replay.target import ReplayTarget
+    target: ReplayTarget = RecencyOnlyTarget()  # structural conformance
+    assert target.name == "recency-only"

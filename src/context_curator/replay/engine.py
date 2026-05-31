@@ -29,6 +29,8 @@ class ReplayEngine:
     def __init__(self, target: ReplayTarget,
                  store_factory: Callable[[], Store] = _default_store_factory,
                  recent_window: int = 5) -> None:
+        if recent_window < 1:
+            raise ValueError("recent_window must be >= 1")
         self._target = target
         self._store_factory = store_factory
         self._recent_window = recent_window
@@ -46,7 +48,9 @@ class ReplayEngine:
             elif isinstance(event, ToolResult):
                 call = calls.get(event.call_id)
                 if call is None:
-                    continue  # orphan (e.g. sidechain) — never ingest into the main store (§4.4)
+                    # drop: assumes call-before-result ordering; a result with no matching
+                    # main-session tool_use (orphan / sidechain) must never be ingested (§4.4)
+                    continue
                 ingest_tool_result(event, call, trace.session_id, ordinal, store)
                 ordinal += 1
             elif isinstance(event, UserPrompt):
