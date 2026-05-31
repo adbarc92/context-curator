@@ -4,3 +4,4 @@
 {"type":"user","isSidechain":false,"sessionId":"sample","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"c1","content":"src/example/__init__.py\nsrc/example/main.py"}]}}
 {"type":"user","isSidechain":false,"sessionId":"sample","message":{"role":"user","content":[{"type":"text","text":"Now summarize the findings."}]}}
 {"type":"user","isSidechain":true,"sessionId":"sample","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"sidechain-orphan","content":"Sub-agent output that should be ignored."}]}}
+{"type":"user","isSidechain":false,"sessionId":"sample","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"never-seen-main","content":"Orphan result whose tool_use was never issued in the main session."}]}}

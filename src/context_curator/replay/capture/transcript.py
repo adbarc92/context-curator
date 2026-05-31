@@ -48,14 +48,17 @@ def _text_of(blocks: list) -> str:
 def parse_transcript(path: str | Path) -> Trace:
     events: list[TraceEvent] = []
     turn = -1
-    session_id = "sample"
+    session_id = "unknown"
     seen_tool_use: set[str] = set()  # main-session tool_use ids, to drop sidechain orphans
 
     for line in Path(path).read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
             continue
-        rec = json.loads(line)
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
         if rec.get("isSidechain"):
             continue  # model the main session only (DESIGN §4.4)
         rec_type = rec.get("type")

@@ -36,3 +36,9 @@ def test_two_tool_use_blocks_become_two_calls_in_order():
     trace = parse_transcript(FIXTURE)
     calls = [e for e in trace.events if isinstance(e, ToolCall)]
     assert [c.call_id for c in calls] == ["c0", "c1"]
+
+
+def test_non_sidechain_orphan_tool_result_is_dropped():
+    trace = parse_transcript(FIXTURE)
+    result_ids = {e.call_id for e in trace.events if isinstance(e, ToolResult)}
+    assert "never-seen-main" not in result_ids
