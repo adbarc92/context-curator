@@ -2,6 +2,7 @@ from context_curator.embeddings import HashingEmbedder
 from context_curator.replay.schema import TaskSignal
 from context_curator.replay.target import RecencyOnlyTarget
 from context_curator.store.memory import InMemoryStore
+from context_curator.tokens import estimate_tokens
 
 
 def _signal():
@@ -24,10 +25,14 @@ def test_onloads_most_recent_first():
 
 def test_total_tokens_matches_and_respects_budget():
     store = _store_with("x" * 100, "y" * 100, "z" * 100)  # ~25 tokens each
-    d = RecencyOnlyTarget(tags=["t"], token_budget=30).decide(_signal(), store)
+    target = RecencyOnlyTarget(tags=["t"], token_budget=30)
+    d = target.decide(_signal(), store)
     assert len(d.selected) == 1
-    assert d.total_tokens == sum(s.tokens for s in d.selected)
     assert d.total_tokens <= 30
+    # cross-check against the store's own token accounting (single-tokenizer invariant, §3.4)
+    for s in d.selected:
+        assert s.tokens == estimate_tokens(store.retrieve(s.key).content)
+    assert d.total_tokens == sum(s.tokens for s in d.selected)
 
 
 def test_k_and_budget_bind_simultaneously():
