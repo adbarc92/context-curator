@@ -29,7 +29,9 @@ def test_trace_roundtrips_with_discriminated_events():
     restored = Trace(**trace.model_dump())
     assert restored == trace
     # discriminated union picks the right type from a raw dict
-    ev = TypeAdapter(TraceEvent).validate_python({"kind": "tool_result", "call_id": "c0", "content": "x"})
+    ev = TypeAdapter(TraceEvent).validate_python(
+        {"kind": "tool_result", "call_id": "c0", "content": "x"}
+    )
     assert isinstance(ev, ToolResult)
 
 
