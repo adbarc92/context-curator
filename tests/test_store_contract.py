@@ -110,3 +110,12 @@ def test_scoped_list_never_returns_out_of_scope(scoped_store):
     scoped_store.store("proj:a:1", "mine")
     scoped_store.store("proj:b:1", "theirs")
     assert scoped_store.list("proj") == ["proj:a:1"]
+
+
+def test_query_orders_by_write_recency(store):
+    store.store("a", "x")
+    store.store("b", "x")
+    store.store("c", "x")
+    assert [c.key for c in store.query("q", k=10)] == ["c", "b", "a"]
+    store.store("a", "x2")  # re-store moves a to front on both backends
+    assert [c.key for c in store.query("q", k=10)] == ["a", "c", "b"]

@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS chunks (
     ttl_s            INTEGER,                -- nullable
     provenance       TEXT,
     embedding        TEXT,                   -- JSON array
-    expires_at       TEXT                    -- precomputed, nullable; NULL when pinned/ttl NULL
+    expires_at       TEXT,                   -- precomputed, nullable; NULL when pinned/ttl NULL
+    seq              INTEGER NOT NULL        -- monotonic write order; recency ranks on this
 );
 """
 
@@ -89,13 +90,14 @@ class SqliteStore(Store):
         self._conn.execute(
             """INSERT INTO chunks
                (key, content, tags, source, created_at, last_onloaded_at, pin,
-                ttl_s, provenance, embedding, expires_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                ttl_s, provenance, embedding, expires_at, seq)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,
+                       (SELECT COALESCE(MAX(seq), 0) + 1 FROM chunks))
                ON CONFLICT(key) DO UPDATE SET
                  content=excluded.content, tags=excluded.tags, source=excluded.source,
                  created_at=excluded.created_at, pin=excluded.pin, ttl_s=excluded.ttl_s,
                  provenance=excluded.provenance, embedding=excluded.embedding,
-                 expires_at=excluded.expires_at""",
+                 expires_at=excluded.expires_at, seq=excluded.seq""",
             (
                 key, content, json.dumps(chunk.tags), source, created_at, None,
                 1 if pin else 0, ttl_s, provenance, json.dumps(chunk.embedding),
@@ -121,12 +123,12 @@ class SqliteStore(Store):
         # tenant scope enforced in SQL
         if self._allowed_prefix is None:
             rows = self._conn.execute(
-                "SELECT * FROM chunks ORDER BY created_at DESC"
+                "SELECT * FROM chunks ORDER BY seq DESC"
             ).fetchall()
         else:
             p = self._allowed_prefix
             rows = self._conn.execute(
-                "SELECT * FROM chunks WHERE key = ? OR key LIKE ? ORDER BY created_at DESC",
+                "SELECT * FROM chunks WHERE key = ? OR key LIKE ? ORDER BY seq DESC",
                 (p, p + ":%"),
             ).fetchall()
         out: list[Chunk] = []

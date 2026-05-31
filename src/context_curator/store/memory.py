@@ -11,6 +11,8 @@ from context_curator.tokens import estimate_tokens
 class InMemoryStore(Store):
     def __init__(self, embedder: Embedder, allowed_prefix: str | None = None) -> None:
         self._data: dict[str, Chunk] = {}
+        self._seq: dict[str, int] = {}
+        self._next_seq: int = 0
         self._embedder = embedder
         self._allowed_prefix = allowed_prefix
 
@@ -28,6 +30,8 @@ class InMemoryStore(Store):
             created_at=utcnow_iso(),
             embedding=self._embedder.embed(content),
         )
+        self._next_seq += 1
+        self._seq[key] = self._next_seq
         return key
 
     def retrieve(self, key: str) -> Chunk | None:
@@ -43,7 +47,7 @@ class InMemoryStore(Store):
             if is_within_scope(c.key, self._allowed_prefix)
             and (tags is None or set(tags).issubset(set(c.tags)))
         ]
-        cands.sort(key=lambda c: c.created_at, reverse=True)  # recency (M3 adds similarity)
+        cands.sort(key=lambda c: self._seq[c.key], reverse=True)  # write-order recency
         cands = cands[:k]
         if token_budget is not None:
             out, used = [], 0
@@ -64,6 +68,7 @@ class InMemoryStore(Store):
         ]
 
     def evict(self, key: str) -> bool:
+        self._seq.pop(key, None)
         return self._data.pop(key, None) is not None
 
     def pin(self, key: str) -> bool:
