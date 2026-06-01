@@ -267,8 +267,10 @@ score(chunk, task_context) -> float
 ```
 
 **Hook contract:** each hook is a script reading event JSON on stdin, returning the
-documented exit code (0 allow / 1 block+stderr / 2 event-specific inject-or-block) and
-JSON for `systemMessage` where used.
+documented exit code. Per the §11 CLI spike: **exit 0 = allow** (and, where supported,
+inject via `hookSpecificOutput.additionalContext`); **exit 2 = block** (stderr shown);
+any other nonzero = non-blocking error surfaced to the user. (Earlier drafts said "1 =
+block" — corrected to match the CLI.)
 
 **Subagent summary schema:** every specialist subagent returns
 `{ summary, artifacts[], contracts_touched[], followups[] }`, which the
