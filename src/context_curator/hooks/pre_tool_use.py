@@ -23,7 +23,7 @@ def _paths_and_texts(tool_name: str, ti: dict) -> tuple[list[str], list[str]]:
         texts = [e.get("new_string", "") for e in ti.get("edits", []) if isinstance(e, dict)]
         return ([ti.get("file_path", "")], texts)
     if tool_name == "Bash":
-        cmd = ti.get("command", "")
+        cmd = ti.get("command") or ""
         return (_REDIRECT.findall(cmd), [cmd])   # path = redirect targets only
     return ([], [])
 
@@ -32,6 +32,7 @@ def handle(event: dict) -> HookResult:
     tool_name = event.get("tool_name", "")
     ti = event.get("tool_input") or {}
     if tool_name not in _GUARDED:
+        log(f"{ALERT} unhandled tool {tool_name!r}, allowing")
         return HookResult(0)
     cfg = load_config()
     paths, texts = _paths_and_texts(tool_name, ti)

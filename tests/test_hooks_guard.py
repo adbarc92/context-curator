@@ -38,3 +38,4 @@ def test_benign_write_allowed():
 def test_unknown_tool_allowed_with_marker(capsys):
     r = handle(_ev("FancyNewTool", {"whatever": 1}))
     assert r.exit_code == 0
+    assert "FancyNewTool" in capsys.readouterr().err
