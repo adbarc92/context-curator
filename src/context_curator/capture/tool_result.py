@@ -6,7 +6,7 @@ from hashlib import sha1
 
 from context_curator.store.interface import Store
 
-CAPTURE_MAX_CONTENT = 32_768  # bytes; larger live content is head-truncated + marked
+CAPTURE_MAX_CONTENT = 32_768  # characters (len-based); oversized content is head-truncated + marked
 
 
 def capture_tool_result(store: Store, *, session_id: str, tool_name: str, content: str,
@@ -17,7 +17,7 @@ def capture_tool_result(store: Store, *, session_id: str, tool_name: str, conten
     content; it is None on the replay path so replay stays structurally byte-identical."""
     if error:
         return None
-    if ordinal is not None:
+    if ordinal is not None and call_id is not None:
         suffix = f"{ordinal:06d}:{call_id}"
     elif call_id:
         suffix = call_id

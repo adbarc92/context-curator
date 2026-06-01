@@ -35,6 +35,12 @@ def test_two_distinct_results_two_keys():
     assert len(s.list("session:s1")) == 2
 
 
+def test_ordinal_without_call_id_falls_back_to_hash():
+    s = _store()
+    key = capture_tool_result(s, session_id="s1", tool_name="Read", content="x", ordinal=3)
+    assert "None" not in key   # never the literal 'None' in the key
+
+
 def test_truncation_only_when_max_content_set():
     s = _store()
     big = "x" * (CAPTURE_MAX_CONTENT + 100)

@@ -13,13 +13,16 @@ def test_sensitive_paths_positive():
     assert is_sensitive_path("config/.env.production", g)
     assert is_sensitive_path("/home/u/.aws/credentials", g)
     assert is_sensitive_path("deploy/id_rsa", g)
-    assert is_sensitive_path("secrets-prod", g)            # basename, no slash
+    assert is_sensitive_path("app.prod.json", g)
 
 
-def test_sensitive_paths_negative():
+def test_sensitive_paths_negative_no_false_positives():
     g = _cfg().sensitive_globs
     assert not is_sensitive_path("src/app.py", g)
     assert not is_sensitive_path("README.md", g)
+    assert not is_sensitive_path("src/product.py", g)
+    assert not is_sensitive_path("docs/production_notes.md", g)
+    assert not is_sensitive_path("secret_santa.py", g)
 
 
 def test_secret_positive():

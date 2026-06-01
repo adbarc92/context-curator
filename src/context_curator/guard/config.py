@@ -10,9 +10,12 @@ CAPTURE_TTL_S = 86_400      # live-capture chunk TTL
 GUARD_MAX_SCAN = 262_144    # bytes; cap on secret-scan input (bounds regex cost)
 
 DEFAULT_SENSITIVE_GLOBS = [
+    # Precise patterns only. Blanket `*prod*`/`*secrets*` were dropped — they over-match
+    # benign files (`product.py`, `production_notes.md`); blocking legitimate writes is the
+    # failure mode that makes users disable a guardrail. A file literally named `secrets-prod`
+    # (no dir/extension signal) is accepted residual surface.
     "**/.env", "**/.env.*", "**/*.pem", "**/*.key", "**/id_rsa*",
-    "**/.aws/**", "**/.ssh/**", "**/secrets/**", "**/*secrets*",
-    "**/*.prod.*", "**/*prod*",
+    "**/.aws/**", "**/.ssh/**", "**/secrets/**", "**/*.prod.*", "**/*.secret",
 ]
 _GENERIC_SECRET_PAT = (
     r"(?i)(?:api[_-]?key|secret|token|password)"
