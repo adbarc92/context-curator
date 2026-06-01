@@ -47,10 +47,12 @@ def test_two_tools_two_chunks():
 
 def test_extract_summary_from_transcript(tmp_path):
     import json
+
+    def _msg(text):
+        return json.dumps({"type": "assistant",
+                           "message": {"content": [{"type": "text", "text": text}]}})
+
     tp = tmp_path / "t.jsonl"
-    tp.write_text(
-        json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "first"}]}}) + "\n" +
-        json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "final summary"}]}}) + "\n",
-        encoding="utf-8")
+    tp.write_text(_msg("first") + "\n" + _msg("final summary") + "\n", encoding="utf-8")
     assert extract_summary({"transcript_path": str(tp)}) == "final summary"
     assert extract_summary({}) == ""                       # no path -> empty -> no-op
