@@ -261,10 +261,16 @@ pin(key) -> bool
 
 **Policy interface** (`cc-policy`):
 ```
-select_onload(task_context, candidates) -> [chunk]       # ranked slice to inject, ≤token_budget
-select_offload(active_window_summary, task_context) -> [key]  # what to PERSIST so compaction can drop it
-score(chunk, task_context) -> float
+scored(task_text, candidates) -> [(chunk, score)]   # the public entry: embeds task ONCE, scores all
+pick(scored_pairs, k, token_budget?) -> [chunk]      # selection over an already-scored list
+select_onload(task_text, candidates, k, token_budget?) -> [chunk]   # = pick(scored(...))
+select_offload(task_text, candidates) -> [key]       # non-pinned below eviction threshold
 ```
+*(Amended in M3a: the public scorer is `scored` (per-chunk `score` is internal and takes an already-
+computed task embedding, so the task is embedded once per prompt, not per chunk). `select_offload`
+takes the candidate set, not an `active_window_summary` — consistent with §4.2's reframe of offload as
+persist-set selection; the real active-window feed is an M4 concern. Candidates come from
+`Store.all_live_chunks()`, not the recency-truncating `query`.)*
 
 **Hook contract:** each hook is a script reading event JSON on stdin, returning the
 documented exit code. Per the §11 CLI spike: **exit 0 = allow** (and, where supported,
