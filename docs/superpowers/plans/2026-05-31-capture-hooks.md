@@ -603,14 +603,18 @@ def test_sensitive_paths_positive():
     assert is_sensitive_path(".env", g)
     assert is_sensitive_path("config/.env.production", g)
     assert is_sensitive_path("/home/u/.aws/credentials", g)
-    assert is_sensitive_path("deploy/id_rsa", g)
-    assert is_sensitive_path("secrets-prod", g)            # basename, no slash
+    assert is_sensitive_path("deploy/id_rsa", g)           # basename match against id_rsa*
+    assert is_sensitive_path("app.prod.json", g)           # **/*.prod.*
 
 
-def test_sensitive_paths_negative():
+def test_sensitive_paths_negative_no_false_positives():
     g = _cfg().sensitive_globs
     assert not is_sensitive_path("src/app.py", g)
     assert not is_sensitive_path("README.md", g)
+    # the dropped-blanket-glob class: benign files containing 'prod'/'secret' must NOT block
+    assert not is_sensitive_path("src/product.py", g)
+    assert not is_sensitive_path("docs/production_notes.md", g)
+    assert not is_sensitive_path("secret_santa.py", g)
 
 
 def test_secret_positive():
@@ -655,9 +659,12 @@ CAPTURE_TTL_S = 86_400      # live-capture chunk TTL
 GUARD_MAX_SCAN = 262_144    # bytes; cap on secret-scan input (bounds regex cost)
 
 DEFAULT_SENSITIVE_GLOBS = [
+    # Precise patterns only. Blanket `*prod*`/`*secrets*` were dropped — they over-match
+    # benign files (`product.py`, `production_notes.md`) and blocking legitimate writes is
+    # the failure mode that makes users disable a guardrail. Bare ambiguous filenames with
+    # no dir/extension signal (e.g. a file literally named `secrets-prod`) are residual surface.
     "**/.env", "**/.env.*", "**/*.pem", "**/*.key", "**/id_rsa*",
-    "**/.aws/**", "**/.ssh/**", "**/secrets/**", "**/*secrets*",
-    "**/*.prod.*", "**/*prod*",
+    "**/.aws/**", "**/.ssh/**", "**/secrets/**", "**/*.prod.*", "**/*.secret",
 ]
 DEFAULT_SECRET_PATTERNS = [
     ("aws-access-key-id", r"AKIA[0-9A-Z]{16}"),
@@ -1197,13 +1204,13 @@ Replace the empty hook arrays:
   "hooks": {
     "PreToolUse": [
       {"matcher": "Write|Edit|MultiEdit|Bash",
-       "hooks": [{"type": "command", "command": "python -m context_curator.hooks.pre_tool_use"}]}
+       "hooks": [{"type": "command", "command": "uv run python -m context_curator.hooks.pre_tool_use"}]}
     ],
     "PostToolUse": [
-      {"hooks": [{"type": "command", "command": "python -m context_curator.hooks.post_tool_use"}]}
+      {"hooks": [{"type": "command", "command": "uv run python -m context_curator.hooks.post_tool_use"}]}
     ],
     "SubagentStop": [
-      {"hooks": [{"type": "command", "command": "python -m context_curator.hooks.subagent_stop"}]}
+      {"hooks": [{"type": "command", "command": "uv run python -m context_curator.hooks.subagent_stop"}]}
     ],
     "SessionStart": [],
     "UserPromptSubmit": [],

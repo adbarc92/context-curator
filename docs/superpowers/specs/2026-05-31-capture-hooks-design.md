@@ -133,8 +133,8 @@ Pure, config-driven, unit-testable.
 **`config.py`** — defaults, overridable by a JSON file at `$CC_GUARD_CONFIG` (or `.claude/cc-guard.json` if present). Also `CAPTURE_TTL_S = 86400` (live-capture TTL) and `GUARD_MAX_SCAN = 262_144` (bytes; inputs larger are head-scanned only, bounding regex cost — I5):
 ```python
 DEFAULT_SENSITIVE_GLOBS = ["**/.env", "**/.env.*", "**/*.pem", "**/*.key", "**/id_rsa*",
-                           "**/.aws/**", "**/.ssh/**", "**/secrets/**", "**/*secrets*",
-                           "**/*.prod.*", "**/*prod*"]
+                           "**/.aws/**", "**/.ssh/**", "**/secrets/**", "**/*.prod.*",
+                           "**/*.secret"]  # precise only — blanket *prod*/*secrets* dropped (false-positive on product.py)
 DEFAULT_SECRET_PATTERNS = [
     ("aws-access-key-id", r"AKIA[0-9A-Z]{16}"),
     ("private-key-block", r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
@@ -145,7 +145,7 @@ DEFAULT_SECRET_PATTERNS = [
 ```
 `load_config()` merges file overrides (replace lists if present) over defaults. Patterns are simple/linear (no nested quantifiers → no catastrophic backtracking); scanning is still capped at `GUARD_MAX_SCAN`.
 
-**`paths.py`** — `is_sensitive_path(path: str, globs: list[str]) -> bool`. Normalizes first: `os.path.expanduser` (resolve `~`), then `normpath`, then `\`→`/`. Matches each glob against **both the full normalized path and the basename** (so `secrets-prod` with no slash is caught by `*secrets*`/`*prod*`). Symlink/TOCTOU/`..`-escape resolution is **out of scope** (stated bypass — §"residual surface").
+**`paths.py`** — `is_sensitive_path(path: str, globs: list[str]) -> bool`. Normalizes first: `os.path.expanduser` (resolve `~`), then `normpath`, then `\`→`/`. Matches each glob against **both the full normalized path and the basename** (so a bare `id_rsa` or `.env` with no directory is still caught by `id_rsa*`/`.env`). Blanket `*prod*`/`*secrets*` globs were **dropped** — they false-positive on benign files (`product.py`, `production_notes.md`), and blocking legitimate writes is the failure mode that makes users disable a guardrail; a file *literally* named `secrets-prod` (no dir/extension signal) is therefore residual surface. Symlink/TOCTOU/`..`-escape resolution is also out of scope.
 
 **`secrets.py`** — `scan_secrets(text: str, patterns: list[tuple[str,str]]) -> str | None` returns the **name** of the first matching pattern (so the block message says *what* matched) or `None`. Scans only the first `GUARD_MAX_SCAN` bytes.
 
@@ -219,9 +219,9 @@ Contract: handlers return `HookResult`; `run_hook` maps it to process exit. **Ca
 {
   "hooks": {
     "PreToolUse":  [{"matcher": "Write|Edit|MultiEdit|Bash",
-                     "hooks": [{"type": "command", "command": "python -m context_curator.hooks.pre_tool_use"}]}],
-    "PostToolUse": [{"hooks": [{"type": "command", "command": "python -m context_curator.hooks.post_tool_use"}]}],
-    "SubagentStop":[{"hooks": [{"type": "command", "command": "python -m context_curator.hooks.subagent_stop"}]}]
+                     "hooks": [{"type": "command", "command": "uv run python -m context_curator.hooks.pre_tool_use"}]}],
+    "PostToolUse": [{"hooks": [{"type": "command", "command": "uv run python -m context_curator.hooks.post_tool_use"}]}],
+    "SubagentStop":[{"hooks": [{"type": "command", "command": "uv run python -m context_curator.hooks.subagent_stop"}]}]
   }
 }
 ```
