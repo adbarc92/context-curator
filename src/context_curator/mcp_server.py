@@ -73,11 +73,11 @@ def build_store_facade(store: Store) -> _StoreFacade:
 
 
 def build_default_store() -> Store:
-    """Construct the store from environment variables (used by build_mcp)."""
-    db_path = os.environ.get("CC_DB_PATH", "context-curator.db")
+    """Construct the store at the unified DB path (shared with the hooks)."""
+    from context_curator.store.paths import resolve_db_path
     allowed_prefix = os.environ.get("CC_ALLOWED_PREFIX") or None
     embedder: Embedder = HashingEmbedder(dim=256)
-    return SqliteStore(db_path=db_path, embedder=embedder, allowed_prefix=allowed_prefix)
+    return SqliteStore(db_path=resolve_db_path(), embedder=embedder, allowed_prefix=allowed_prefix)
 
 
 def build_mcp() -> FastMCP:
