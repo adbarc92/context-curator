@@ -6,6 +6,7 @@ import sys
 import time
 
 from context_curator.embeddings import HashingEmbedder
+from context_curator.hooks import user_prompt_submit as ups
 from context_curator.store.sqlite_store import SqliteStore
 
 
@@ -16,7 +17,9 @@ def _run(module, event, env):
 
 def test_settings_registers_both_onload_hooks():
     # The red->green anchor for this task: empty arrays -> IndexError before registration.
-    settings = json.loads(pathlib.Path(".claude/settings.json").read_text())
+    # Anchor the path to the repo root (parents[1]) so CWD doesn't matter.
+    settings_path = pathlib.Path(__file__).resolve().parents[1] / ".claude" / "settings.json"
+    settings = json.loads(settings_path.read_text())
     hooks = settings["hooks"]
     ups_cmd = hooks["UserPromptSubmit"][0]["hooks"][0]["command"]
     ss_cmd = hooks["SessionStart"][0]["hooks"][0]["command"]
@@ -37,6 +40,8 @@ def test_user_prompt_submit_stdout_is_exactly_inject_json(tmp_path):
     assert obj["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
     assert "session:s:tool:c" in obj["hookSpecificOutput"]["additionalContext"]
     assert r.stdout == json.dumps(obj)               # exact bytes: no prefix/suffix/newline
+    # the breadcrumb + DB-path diagnostics go to STDERR, never polluting the stdout inject
+    assert "context-curator: onloaded" in r.stderr
 
 
 def test_user_prompt_submit_offtopic_stdout_empty(tmp_path):
@@ -48,6 +53,8 @@ def test_user_prompt_submit_offtopic_stdout_empty(tmp_path):
              {"prompt": "authenticate authorize user session",
               "hook_event_name": "UserPromptSubmit"}, env)
     assert r.returncode == 0
+    # HashingEmbedder: "quarterly financial revenue spreadsheet" shares no tokens with the
+    # prompt -> cosine 0.0 -> below the 0.15 gate -> nothing selected -> empty stdout.
     assert r.stdout == ""                            # no injection => empty stdout
 
 
@@ -67,7 +74,6 @@ def test_onload_latency_ceiling_1000_chunks(tmp_path):
     # round-3 I3: declared ceiling — at 1000 live chunks UserPromptSubmit p50 < 300ms on the
     # dev reference machine. Generous; if a slow CI trips it, convert to xfail rather than
     # weakening the budget.
-    from context_curator.hooks import user_prompt_submit as ups
     s = SqliteStore(db_path=str(tmp_path / "big.db"), embedder=HashingEmbedder())
     for i in range(1000):
         s.store(f"session:x:tool:c{i}", f"chunk {i} authenticate authorize user session")
