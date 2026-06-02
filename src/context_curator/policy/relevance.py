@@ -27,6 +27,10 @@ class RelevancePolicy:
         self._embedder = embedder
         self._w = weights
 
+    @property
+    def embedder(self) -> Embedder:
+        return self._embedder
+
     def scored(self, task_text: str, candidates: list[Chunk],
                query_tags: list[str] | None = None) -> list[tuple[Chunk, float]]:
         """Embed task ONCE; score every candidate (candidates MUST be recency newest-first);
