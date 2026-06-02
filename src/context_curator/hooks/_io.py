@@ -69,7 +69,8 @@ def run_hook(handler: Callable[..., HookResult], *, needs_store: bool,
             log(f"context-curator: {fail_label} failed: {e}")
         sys.exit(0)
         return
-    if result.additional_context is not None:
+    # inject ONLY on allow (exit 0): a blocking hook must not also write to stdout (design §3.4)
+    if result.exit_code == 0 and result.additional_context is not None:
         _emit_inject(event, result.additional_context)
     if result.message:
         log(result.message)
