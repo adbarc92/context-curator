@@ -1,6 +1,6 @@
 import json
 
-import pytest  # noqa: I001 — pytest sorts before json alphabetically but json is stdlib
+import pytest
 
 import context_curator.hooks._io as io
 from context_curator.hooks._io import HookResult, run_hook
