@@ -8,6 +8,9 @@ dependencies = [
     "mcp>=1.2",
 ]
 
+[project.optional-dependencies]
+embed = ["fastembed>=0.3"]
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",

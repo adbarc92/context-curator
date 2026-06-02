@@ -39,3 +39,30 @@ class HashingEmbedder(Embedder):
         if norm == 0.0:
             return vec
         return [v / norm for v in vec]
+
+
+def _unit_normalize(vec: list[float]) -> list[float]:
+    norm = math.sqrt(sum(x * x for x in vec))
+    if norm == 0.0:
+        return vec
+    return [x / norm for x in vec]
+
+
+class FastEmbedEmbedder(Embedder):
+    """bge-small-en-v1.5 via fastembed (ONNX, no torch). Lazy-loads the model on first
+    embed; `fastembed` is an OPTIONAL dep, so the import is inside `embed`."""
+
+    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5") -> None:
+        self._model_name = model_name
+        self._model = None
+
+    @property
+    def dim(self) -> int:
+        return 384
+
+    def embed(self, text: str) -> list[float]:
+        if self._model is None:
+            from fastembed import TextEmbedding
+            self._model = TextEmbedding(self._model_name)
+        vec = next(iter(self._model.embed([text])))      # numpy row
+        return _unit_normalize([float(x) for x in vec])  # defensive re-normalize
