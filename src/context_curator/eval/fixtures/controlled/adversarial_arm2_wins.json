@@ -1,0 +1,3 @@
+{"name": "adversarial-arm2-wins",
+ "chunks": [{"key": "distractor", "content": "A B C D"}, {"key": "gold", "content": "A B C"}],
+ "prompt": "A B C D", "gold_keys": ["gold"], "split": "train"}

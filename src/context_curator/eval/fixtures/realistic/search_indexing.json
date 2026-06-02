@@ -1,0 +1,8 @@
+{"name": "search-indexing",
+ "chunks": [
+   {"key": "k_es_index", "content": "index a document in Elasticsearch: es.index(index='products', id=doc_id, body={'title': title, 'description': desc, 'price': price})"},
+   {"key": "k_full_text_query", "content": "full-text search query in Elasticsearch using multi_match across title and description fields with fuzziness AUTO"},
+   {"key": "k_connection_pool", "content": "configure a database connection pool with a max size of 10 and a timeout of 30 seconds using SQLAlchemy's create_engine pool_size parameter"},
+   {"key": "k_reindex", "content": "reindex an Elasticsearch alias with zero downtime: create a new index with updated mappings, bulk-copy documents, then atomically swap the alias"}],
+ "prompt": "how do I index documents and run full-text search with Elasticsearch",
+ "gold_keys": ["k_es_index", "k_full_text_query"], "split": "test"}

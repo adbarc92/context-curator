@@ -1,0 +1,8 @@
+{"name": "file-upload",
+ "chunks": [
+   {"key": "k_s3_upload", "content": "upload a file to S3 using boto3: client.upload_fileobj(file, bucket, key, ExtraArgs={'ContentType': content_type})"},
+   {"key": "k_presigned_url", "content": "generate a presigned S3 URL for temporary read access: client.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': key}, ExpiresIn=3600)"},
+   {"key": "k_db_backup", "content": "create a database backup by dumping all tables to a SQL file with pg_dump"},
+   {"key": "k_multipart", "content": "use multipart upload for files over 5MB: initiate, upload parts in parallel, then complete the multipart upload"}],
+ "prompt": "how do I upload large files to S3 efficiently",
+ "gold_keys": ["k_multipart", "k_s3_upload"], "split": "train"}

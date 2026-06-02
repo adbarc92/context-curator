@@ -1,0 +1,8 @@
+{"name": "error-handling",
+ "chunks": [
+   {"key": "k_http_exception", "content": "raise HTTPException(status_code=404, detail='User not found') to return a structured error response"},
+   {"key": "k_global_handler", "content": "register a global exception handler with @app.exception_handler(Exception) to log unhandled errors and return a 500 response"},
+   {"key": "k_password_reset", "content": "send a password reset email with a time-limited token when the user requests it"},
+   {"key": "k_validation_error", "content": "catch pydantic ValidationError and return HTTP 422 with field-level error messages extracted from the error detail list"}],
+ "prompt": "how do I handle and return structured error responses in FastAPI",
+ "gold_keys": ["k_http_exception", "k_global_handler", "k_validation_error"], "split": "train"}

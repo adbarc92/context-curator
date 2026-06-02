@@ -1,0 +1,8 @@
+{"name": "pagination",
+ "chunks": [
+   {"key": "k_offset_page", "content": "implement offset-based pagination: SELECT * FROM items ORDER BY id LIMIT 20 OFFSET (page-1)*20"},
+   {"key": "k_cursor_page", "content": "implement cursor-based pagination using the last seen id: WHERE id > :cursor ORDER BY id LIMIT 20, returning next_cursor in the response"},
+   {"key": "k_email_template", "content": "render an HTML email template using Jinja2 with user-specific variables before sending"},
+   {"key": "k_total_count", "content": "return the total count of matching rows alongside the page results using a COUNT(*) subquery or window function"}],
+ "prompt": "how do I add efficient pagination to my API list endpoints",
+ "gold_keys": ["k_cursor_page", "k_total_count"], "split": "test"}

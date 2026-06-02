@@ -1,0 +1,8 @@
+{"name": "caching-strategy",
+ "chunks": [
+   {"key": "k_redis_get_set", "content": "cache a computed value in Redis: r.set(key, value, ex=300) and r.get(key) with JSON serialization"},
+   {"key": "k_cache_invalidation", "content": "invalidate all cache keys matching a pattern using r.delete(*r.keys('user:*')) after a write"},
+   {"key": "k_websocket_handler", "content": "handle WebSocket connections: accept the connection, read messages in a loop, and broadcast to all connected clients"},
+   {"key": "k_write_through", "content": "write-through cache pattern: update both the database and cache atomically using a pipeline to avoid stale reads"}],
+ "prompt": "how do I implement a Redis cache with proper invalidation",
+ "gold_keys": ["k_redis_get_set", "k_cache_invalidation", "k_write_through"], "split": "train"}
