@@ -27,17 +27,21 @@ class RelevancePolicy:
         self._embedder = embedder
         self._w = weights
 
-    def scored(self, task_text: str, candidates: list[Chunk],
-               query_tags: list[str] | None = None) -> list[tuple[Chunk, float]]:
+    def scored_with_similarity(
+        self, task_text: str, candidates: list[Chunk], query_tags: list[str] | None = None
+    ) -> list[tuple[Chunk, float, float]]:
         """Embed task ONCE; score every candidate (candidates MUST be recency newest-first);
-        return (chunk, score) sorted by (-score, incoming_index). reembed_cap is the
+        return (chunk, score, RAW_COSINE) sorted by (-score, incoming_index). The raw cosine
+        is the value BEFORE the affine rescale — the onload gate thresholds on it (design §3.2).
+        It is 0.0 whenever there is no comparable embedding (over reembed_cap / dim mismatch with
+        no re-embed): no comparison -> cosine 0 -> gate-excluded (round-2 I4). reembed_cap is the
         per-pass budget; mismatched candidates beyond it score similarity 0."""
         task_emb = self._embedder.embed(task_text)
         qtags = set(query_tags or [])
         cache: dict[str, list[float]] = {}
         reembed_used = 0
         w = self._w
-        results: list[tuple[Chunk, float, int]] = []
+        results: list[tuple[Chunk, float, float, int]] = []
         for i, c in enumerate(candidates):
             recency = math.exp(-w.decay_lambda * i)
             emb = c.embedding
@@ -51,6 +55,7 @@ class RelevancePolicy:
                     reembed_used += 1
                 else:
                     emb = None  # over cap -> similarity 0
+            cos = 0.0
             if emb is None:
                 sim = 0.0
             else:
@@ -60,9 +65,16 @@ class RelevancePolicy:
             tag = (len(qtags & set(c.tags)) / len(qtags)) if qtags else 0.0
             score = (w.w_recency * recency + w.w_similarity * sim
                      + w.w_tag * tag + (w.pin_bias if c.pin else 0.0))
-            results.append((c, score, i))
-        results.sort(key=lambda t: (-t[1], t[2]))   # (-score, incoming_index)
-        return [(c, s) for (c, s, _i) in results]
+            results.append((c, score, cos, i))
+        results.sort(key=lambda t: (-t[1], t[3]))   # (-score, incoming_index)
+        return [(c, s, cos) for (c, s, cos, _i) in results]
+
+    def scored(self, task_text: str, candidates: list[Chunk],
+               query_tags: list[str] | None = None) -> list[tuple[Chunk, float]]:
+        """(chunk, score) view of scored_with_similarity — the single scoring impl (round-1 M4).
+        Keeps query_tags so the tag term is preserved (round-3 C2)."""
+        return [(c, s) for c, s, _cos in
+                self.scored_with_similarity(task_text, candidates, query_tags)]
 
     def pick(self, scored_pairs: list[tuple[Chunk, float]], k: int = 10,
              token_budget: int | None = None) -> list[Chunk]:
