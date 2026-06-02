@@ -22,3 +22,10 @@ def test_truncates_overlong_content():
     out = format_block([_c("k", "x" * 5000)], title="T", per_chunk_chars=100)
     assert "…" in out
     assert ("x" * 5000) not in out
+    assert "x" * 100 in out          # the per_chunk_chars prefix is preserved
+
+
+def test_content_at_exact_boundary_not_truncated():
+    out = format_block([_c("k", "x" * 100)], title="T", per_chunk_chars=100)
+    assert "…" not in out
+    assert "x" * 100 in out
