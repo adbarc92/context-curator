@@ -66,3 +66,17 @@ class FastEmbedEmbedder(Embedder):
             self._model = TextEmbedding(self._model_name)
         vec = next(iter(self._model.embed([text])))      # numpy row
         return _unit_normalize([float(x) for x in vec])  # defensive re-normalize
+
+
+class NullEmbedder(Embedder):
+    """Writes no vector: capture uses this so chunks land with embedding=NULL; the curator
+    (the sole embedding authority) backfills bge later. `dim` reports bge's 384 as a routing
+    convenience (it never actually produces a vector) — guarded by the scored_with_similarity
+    None-task check so a policy built on it degrades to recency, never crashes (design §4, §5.4)."""
+
+    @property
+    def dim(self) -> int:
+        return 384
+
+    def embed(self, text: str) -> list[float] | None:  # type: ignore[override]
+        return None

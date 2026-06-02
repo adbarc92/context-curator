@@ -113,7 +113,8 @@ class SqliteStore(Store):
                      expires_at=excluded.expires_at, seq=excluded.seq""",
                 (
                     key, content, json.dumps(chunk.tags), source, created_at, None,
-                    1 if pin else 0, ttl_s, provenance, json.dumps(chunk.embedding),
+                    1 if pin else 0, ttl_s, provenance,
+                    json.dumps(chunk.embedding) if chunk.embedding is not None else None,
                     _compute_expires_at(created_at, ttl_s, pin),
                 ),
             )

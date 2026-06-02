@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
-from context_curator.embeddings import Embedder, HashingEmbedder
+from context_curator.embeddings import Embedder, NullEmbedder
 from context_curator.store.interface import Store
 from context_curator.store.sqlite_store import SqliteStore
 
@@ -76,7 +76,7 @@ def build_default_store() -> Store:
     """Construct the store at the unified DB path (shared with the hooks)."""
     from context_curator.store.paths import resolve_db_path
     allowed_prefix = os.environ.get("CC_ALLOWED_PREFIX") or None
-    embedder: Embedder = HashingEmbedder(dim=256)
+    embedder: Embedder = NullEmbedder()
     return SqliteStore(db_path=resolve_db_path(), embedder=embedder, allowed_prefix=allowed_prefix)
 
 
