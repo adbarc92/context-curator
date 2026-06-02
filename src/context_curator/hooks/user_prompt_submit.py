@@ -25,6 +25,7 @@ def handle(event: dict, store: Store) -> HookResult:
     log(f"context-curator: onloaded {len(chunks)} chunk(s)" if chunks
         else "context-curator: onloaded 0 (off-topic)")
     block = format_block(chunks, title=_TITLE)
+    # format_block returns "" for no chunks; "" or None -> None suppresses the inject entirely
     return HookResult(0, additional_context=block or None)
 
 

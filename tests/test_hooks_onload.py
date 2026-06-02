@@ -112,3 +112,11 @@ def test_ups_breadcrumb_reports_count(tmp_path, capsys):
     s.store("session:x:tool:c1", "authenticate authorize user session")
     ups.handle({"prompt": "authenticate authorize user session"}, s)
     assert "onloaded 1 chunk" in capsys.readouterr().err
+
+
+def test_ups_empty_store_no_injection(tmp_path):
+    from context_curator.hooks import user_prompt_submit as ups
+    s = _sqlite(tmp_path)
+    r = ups.handle({"prompt": "authenticate authorize user session",
+                    "hook_event_name": "UserPromptSubmit"}, s)
+    assert r.additional_context is None
