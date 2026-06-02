@@ -13,7 +13,10 @@ def test_onload_weights_only_overrides_sim_floor():
     assert ONLOAD_WEIGHTS.w_recency == default.w_recency
     assert ONLOAD_WEIGHTS.w_similarity == default.w_similarity
     assert ONLOAD_WEIGHTS.pin_bias == default.pin_bias
+    assert ONLOAD_WEIGHTS.eviction_threshold == default.eviction_threshold
 
 
-def test_threshold_is_provisional_placeholder_value():
-    assert ONLOAD_COSINE_THRESHOLD == 0.15
+def test_threshold_is_a_sane_cosine_gate():
+    # An untuned placeholder (re-derived in M4b) — assert only that it is a sane cosine gate,
+    # not a hardcoded value that would break on legitimate tuning.
+    assert 0.0 < ONLOAD_COSINE_THRESHOLD < 1.0
