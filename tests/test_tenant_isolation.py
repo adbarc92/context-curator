@@ -68,3 +68,13 @@ def test_query_scope_with_like_wildcard_in_prefix(tmp_path):
     scoped = _scoped_store(tmp_path, "proj:my_app:tenant:t1")
     keys = {c.key for c in scoped.query("x", tags=["s"], k=1000, token_budget=99999)}
     assert keys == {"proj:my_app:tenant:t1:doc"}
+
+
+def test_all_live_chunks_scope_with_like_wildcard_in_prefix(tmp_path):
+    # an allowed_prefix containing '_' (a SQL LIKE wildcard) must not leak via all_live_chunks
+    seed = SqliteStore(db_path=str(tmp_path / "cc.db"), embedder=HashingEmbedder(dim=32))
+    seed.store("proj:my_app:tenant:t1:doc", "mine")
+    seed.store("proj:myXapp:tenant:t1:doc", "leak?")   # 'X' matches '_' in LIKE
+    scoped = SqliteStore(db_path=str(tmp_path / "cc.db"), embedder=HashingEmbedder(dim=32),
+                         allowed_prefix="proj:my_app:tenant:t1")
+    assert {c.key for c in scoped.all_live_chunks()} == {"proj:my_app:tenant:t1:doc"}

@@ -64,6 +64,15 @@ class InMemoryStore(Store):
             return out
         return cands
 
+    def all_live_chunks(self) -> list[Chunk]:
+        cands = [
+            c for c in self._data.values()
+            if is_within_scope(c.key, self._allowed_prefix)
+            and not is_expired(c.created_at, c.ttl_s, c.pin)
+        ]
+        cands.sort(key=lambda c: self._seq[c.key], reverse=True)  # recency newest-first
+        return cands
+
     def list(self, prefix: str) -> list[str]:
         return [
             key for key in self._data

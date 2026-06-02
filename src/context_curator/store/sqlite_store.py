@@ -171,6 +171,25 @@ class SqliteStore(Store):
                 break
         return out
 
+    def all_live_chunks(self) -> list[Chunk]:
+        if self._allowed_prefix is None:
+            rows = self._conn.execute("SELECT * FROM chunks ORDER BY seq DESC").fetchall()
+        else:
+            p = self._allowed_prefix
+            rows = self._conn.execute(
+                "SELECT * FROM chunks WHERE key = ? OR key LIKE ? ORDER BY seq DESC",
+                (p, p + ":%"),
+            ).fetchall()
+        out: list[Chunk] = []
+        for row in rows:
+            if self._is_expired(row):
+                continue
+            # defence-in-depth: SQL LIKE treats `_`/`%` as wildcards (same guard as query)
+            if not is_within_scope(row["key"], self._allowed_prefix):
+                continue
+            out.append(self._row_to_chunk(row))
+        return out
+
     def list(self, prefix: str) -> list[str]:
         # boundary-aware: `prefix + ":%"` so `shared:contracts` never matches `shared:contractsX`
         rows = self._conn.execute(
