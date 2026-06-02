@@ -119,3 +119,14 @@ def test_query_orders_by_write_recency(store):
     assert [c.key for c in store.query("q", k=10)] == ["c", "b", "a"]
     store.store("a", "x2")  # re-store moves a to front on both backends
     assert [c.key for c in store.query("q", k=10)] == ["a", "c", "b"]
+
+
+def test_expired_chunk_absent_on_retrieve(store):
+    store.store("k", "v", ttl_s=0)          # expires immediately
+    assert store.retrieve("k") is None       # now true on BOTH backends (TTL parity)
+
+
+def test_expired_chunk_excluded_from_query(store):
+    store.store("live", "x", ttl_s=3600)
+    store.store("dead", "x", ttl_s=0)
+    assert {c.key for c in store.query("q", k=10)} == {"live"}

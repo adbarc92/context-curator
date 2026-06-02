@@ -4,6 +4,7 @@ from __future__ import annotations
 from context_curator.embeddings import Embedder
 from context_curator.keys import is_within_scope
 from context_curator.models import Chunk, utcnow_iso
+from context_curator.store.expiry import is_expired
 from context_curator.store.interface import Store
 from context_curator.tokens import estimate_tokens
 
@@ -38,6 +39,8 @@ class InMemoryStore(Store):
         c = self._data.get(key)
         if c is None or not is_within_scope(key, self._allowed_prefix):
             return None
+        if is_expired(c.created_at, c.ttl_s, c.pin):
+            return None
         return c
 
     def query(self, task_context: str, tags: list[str] | None = None, k: int = 10,
@@ -45,6 +48,7 @@ class InMemoryStore(Store):
         cands = [
             c for c in self._data.values()
             if is_within_scope(c.key, self._allowed_prefix)
+            and not is_expired(c.created_at, c.ttl_s, c.pin)
             and (tags is None or set(tags).issubset(set(c.tags)))
         ]
         cands.sort(key=lambda c: self._seq[c.key], reverse=True)  # write-order recency

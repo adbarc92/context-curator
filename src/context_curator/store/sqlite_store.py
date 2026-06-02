@@ -11,6 +11,7 @@ from pathlib import Path
 from context_curator.embeddings import Embedder
 from context_curator.keys import is_within_scope
 from context_curator.models import Chunk, utcnow_iso
+from context_curator.store.expiry import is_expired
 from context_curator.store.interface import Store
 from context_curator.tokens import estimate_tokens
 
@@ -83,9 +84,7 @@ class SqliteStore(Store):
         )
 
     def _is_expired(self, row: sqlite3.Row) -> bool:
-        if row["expires_at"] is None:
-            return False
-        return datetime.fromisoformat(row["expires_at"]) <= _now()
+        return is_expired(row["created_at"], row["ttl_s"], bool(row["pin"]))
 
     # --- interface ---------------------------------------------------------
     def store(self, key: str, content: str, tags: list[str] | None = None,
