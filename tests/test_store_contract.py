@@ -119,3 +119,39 @@ def test_query_orders_by_write_recency(store):
     assert [c.key for c in store.query("q", k=10)] == ["c", "b", "a"]
     store.store("a", "x2")  # re-store moves a to front on both backends
     assert [c.key for c in store.query("q", k=10)] == ["a", "c", "b"]
+
+
+def test_expired_chunk_absent_on_retrieve(store):
+    store.store("k", "v", ttl_s=0)          # expires immediately
+    assert store.retrieve("k") is None       # now true on BOTH backends (TTL parity)
+
+
+def test_expired_chunk_excluded_from_query(store):
+    store.store("live", "x", ttl_s=3600)
+    store.store("dead", "x", ttl_s=0)
+    assert {c.key for c in store.query("q", k=10)} == {"live"}
+
+
+def test_all_live_chunks_full_set_recency_ordered(store):
+    store.store("a", "x")
+    store.store("b", "x")
+    store.store("c", "x")
+    assert [c.key for c in store.all_live_chunks()] == ["c", "b", "a"]
+
+
+def test_all_live_chunks_excludes_expired(store):
+    store.store("live", "x", ttl_s=3600)
+    store.store("dead", "x", ttl_s=0)
+    assert {c.key for c in store.all_live_chunks()} == {"live"}
+
+
+def test_all_live_chunks_not_truncated(store):
+    for i in range(50):
+        store.store(f"k{i}", "x")
+    assert len(store.all_live_chunks()) == 50   # NOT limited by query's k
+
+
+def test_all_live_chunks_scope_enforced(scoped_store):
+    scoped_store.store("proj:a:1", "x")
+    scoped_store.store("proj:b:1", "x")      # out of scope
+    assert {c.key for c in scoped_store.all_live_chunks()} == {"proj:a:1"}

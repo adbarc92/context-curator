@@ -37,6 +37,11 @@ class Store(ABC):
         Never returns chunks outside the allowed scope."""
 
     @abstractmethod
+    def all_live_chunks(self) -> list[Chunk]:
+        """ALL non-expired chunks in recency order (seq DESC), scope-enforced, with NO
+        k/token_budget/tag truncation. The policy's full candidate source (DESIGN §6)."""
+
+    @abstractmethod
     def list(self, prefix: str) -> list[str]:
         """Enumerate keys under `prefix` (debug/inspection). Scope-constrained."""
 
