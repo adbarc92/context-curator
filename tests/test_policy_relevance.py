@@ -103,3 +103,11 @@ def test_sim_floor_one_does_not_crash():
     cands = [_chunk("a", "auth"), _chunk("b", "far")]
     ranked = _policy(sim_floor=1.0).scored("auth query", cands)   # no exception
     assert len(ranked) == 2
+
+
+def test_similarity_upper_clamped():
+    # a non-unit-normalized stored embedding (cosine could exceed 1 pre-clamp) -> sim <= 1
+    p = _policy(w_recency=0.0, w_similarity=1.0, sim_floor=0.0)
+    big = _chunk("big", "x", emb=[5.0, 0.0, 0.0])   # non-unit vec; cos with [1,0,0] = 1.0
+    ranked = dict((c.key, s) for c, s in p.scored("auth q", [big]))
+    assert ranked["big"] <= 1.0
