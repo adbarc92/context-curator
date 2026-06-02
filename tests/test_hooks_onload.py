@@ -57,3 +57,58 @@ def test_blocking_result_does_not_emit_inject(monkeypatch, capsys):
     out = capsys.readouterr()
     assert out.out == ""
     assert "SHOULD_NOT_APPEAR" not in out.out
+
+
+def _sqlite(tmp_path):
+    # real backend that ships (round-3 I2): exercises seq-DESC order + JSON deserialize.
+    # Local imports — this block is appended BELOW Task 5's tests, so module-level imports
+    # here would trip ruff E402/I (the project lints E + I).
+    from context_curator.embeddings import HashingEmbedder
+    from context_curator.store.sqlite_store import SqliteStore
+    return SqliteStore(db_path=str(tmp_path / "o.db"), embedder=HashingEmbedder())
+
+
+def test_ups_relevant_chunk_named_in_block(tmp_path):
+    from context_curator.hooks import user_prompt_submit as ups
+    s = _sqlite(tmp_path)
+    s.store("session:x:tool:c1", "authenticate authorize user session token")
+    r = ups.handle({"prompt": "authenticate authorize user session",
+                    "hook_event_name": "UserPromptSubmit"}, s)
+    assert r.additional_context is not None
+    assert "session:x:tool:c1" in r.additional_context
+
+
+def test_ups_offtopic_prompt_no_injection(tmp_path):
+    from context_curator.hooks import user_prompt_submit as ups
+    s = _sqlite(tmp_path)
+    s.store("session:x:tool:c1", "quarterly financial revenue spreadsheet")
+    r = ups.handle({"prompt": "authenticate authorize user session"}, s)
+    assert r.additional_context is None
+
+
+def test_ups_whitespace_prompt_no_injection_and_breadcrumb(tmp_path, capsys):
+    from context_curator.hooks import user_prompt_submit as ups
+    s = _sqlite(tmp_path)
+    r = ups.handle({"prompt": "   "}, s)
+    assert r.additional_context is None
+    assert "empty prompt" in capsys.readouterr().err
+
+
+def test_ups_pins_and_conventions_excluded(tmp_path):
+    from context_curator.hooks import user_prompt_submit as ups
+    s = _sqlite(tmp_path)
+    s.store("pinnedkey", "authenticate authorize user session", pin=True)
+    s.store("proj:myapp:conventions", "authenticate authorize user session")
+    s.store("session:x:tool:c1", "authenticate authorize user session")
+    r = ups.handle({"prompt": "authenticate authorize user session"}, s)
+    ctx = r.additional_context or ""
+    assert "session:x:tool:c1" in ctx
+    assert "pinnedkey" not in ctx and "proj:myapp:conventions" not in ctx
+
+
+def test_ups_breadcrumb_reports_count(tmp_path, capsys):
+    from context_curator.hooks import user_prompt_submit as ups
+    s = _sqlite(tmp_path)
+    s.store("session:x:tool:c1", "authenticate authorize user session")
+    ups.handle({"prompt": "authenticate authorize user session"}, s)
+    assert "onloaded 1 chunk" in capsys.readouterr().err
