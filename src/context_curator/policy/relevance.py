@@ -66,7 +66,8 @@ class RelevancePolicy:
             score = (w.w_recency * recency + w.w_similarity * sim
                      + w.w_tag * tag + (w.pin_bias if c.pin else 0.0))
             results.append((c, score, cos, i))
-        results.sort(key=lambda t: (-t[1], t[3]))   # (-score, incoming_index)
+        # t = (chunk, score, cos, incoming_index); sort by (-score, incoming_index)
+        results.sort(key=lambda t: (-t[1], t[3]))
         return [(c, s, cos) for (c, s, cos, _i) in results]
 
     def scored(self, task_text: str, candidates: list[Chunk],
