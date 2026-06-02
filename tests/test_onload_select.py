@@ -24,8 +24,11 @@ def _policy():
     return RelevancePolicy(_Emb(), ONLOAD_WEIGHTS)
 
 
+_EMB = _Emb()
+
+
 def _chunk(key, topic, *, pin=False):
-    return Chunk(key=key, content=f"{topic} content", pin=pin, embedding=_Emb().embed(topic))
+    return Chunk(key=key, content=f"{topic} content", pin=pin, embedding=_EMB.embed(topic))
 
 
 def _onload(policy, prompt, cands, *, k=10, token_budget=None):

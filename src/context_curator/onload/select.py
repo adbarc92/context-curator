@@ -16,7 +16,8 @@ ONLOAD_TOKEN_BUDGET = 1500
 SEED_TOKEN_BUDGET = 1500
 
 # proj:{project}:conventions are SessionStart's job -> excluded from per-prompt onload so a
-# post-compaction turn doesn't double-inject the durable set (round-3 I1).
+# post-compaction turn doesn't double-inject the durable set (round-3 I1). Always applied with
+# .fullmatch() (so no ^$ anchors here) -> 'shared:...:naming-conventions' must NOT match.
 _CONV_RE = re.compile(r"proj:[^:]+:conventions")
 
 
