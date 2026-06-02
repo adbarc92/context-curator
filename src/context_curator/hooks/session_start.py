@@ -15,6 +15,7 @@ def handle(event: dict, store: Store) -> HookResult:
     chunks = seed_select(store, token_budget=SEED_TOKEN_BUDGET)
     log(f"context-curator: seeded {len(chunks)} pinned/convention chunk(s)")
     block = format_block(chunks, title=_TITLE)
+    # format_block returns "" for no chunks; "" or None -> None suppresses the inject entirely
     return HookResult(0, additional_context=block or None)
 
 

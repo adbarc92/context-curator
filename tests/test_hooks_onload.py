@@ -1,5 +1,7 @@
 import json
 
+import pytest  # noqa: I001 — pytest sorts before json alphabetically but json is stdlib
+
 import context_curator.hooks._io as io
 from context_curator.hooks._io import HookResult, run_hook
 
@@ -140,3 +142,23 @@ def test_session_start_empty_store_no_injection(tmp_path):
     s = _sqlite(tmp_path)
     r = ss.handle({"hook_event_name": "SessionStart", "source": "startup"}, s)
     assert r.additional_context is None
+
+
+def test_session_start_breadcrumb_reports_count(tmp_path, capsys):
+    from context_curator.hooks import session_start as ss
+    s = _sqlite(tmp_path)
+    s.store("pinnedkey", "a pinned decision", pin=True)
+    ss.handle({"hook_event_name": "SessionStart", "source": "startup"}, s)
+    assert "seeded 1 pinned/convention chunk" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("source", ["startup", "resume", "compact", "clear"])
+def test_session_start_ignores_source(tmp_path, source):
+    # round-3 I1: the durable set is re-seeded regardless of source (incl. compact, which is
+    # exactly when the window was just trimmed). Same output for every source value.
+    from context_curator.hooks import session_start as ss
+    s = _sqlite(tmp_path)
+    s.store("pinnedkey", "a pinned decision", pin=True)
+    r = ss.handle({"hook_event_name": "SessionStart", "source": source}, s)
+    assert r.additional_context is not None
+    assert "pinnedkey" in r.additional_context
