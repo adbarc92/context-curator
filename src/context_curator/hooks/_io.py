@@ -20,6 +20,7 @@ ALERT = "[context-curator GUARD-FAILOPEN]"   # distinct, greppable marker
 class HookResult:
     exit_code: int          # 0 allow, 2 block
     message: str = ""       # -> stderr when blocking
+    additional_context: str | None = None   # -> stdout inject JSON on exit 0 (design §3.4)
 
 
 def log(msg: str) -> None:
@@ -43,7 +44,18 @@ def open_store() -> Store:
     return store
 
 
-def run_hook(handler: Callable[..., HookResult], *, needs_store: bool) -> None:
+def _emit_inject(event: dict, text: str) -> None:
+    """STDOUT-ONLY contract (design §3.4): write EXACTLY the inject JSON and nothing else.
+    json.dump emits no trailing newline (unlike print(json.dumps(...))) — do NOT switch to
+    print() or add a newline; any stray byte silently breaks Claude Code's additionalContext
+    parse."""
+    name = event.get("hook_event_name") or event.get("hookEventName") or ""
+    obj = {"hookSpecificOutput": {"hookEventName": name, "additionalContext": text}}
+    json.dump(obj, sys.stdout)
+
+
+def run_hook(handler: Callable[..., HookResult], *, needs_store: bool,
+             fail_label: str = "capture") -> None:
     try:
         event = read_event()
         if needs_store:
@@ -53,10 +65,12 @@ def run_hook(handler: Callable[..., HookResult], *, needs_store: bool) -> None:
     except Exception as e:        # FAIL-OPEN
         if not needs_store:       # the guard: make the bypass visible
             log(f"{ALERT} guard crashed, allowing tool: {e}")
-        else:
-            log(f"context-curator: capture failed: {e}")
+        else:                     # distinct, greppable per-hook label (round-1 I3)
+            log(f"context-curator: {fail_label} failed: {e}")
         sys.exit(0)
         return
+    if result.additional_context is not None:
+        _emit_inject(event, result.additional_context)
     if result.message:
         log(result.message)
     sys.exit(result.exit_code)
