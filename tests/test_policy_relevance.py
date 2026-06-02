@@ -96,3 +96,10 @@ def test_pick_respects_k_and_budget_break():
     pairs = _policy().scored("auth q", cands)
     assert len(_policy().pick(pairs, k=2)) == 2                       # k cap
     assert len(_policy().pick(pairs, k=10, token_budget=30)) == 1     # first-fit break
+
+
+def test_sim_floor_one_does_not_crash():
+    # sim_floor=1.0 is a degenerate sweep value; must not ZeroDivisionError
+    cands = [_chunk("a", "auth"), _chunk("b", "far")]
+    ranked = _policy(sim_floor=1.0).scored("auth query", cands)   # no exception
+    assert len(ranked) == 2

@@ -55,7 +55,8 @@ class RelevancePolicy:
                 sim = 0.0
             else:
                 cos = _cosine(task_emb, emb)
-                sim = max(0.0, (cos - w.sim_floor) / (1.0 - w.sim_floor))
+                denom = max(1e-9, 1.0 - w.sim_floor)
+                sim = max(0.0, (cos - w.sim_floor) / denom)
             tag = (len(qtags & set(c.tags)) / len(qtags)) if qtags else 0.0
             score = (w.w_recency * recency + w.w_similarity * sim
                      + w.w_tag * tag + (w.pin_bias if c.pin else 0.0))
