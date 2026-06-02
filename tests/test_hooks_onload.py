@@ -120,3 +120,23 @@ def test_ups_empty_store_no_injection(tmp_path):
     r = ups.handle({"prompt": "authenticate authorize user session",
                     "hook_event_name": "UserPromptSubmit"}, s)
     assert r.additional_context is None
+
+
+def test_session_start_seeds_pins_and_conventions(tmp_path):
+    from context_curator.hooks import session_start as ss
+    s = _sqlite(tmp_path)
+    s.store("pinnedkey", "an important pinned decision", pin=True)
+    s.store("proj:myapp:conventions", "the project conventions body")
+    s.store("session:x:tool:c1", "ordinary captured output", pin=False)
+    r = ss.handle({"hook_event_name": "SessionStart", "source": "compact"}, s)
+    ctx = r.additional_context
+    assert ctx is not None
+    assert "pinnedkey" in ctx and "proj:myapp:conventions" in ctx
+    assert "session:x:tool:c1" not in ctx          # non-pin non-convention not seeded
+
+
+def test_session_start_empty_store_no_injection(tmp_path):
+    from context_curator.hooks import session_start as ss
+    s = _sqlite(tmp_path)
+    r = ss.handle({"hook_event_name": "SessionStart", "source": "startup"}, s)
+    assert r.additional_context is None
