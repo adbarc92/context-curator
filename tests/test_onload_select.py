@@ -86,14 +86,15 @@ def test_gate_excludes_lexically_disjoint_offtopic():
 
 
 def test_gate_known_limitation_stopword_overlap_passes():
-    # HONEST characterization (round-3 I4): HashingEmbedder does NOT strip stopwords, so a
-    # chunk sharing only stopwords scores cosine ~0.7 and is NOT excluded. We assert the
-    # false positive to document the gate is lexical-and-permissive, not semantic (M4b/bge job).
+    # HONEST characterization (round-3 I4): HashingEmbedder does NOT strip stopwords. A chunk
+    # that shares ONLY stopwords with the prompt (zero topical overlap) still scores cosine
+    # ~0.75 -> clears the 0.15 gate -> is onloaded. We assert this FALSE POSITIVE to document
+    # that the gate is lexical-and-permissive, not semantic (the bge semantic gate is M4b).
     policy = RelevancePolicy(HashingEmbedder(), ONLOAD_WEIGHTS)
-    prompt = "how do i and the of a to in"
-    stopword_only = _hchunk("sw", "how do i and the of a to in")
+    prompt = "how do i authenticate and authorize the user session"   # topical + stopwords
+    stopword_only = _hchunk("sw", "how do i and the")                 # ONLY shared stopwords
     out = _onload(policy, prompt, [stopword_only])
-    assert "sw" in [c.key for c in out]
+    assert "sw" in [c.key for c in out]   # irrelevant chunk passes the gate on stopwords alone
 
 
 # --- seed_select ------------------------------------------------------------
