@@ -57,11 +57,15 @@ def pid_alive(pid: int) -> bool:
     if pid <= 0:
         return False
     if os.name == "nt":
-        out = subprocess.run(
-            ["tasklist", "/FI", f"PID eq {pid}"],
-            capture_output=True,
-            text=True,
-        )
+        try:
+            out = subprocess.run(
+                ["tasklist", "/FI", f"PID eq {pid}"],
+                capture_output=True,
+                text=True,
+                timeout=3,
+            )
+        except subprocess.TimeoutExpired:
+            return True             # can't check in time -> assume alive (avoid spurious respawn)
         return str(pid) in out.stdout
     try:
         os.kill(pid, 0)
@@ -108,6 +112,7 @@ def try_lock(lock_path: str):
     try:
         if os.name == "nt":
             import msvcrt
+            f.seek(0)              # lock at offset 0 -> matches release_lock's seek(0)
             msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
         else:
             import fcntl

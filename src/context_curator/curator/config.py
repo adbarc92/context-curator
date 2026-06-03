@@ -12,6 +12,13 @@ def _int(name: str, default: int) -> int:
         return default
 
 
+def _float(name: str, default: float) -> float:
+    try:
+        return float(os.environ.get(name, default))
+    except ValueError:
+        return default
+
+
 CURATOR_EMBEDDER = os.environ.get("CC_CURATOR_EMBEDDER", "bge")     # bge | hashing
 CURATOR_ONLOAD_ENABLED = os.environ.get("CC_CURATOR_ONLOAD", "0") == "1"   # dark by default
 CURATOR_DEBUG = os.environ.get("CC_CURATOR_DEBUG", "0") == "1"
@@ -22,7 +29,7 @@ IDLE_TIMEOUT_S = _int("CC_CURATOR_IDLE_TIMEOUT_S", 1800)
 RECONCILE_BATCH = _int("CC_CURATOR_RECONCILE_BATCH", 16)
 RECONCILE_INTERVAL_S = _int("CC_CURATOR_RECONCILE_INTERVAL_S", 2)
 ONDEMAND_EMBED_CAP = _int("CC_CURATOR_ONDEMAND_CAP", 12)
-REQUEST_DEADLINE_S = float(os.environ.get("CC_CURATOR_REQUEST_DEADLINE_S", "0.25"))
+REQUEST_DEADLINE_S = _float("CC_CURATOR_REQUEST_DEADLINE_S", 0.25)
 BGE_DIM = 384
 
 

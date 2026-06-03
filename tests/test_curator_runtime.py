@@ -63,3 +63,22 @@ def test_discover_dead_or_stale_warming_respawns(tmp_path):
         p, age_s=lambda _iso: 999.0, deadlines=_DEADLINES, alive=lambda _pid: True
     )
     assert stale.respawn is True
+
+
+def test_discover_warming_at_exact_deadline_respawns(tmp_path):
+    # the cutoff is strict (< deadline), so age == deadline -> stale -> respawn
+    p = tmp_path / ".curator.json"
+    runtime.write_runtime(p, {"state": "warming", "pid": 1, "port": 1, "token": "t", "dim": 384,
+                              "started_at": "2026-06-02T00:00:00+00:00", "embedder": "bge"})
+    d = runtime.discover(p, age_s=lambda _iso: 15.0, deadlines=_DEADLINES, alive=lambda _pid: True)
+    assert d.respawn is True
+
+
+def test_discover_live_provisioning_no_respawn(tmp_path):
+    # provisioning has the long deadline; live + in-deadline -> no respawn (same branch as warming)
+    p = tmp_path / ".curator.json"
+    runtime.write_runtime(p, {"state": "provisioning", "pid": 1, "port": 1, "token": "t",
+                              "dim": 384, "started_at": "2026-06-02T00:00:00+00:00",
+                              "embedder": "bge"})
+    d = runtime.discover(p, age_s=lambda _iso: 100.0, deadlines=_DEADLINES, alive=lambda _pid: True)
+    assert d.state == "provisioning" and d.respawn is False
