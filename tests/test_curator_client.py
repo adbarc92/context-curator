@@ -65,3 +65,26 @@ def test_refused_raises_unavailable():
         client.request_onload_at(
             "127.0.0.1", 1, "tok", "p", k=10, token_budget=None, deadline_s=0.2
         )
+
+
+def test_iso_age_s_valid_and_garbage():
+    # regression: _iso_age_s must NOT raise (it ran datetime.now(datetime.UTC) -> AttributeError,
+    # which escaped request_onload on the warming path and broke fail-open)
+    age = client._iso_age_s("2020-01-01T00:00:00+00:00")
+    assert age > 0                                   # a past timestamp -> positive age
+    assert client._iso_age_s("not-a-date") == 1e9    # garbage -> huge age (treated stale)
+
+
+def test_request_onload_warming_raises_unavailable_no_crash(tmp_path, monkeypatch):
+    # a live 'warming' runtime file must yield CuratorUnavailable(respawn=False) via discover,
+    # NOT an AttributeError out of _iso_age_s (fail-open regression guard)
+    import os
+
+    from context_curator.curator import config
+    db = str(tmp_path / "s.db")
+    info = {"state": "warming", "pid": os.getpid(), "port": 1, "token": "t", "dim": 384,
+            "started_at": "2020-01-01T00:00:00+00:00", "embedder": "bge"}
+    runtime.write_runtime(config.runtime_path(db), info)
+    monkeypatch.setenv("CC_DB_PATH", db)
+    with pytest.raises(client.CuratorUnavailable):
+        client.request_onload("p", k=10, token_budget=None)

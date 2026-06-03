@@ -17,10 +17,10 @@ class CuratorUnavailable(Exception):
 
 
 def _iso_age_s(started_at: str) -> float:
-    from datetime import datetime
+    from datetime import UTC, datetime
 
     try:
-        return (datetime.now(datetime.UTC) - datetime.fromisoformat(started_at)).total_seconds()
+        return (datetime.now(UTC) - datetime.fromisoformat(started_at)).total_seconds()
     except ValueError:
         return 1e9
 
