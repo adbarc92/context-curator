@@ -56,8 +56,8 @@ class RelevancePolicy:
                 else:
                     emb = None  # over cap -> similarity 0
             cos = 0.0
-            if emb is None:
-                sim = 0.0
+            if task_emb is None or emb is None:   # round-1 I5: a None task embedding (NullEmbedder)
+                sim = 0.0                          # -> recency-only, never _cosine(None, ...)
             else:
                 cos = _cosine(task_emb, emb)
                 denom = max(1e-9, 1.0 - w.sim_floor)

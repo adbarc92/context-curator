@@ -149,3 +149,13 @@ def test_scored_delegates_and_threads_query_tags():
     with_tags = dict((c.key, s) for c, s in p.scored("far q", cands, query_tags=["topic"]))
     without = dict((c.key, s) for c, s in p.scored("far q", cands))
     assert with_tags["tagged"] > without["tagged"]
+
+
+def test_scored_with_similarity_recency_only_when_task_emb_none():
+    from context_curator.embeddings import NullEmbedder
+    p = RelevancePolicy(NullEmbedder())                       # embed() -> None
+    cands = [_chunk("new", "auth"), _chunk("old", "far")]     # any embeddings
+    triples = p.scored_with_similarity("auth q", cands)       # must NOT raise
+    by_key = {c.key: (s, cos) for c, s, cos in triples}
+    assert by_key["new"][1] == 0.0 and by_key["old"][1] == 0.0   # cos 0 for all
+    assert by_key["new"][0] > by_key["old"][0]                # newer outranks (recency only)
