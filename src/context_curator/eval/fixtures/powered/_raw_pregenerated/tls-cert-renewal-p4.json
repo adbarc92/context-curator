@@ -1,0 +1,25 @@
+{
+  "name": "tls-cert-renewal-p4",
+  "prompt": "how do I rotate the TLS certificate before it expires without dropping live connections",
+  "chunks": [
+    {"key": "k_css_nav", "content": "collapsed the side navigation into a hamburger menu on narrow screens", "tags": []},
+    {"key": "k_db_backup", "content": "nightly base backups stream to object storage with point-in-time WAL archiving", "tags": []},
+    {"key": "k_cert_pin_decoy", "content": "the mobile app pins the server's public key certificate so a man-in-the-middle proxy with a forged cert is rejected at the TLS handshake", "tags": ["hard_neg"]},
+    {"key": "k_queue_dlq", "content": "messages that fail three times land in a dead-letter queue for manual inspection", "tags": []},
+    {"key": "k_log_sampling", "content": "debug logs are sampled at one percent in production to keep storage costs down", "tags": []},
+    {"key": "k_cert_renew_acme", "content": "decided to auto-renew the certificate through ACME 30 days before expiry, fetching the new chain and writing it next to the old one without touching the running listener yet", "tags": []},
+    {"key": "k_cert_hot_reload", "content": "the server watches the cert directory and reloads the key pair on change in its SNI callback, so new TLS handshakes pick up the fresh certificate while existing connections keep their old one until they close", "tags": []},
+    {"key": "k_signup_email_decoy", "content": "the welcome email links to a page served over https and we had to renew our trust in the marketing domain's identity provider", "tags": ["hard_neg"]},
+    {"key": "k_cert_expiry_monitor", "content": "a probe checks the leaf certificate's notAfter date daily and pages on-call if any endpoint is within 14 days of expiring so a renewal never slips", "tags": []},
+    {"key": "k_cert_ocsp", "content": "we staple a fresh OCSP response with the rotated cert so clients can confirm it has not been revoked without a side request", "tags": []},
+    {"key": "k_locale_currency", "content": "prices render in the user's currency using the daily FX snapshot", "tags": []},
+    {"key": "k_search_index", "content": "the catalog reindex runs into a shadow index and swaps on completion", "tags": []},
+    {"key": "k_feature_toggle", "content": "the new pricing page is behind a staff-only toggle for now", "tags": []},
+    {"key": "k_audit_trail", "content": "admin role changes are written to an append-only audit table", "tags": []},
+    {"key": "k_cron_report", "content": "the monthly usage report is generated at 02:00 on the first of the month", "tags": []},
+    {"key": "k_image_cdn", "content": "static images are served from the CDN with a one-year immutable cache header", "tags": []}
+  ],
+  "gold_keys": ["k_cert_renew_acme", "k_cert_hot_reload", "k_cert_expiry_monitor", "k_cert_ocsp"],
+  "split": "train",
+  "recent_tools": []
+}

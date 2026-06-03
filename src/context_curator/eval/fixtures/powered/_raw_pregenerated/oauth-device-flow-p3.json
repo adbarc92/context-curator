@@ -1,0 +1,23 @@
+{
+  "name": "oauth-device-flow-p3",
+  "prompt": "how should I let a smart TV app without a browser sign the user in against our OAuth server",
+  "chunks": [
+    {"key": "k_device_code_grant", "content": "decided to use the device authorization grant: the TV asks our server for a device code and a short user code, shows that code on screen, and the person types it into a phone browser to approve the login", "tags": []},
+    {"key": "k_device_poll", "content": "while the TV waits, it polls the token endpoint with its device code at the interval the server returns and only receives an access token once the user has confirmed on their separate browser", "tags": []},
+    {"key": "k_verification_uri", "content": "the server hands back a verification URI plus the user code, and the app renders both so the viewer can open the link on any phone to authorize the headless television client", "tags": []},
+    {"key": "k_qr_marketing", "content": "the marketing landing page shows a QR code that deep-links into the app store listing for the mobile app", "tags": ["hard_neg"]},
+    {"key": "k_remote_pairing_decoy", "content": "the remote-control pairing screen makes the TV and the phone exchange a 6-digit code over the local network so the phone can act as a touch remote", "tags": ["hard_neg"]},
+    {"key": "k_invoice_pdf", "content": "generate the monthly invoice as a PDF and email it to the billing contact", "tags": []},
+    {"key": "k_cdn_purge", "content": "purge the CDN edge cache for an asset path immediately after a new build is published", "tags": []},
+    {"key": "k_db_pool", "content": "added a 50-connection database pool with a health-check ping on checkout", "tags": []},
+    {"key": "k_dark_mode", "content": "switched the dashboard to a dark theme using CSS custom properties", "tags": []},
+    {"key": "k_retry_jitter", "content": "wrap outbound webhook delivery in exponential backoff with full jitter", "tags": []},
+    {"key": "k_metrics_export", "content": "export request latency histograms to Prometheus on the /metrics endpoint", "tags": []},
+    {"key": "k_i18n", "content": "extracted all UI strings into a message catalog for translation", "tags": []},
+    {"key": "k_soft_delete", "content": "records are soft-deleted with a deleted_at column and filtered from default queries", "tags": []},
+    {"key": "k_healthz", "content": "the /healthz endpoint returns 200 once the database pool is ready", "tags": []}
+  ],
+  "gold_keys": ["k_device_code_grant", "k_device_poll", "k_verification_uri"],
+  "split": "train",
+  "recent_tools": []
+}

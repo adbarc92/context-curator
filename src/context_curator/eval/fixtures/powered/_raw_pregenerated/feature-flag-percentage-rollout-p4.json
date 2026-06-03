@@ -1,0 +1,23 @@
+{
+  "name": "feature-flag-percentage-rollout-p4",
+  "prompt": "how do I roll a new feature out to a stable random percentage of users and ramp it up gradually",
+  "chunks": [
+    {"key": "k_css_switch", "content": "the settings toggle switch now has an accessible focus ring", "tags": []},
+    {"key": "k_db_readmodel", "content": "the dashboard reads from a denormalized summary table refreshed every minute", "tags": []},
+    {"key": "k_discount_percent_decoy", "content": "the promo engine applies a 15 percent discount to the cart total when a valid coupon is entered at checkout", "tags": ["hard_neg"]},
+    {"key": "k_email_open_rate_decoy", "content": "the campaign report shows the open rate as a percentage and ranks subject lines by how many users opened them", "tags": ["hard_neg"]},
+    {"key": "k_search_synonyms", "content": "added a synonym list so 'laptop' also matches 'notebook'", "tags": []},
+    {"key": "k_oauth_consent", "content": "the consent screen now itemizes each requested scope", "tags": []},
+    {"key": "k_metrics_dash", "content": "the ops dashboard graphs request rate, error rate, and latency side by side", "tags": []},
+    {"key": "k_locale_first_day", "content": "the calendar's first day of week follows the user's locale", "tags": []},
+    {"key": "k_cron_billing", "content": "subscription renewals are charged at midnight UTC on the renewal date", "tags": []},
+    {"key": "k_flag_hash_bucket", "content": "decided to bucket each user by hashing their stable user id with the flag name into 0-99, so the same user always lands in the same bucket and the on/off decision is sticky across requests", "tags": []},
+    {"key": "k_flag_ramp", "content": "to ramp, we raise the enabled threshold from 1 to 5 to 25 percent over a few days, and because bucketing is deterministic nobody who already had it flips back off as we widen it", "tags": []},
+    {"key": "k_flag_kill_switch", "content": "each rollout has a kill switch that forces the flag to zero percent instantly if error rates climb, overriding the gradual ramp", "tags": []},
+    {"key": "k_flag_override_list", "content": "we keep an allow-list of specific users and internal accounts that always see the feature regardless of their percentage bucket, for dogfooding", "tags": []},
+    {"key": "k_audit_admin", "content": "every flag change is recorded with who made it and when", "tags": []}
+  ],
+  "gold_keys": ["k_flag_hash_bucket", "k_flag_ramp", "k_flag_kill_switch", "k_flag_override_list"],
+  "split": "train",
+  "recent_tools": []
+}

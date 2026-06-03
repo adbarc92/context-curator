@@ -1,0 +1,23 @@
+{
+  "name": "timezone-correct-scheduling-p4",
+  "prompt": "how do I schedule a recurring reminder so it fires at the right local wall-clock time even across daylight saving changes",
+  "chunks": [
+    {"key": "k_css_calendar", "content": "restyled the calendar grid so today's column has a highlighted border", "tags": []},
+    {"key": "k_db_partition", "content": "partitioned the events table by month to keep queries fast", "tags": []},
+    {"key": "k_meeting_invite_decoy", "content": "the meeting invite email lists the start time in three timezones so remote attendees in different regions know when to join", "tags": ["hard_neg"]},
+    {"key": "k_email_unsub", "content": "every campaign email includes a one-click unsubscribe link", "tags": []},
+    {"key": "k_flight_time_decoy", "content": "the travel page shows departure and arrival times in local airport time and computes the duration accounting for the timezone difference", "tags": ["hard_neg"]},
+    {"key": "k_search_typo", "content": "search now tolerates one-character typos via a fuzzy match", "tags": []},
+    {"key": "k_oauth_pkce", "content": "the mobile login flow uses PKCE to protect the authorization code", "tags": []},
+    {"key": "k_metrics_slo", "content": "defined an SLO of 99.9 percent availability for the checkout API", "tags": []},
+    {"key": "k_locale_number", "content": "thousands separators follow the viewer's locale in reports", "tags": []},
+    {"key": "k_tz_store_zone", "content": "decided to store each reminder with its IANA timezone id plus the local time the user picked, rather than a fixed UTC instant, so the next firing is recomputed in that zone every time", "tags": []},
+    {"key": "k_tz_dst_recompute", "content": "the scheduler recomputes the next occurrence by applying the timezone's current daylight-saving offset at run time, so a 9am daily reminder stays at 9am wall-clock even after the clocks shift", "tags": []},
+    {"key": "k_tz_skip_gap", "content": "for times that fall in a spring-forward gap that does not exist, we roll the firing forward to the next valid instant instead of silently skipping that day's reminder", "tags": []},
+    {"key": "k_tz_fold_ambiguous", "content": "when a chosen time lands in a fall-back fold and occurs twice, we pick the first occurrence consistently so the reminder is not delivered twice", "tags": []},
+    {"key": "k_feature_flag", "content": "the redesigned settings panel is gated behind a beta flag", "tags": []}
+  ],
+  "gold_keys": ["k_tz_store_zone", "k_tz_dst_recompute", "k_tz_skip_gap", "k_tz_fold_ambiguous"],
+  "split": "train",
+  "recent_tools": []
+}
