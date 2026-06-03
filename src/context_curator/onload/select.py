@@ -21,6 +21,34 @@ SEED_TOKEN_BUDGET = 1500
 _CONV_RE = re.compile(r"proj:[^:]+:conventions")
 
 
+def _is_durable(c: Chunk) -> bool:
+    """Pins + proj:*:conventions are the SessionStart durable set — excluded from per-prompt
+    onload AND the recency fallback (round-3 I1)."""
+    return c.pin or bool(_CONV_RE.fullmatch(c.key))
+
+
+def _first_fit(chunks: list[Chunk], k: int, token_budget: int | None) -> list[Chunk]:
+    out: list[Chunk] = []
+    used = 0
+    for c in chunks:
+        if token_budget is not None:
+            t = estimate_tokens(c.content)
+            if used + t > token_budget:
+                break
+            used += t
+        out.append(c)
+        if len(out) >= k:
+            break
+    return out
+
+
+def recency_select(candidates: list[Chunk], *, k: int, token_budget: int | None) -> list[Chunk]:
+    """No-embedding fallback (design §6.3, DESIGN §4.2 'tag+recency'): newest-first (candidates
+    arrive seq DESC), pins/conventions excluded, first-fit under k+budget. Recency-only in
+    practice — tags are tool-provenance not topic (w_tag=0)."""
+    return _first_fit([c for c in candidates if not _is_durable(c)], k, token_budget)
+
+
 def onload_select(policy: RelevancePolicy, task_text: str, candidates: list[Chunk], *,
                   cos_threshold: float, k: int, token_budget: int | None) -> list[Chunk]:
     """Per-prompt onload: candidates whose RAW COSINE >= cos_threshold (round-1 C3), ranked by
@@ -30,7 +58,7 @@ def onload_select(policy: RelevancePolicy, task_text: str, candidates: list[Chun
     dedup — the relevant slice is (re)injected every turn (round-2 M1)."""
     eligible = [(c, score)
                 for c, score, cos in policy.scored_with_similarity(task_text, candidates)
-                if not c.pin and not _CONV_RE.fullmatch(c.key) and cos >= cos_threshold]
+                if not _is_durable(c) and cos >= cos_threshold]
     return policy.pick(eligible, k, token_budget)
 
 
