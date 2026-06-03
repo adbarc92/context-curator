@@ -30,3 +30,10 @@ def test_bge_weights_sim_floor_equals_bge_threshold():
 def test_bge_threshold_is_provisional_mid_band():
     from context_curator.policy.weights import ONLOAD_BGE_COSINE_THRESHOLD
     assert ONLOAD_BGE_COSINE_THRESHOLD == 0.55       # provisional; M3b tunes it
+
+
+def test_bge_weights_disable_inline_reembed():
+    # the curator's on-demand embed is the sole candidate-embed path; the policy must not
+    # inline-reembed NULL candidates (round-3 C-3 / §8 latency bound)
+    from context_curator.policy.weights import ONLOAD_BGE_WEIGHTS
+    assert ONLOAD_BGE_WEIGHTS.reembed_cap == 0

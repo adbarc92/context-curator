@@ -32,4 +32,8 @@ ONLOAD_WEIGHTS = PolicyWeights(sim_floor=ONLOAD_COSINE_THRESHOLD)
 # round-2-C1 gate<->floor reconciliation. (The hashing ONLOAD_* above stay as the
 # legacy/test operating point.)
 ONLOAD_BGE_COSINE_THRESHOLD: float = 0.55
-ONLOAD_BGE_WEIGHTS = PolicyWeights(sim_floor=ONLOAD_BGE_COSINE_THRESHOLD)
+# reembed_cap=0: the curator handler does a bounded (ONDEMAND_EMBED_CAP) in-memory on-demand embed
+# of fresh NULL candidates and scores those; the policy must NOT additionally inline-reembed the
+# rest (that would defeat the §8 latency bound AND make the on-demand path indistinguishable from
+# the policy fallback — round-3 C-3). Remaining NULLs stay cos-0 -> gate-excluded.
+ONLOAD_BGE_WEIGHTS = PolicyWeights(sim_floor=ONLOAD_BGE_COSINE_THRESHOLD, reembed_cap=0)
