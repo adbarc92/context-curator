@@ -14,8 +14,9 @@ class Embedder(ABC):
         """Embedding dimensionality."""
 
     @abstractmethod
-    def embed(self, text: str) -> list[float]:
-        """Return a `dim`-length embedding for `text`."""
+    def embed(self, text: str) -> list[float] | None:
+        """Return a `dim`-length embedding for `text`, or None if this embedder produces no
+        vector (e.g. NullEmbedder — the chunk is stored with embedding=NULL for later backfill)."""
 
 
 class HashingEmbedder(Embedder):
@@ -69,14 +70,16 @@ class FastEmbedEmbedder(Embedder):
 
 
 class NullEmbedder(Embedder):
-    """Writes no vector: capture uses this so chunks land with embedding=NULL; the curator
-    (the sole embedding authority) backfills bge later. `dim` reports bge's 384 as a routing
-    convenience (it never actually produces a vector) — guarded by the scored_with_similarity
-    None-task check so a policy built on it degrades to recency, never crashes (design §4, §5.4)."""
+    """Embedder that produces no vector: `embed` returns None, so capture stores chunks with
+    embedding=NULL. The curator is the sole embedding authority and backfills bge later.
+
+    `dim` reports bge's 384 as a routing convenience — it never actually produces a vector, and
+    `RelevancePolicy.scored_with_similarity` guards against a None task embedding so a policy
+    built on NullEmbedder degrades to recency rather than crashing (design §4, §5.4)."""
 
     @property
     def dim(self) -> int:
         return 384
 
-    def embed(self, text: str) -> list[float] | None:  # type: ignore[override]
+    def embed(self, text: str) -> list[float] | None:
         return None
