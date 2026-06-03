@@ -14,3 +14,4 @@ build/
 .context-curator/
 .curator.json
 .curator.lock
+results/

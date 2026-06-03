@@ -1,0 +1,8 @@
+{"name": "async-task-queue",
+ "chunks": [
+   {"key": "k_celery_task", "content": "@celery.task def send_email(recipient, subject, body): compose and deliver the email via SMTP"},
+   {"key": "k_queue_config", "content": "configure Celery with Redis as the broker and result backend: CELERY_BROKER_URL = 'redis://localhost:6379/0'"},
+   {"key": "k_jwt_decode", "content": "decode and verify a JWT token using the secret key and check the expiry claim"},
+   {"key": "k_beat_schedule", "content": "schedule a periodic Celery beat task to run every hour using CELERYBEAT_SCHEDULE with a crontab or timedelta interval"}],
+ "prompt": "how do I set up background tasks with Celery and Redis",
+ "gold_keys": ["k_queue_config", "k_celery_task"], "split": "train"}

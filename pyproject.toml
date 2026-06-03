@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-embed = ["fastembed>=0.3"]
+embed = ["fastembed>=0.3", "onnxruntime>=1.17"]
 
 [dependency-groups]
 dev = [

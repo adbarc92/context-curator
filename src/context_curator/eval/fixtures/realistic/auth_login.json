@@ -1,0 +1,8 @@
+{"name": "auth-login",
+ "chunks": [
+   {"key": "k_login", "content": "def login(user, pw): verify the password hash and issue a session token"},
+   {"key": "k_logout", "content": "def logout(session): clear the session cookie and revoke the token"},
+   {"key": "k_csv", "content": "read rows from a CSV file with the python csv module"},
+   {"key": "k_session_new", "content": "the session store keeps active tokens with a sliding expiry"}],
+ "prompt": "how do I authenticate a user and start a session",
+ "gold_keys": ["k_login", "k_session_new"], "split": "train"}

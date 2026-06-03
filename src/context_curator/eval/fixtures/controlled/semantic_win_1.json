@@ -1,0 +1,3 @@
+{"name": "semantic-win-1",
+ "chunks": [{"key": "gold", "content": "A B C D"}, {"key": "distractor", "content": "E F"}],
+ "prompt": "A B C D", "gold_keys": ["gold"], "split": "train"}

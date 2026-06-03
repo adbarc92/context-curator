@@ -29,6 +29,10 @@ class PolicyTarget:
         self._token_budget = token_budget
         self._nd = score_ndigits
 
+    @property
+    def embedder(self):
+        return self._policy.embedder
+
     def decide(self, signal: TaskSignal, store: Store) -> Decision:
         parts = [signal.prompt]
         if signal.recent_tool_calls:                     # subtask_id NOT embedded (opaque ID)
@@ -76,10 +80,15 @@ class RecencyOnlyTarget:
             SelectedChunk(key=c.key, score=None, tokens=estimate_tokens(c.content))
             for c in chunks
         ]
+        candidates = [
+            SelectedChunk(key=c.key, score=None, tokens=estimate_tokens(c.content))
+            for c in store.all_live_chunks()      # full recency pool (newest-first), for nDCG
+        ]
         return Decision(
             turn_index=signal.turn_index,
             subtask_id=signal.subtask_id,
             prompt_preview=signal.prompt[:80],
             selected=selected,
             total_tokens=sum(s.tokens for s in selected),
+            candidates=candidates,
         )
