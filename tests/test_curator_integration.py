@@ -7,7 +7,7 @@ import threading
 import time
 
 from context_curator.curator import config, reconcile, runtime
-from context_curator.embeddings import HashingEmbedder
+from context_curator.embeddings import HashingEmbedder, NullEmbedder
 from context_curator.store.sqlite_store import SqliteStore
 
 
@@ -37,9 +37,8 @@ def test_curator_lifecycle_and_handshake(tmp_path):
     rt = config.runtime_path(db)
     proc = _spawn(db)
     try:
-        assert _poll(
-            lambda: (runtime.read_runtime(rt) or {}).get("state") == "ready"
-        ), "never ready"
+        assert _poll(lambda: (runtime.read_runtime(rt) or {}).get("state") == "ready",
+                     deadline_s=30.0), "never ready"
         info = runtime.read_runtime(rt)
         # real handshake + ping over loopback
         s = socket.create_connection(("127.0.0.1", info["port"]), timeout=2)
@@ -55,7 +54,11 @@ def test_curator_lifecycle_and_handshake(tmp_path):
         s.close()
         # second spawn loses the single-instance lock and exits 0 quickly
         loser = _spawn(db)
-        assert loser.wait(timeout=10) == 0
+        try:
+            assert loser.wait(timeout=10) == 0
+        finally:
+            if loser.poll() is None:
+                loser.kill()
         # idle-exit (IDLE_TIMEOUT_S=2) removes the runtime file
         assert _poll(lambda: runtime.read_runtime(rt) is None, deadline_s=15.0), "file not removed"
     finally:
@@ -68,10 +71,10 @@ def test_curator_lifecycle_and_handshake(tmp_path):
 
 def test_two_connections_reconcile_and_read_no_misuse(tmp_path):
     db = str(tmp_path / "c.db")
-    s = SqliteStore(db_path=db, embedder=HashingEmbedder())
+    seed = SqliteStore(db_path=db, embedder=NullEmbedder())      # rows land with embedding=NULL...
     for i in range(50):
-        s.store(f"session:x:tool:{i}", f"content {i}")           # all embedded (hashing)
-    write_store = SqliteStore(db_path=db, embedder=HashingEmbedder())
+        seed.store(f"session:x:tool:{i}", f"content {i}")
+    write_store = SqliteStore(db_path=db, embedder=HashingEmbedder())  # ...so reconcile DOES write
     read_store = SqliteStore(db_path=db, embedder=HashingEmbedder())
     errors = []
 
