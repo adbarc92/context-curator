@@ -10,8 +10,12 @@
     "SubagentStop": [
       {"hooks": [{"type": "command", "command": "uv run python -m context_curator.hooks.subagent_stop"}]}
     ],
-    "SessionStart": [],
-    "UserPromptSubmit": [],
+    "SessionStart": [
+      {"hooks": [{"type": "command", "command": "uv run python -m context_curator.hooks.session_start"}]}
+    ],
+    "UserPromptSubmit": [
+      {"hooks": [{"type": "command", "command": "uv run python -m context_curator.hooks.user_prompt_submit"}]}
+    ],
     "Stop": []
   }
 }

@@ -111,3 +111,41 @@ def test_similarity_upper_clamped():
     big = _chunk("big", "x", emb=[5.0, 0.0, 0.0])   # non-unit vec; cos with [1,0,0] = 1.0
     ranked = dict((c.key, s) for c, s in p.scored("auth q", [big]))
     assert ranked["big"] <= 1.0
+
+
+def test_scored_with_similarity_exposes_raw_cosine():
+    p = _policy(w_recency=0.0, w_similarity=1.0, sim_floor=0.0)
+    perfect = _chunk("p", "auth", emb=[1.0, 0.0, 0.0])     # cos with "auth" task = 1.0
+    triples = p.scored_with_similarity("auth q", [perfect])
+    _c, _score, cos = triples[0]
+    assert abs(cos - 1.0) < 1e-9
+
+
+def test_scored_with_similarity_zero_cosine_when_no_embedding():
+    # reembed_cap=0 + dim-mismatched stored emb -> emb None -> cos 0.0 (round-2 I4)
+    p = _policy(reembed_cap=0, w_recency=0.0, w_similarity=1.0, sim_floor=0.0)
+    mism = _chunk("m", "auth", emb=[0.1, 0.2])             # wrong dim, over cap -> None
+    _c, _score, cos = p.scored_with_similarity("auth q", [mism])[0]
+    assert cos == 0.0
+
+
+def test_scored_with_similarity_raw_cosine_is_pre_rescale():
+    import math
+    # 60deg from [1,0,0] -> raw cosine 0.5 EXACTLY. Even with sim_floor=0.5 (which rescales
+    # this chunk's similarity to 0), scored_with_similarity must report the RAW 0.5 — that's
+    # the value the onload gate thresholds on, not the rescaled sim.
+    p = _policy(w_recency=0.0, w_similarity=1.0, sim_floor=0.5)
+    at_floor = _chunk("f", "x", emb=[0.5, math.sqrt(0.75), 0.0])
+    _c, score, cos = p.scored_with_similarity("auth q", [at_floor])[0]
+    assert abs(cos - 0.5) < 1e-9        # RAW cosine exposed
+    assert abs(score) < 1e-9            # rescaled sim at the floor is 0 -> score 0
+
+
+def test_scored_delegates_and_threads_query_tags():
+    # round-3 C2: scored() must keep passing query_tags through the delegate, else the
+    # tag term silently zeroes.
+    p = _policy(w_tag=1.0)
+    cands = [_chunk("tagged", "far", tags=["topic"])]
+    with_tags = dict((c.key, s) for c, s in p.scored("far q", cands, query_tags=["topic"]))
+    without = dict((c.key, s) for c, s in p.scored("far q", cands))
+    assert with_tags["tagged"] > without["tagged"]
