@@ -38,10 +38,14 @@ def request_onload(prompt: str, *, k: int, token_budget) -> list[str]:
     if d.state != "ready":
         raise CuratorUnavailable(f"state={d.state}", respawn=d.respawn)
     info = d.info or {}
+    try:                                             # a corrupt 'ready' file (missing/bad port,
+        port, token = int(info["port"]), info["token"]   # token) must fail-open, not raise raw
+    except (KeyError, ValueError, TypeError) as e:
+        raise CuratorUnavailable(f"bad runtime info: {e}", respawn=True) from e
     return request_onload_at(
         "127.0.0.1",
-        int(info["port"]),
-        info["token"],
+        port,
+        token,
         prompt,
         k=k,
         token_budget=token_budget,

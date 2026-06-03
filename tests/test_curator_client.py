@@ -88,3 +88,54 @@ def test_request_onload_warming_raises_unavailable_no_crash(tmp_path, monkeypatc
     monkeypatch.setenv("CC_DB_PATH", db)
     with pytest.raises(client.CuratorUnavailable):
         client.request_onload("p", k=10, token_budget=None)
+
+
+def test_server_ok_false_raises_unavailable():
+    # a server that handshakes correctly but answers {ok: False} -> CuratorUnavailable
+    token = runtime.new_token()
+    s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s2.bind(("127.0.0.1", 0))
+    s2.listen(1)
+    p2 = s2.getsockname()[1]
+
+    def serve():
+        import json
+        conn, _ = s2.accept()
+        f = conn.makefile("rwb")
+        hello = json.loads(f.readline())
+        proof = runtime.make_proof(token, hello["nonce"])
+        f.write((json.dumps({"server": "context-curator", "proof": proof}) + "\n").encode())
+        f.flush()
+        f.readline()
+        f.write((json.dumps({"ok": False}) + "\n").encode())
+        f.flush()
+        conn.close()
+
+    threading.Thread(target=serve, daemon=True).start()
+    with pytest.raises(client.CuratorUnavailable):
+        client.request_onload_at("127.0.0.1", p2, token, "p", k=10, token_budget=None,
+                                 deadline_s=2.0)
+    s2.close()
+
+
+def test_single_deadline_times_out_within_budget():
+    token = runtime.new_token()
+    port, _received, srv = _fake_server(token, delay=0.5)   # server stalls 0.5s between round-trips
+    import time
+    t0 = time.monotonic()
+    with pytest.raises(client.CuratorUnavailable):
+        client.request_onload_at("127.0.0.1", port, token, "p", k=10, token_budget=None,
+                                 deadline_s=0.1)             # budget 0.1s < 0.5s stall
+    assert time.monotonic() - t0 < 0.4                       # one shared deadline, not 2x
+    srv.close()
+
+
+def test_request_onload_corrupt_ready_file_fails_open(tmp_path, monkeypatch):
+    db = str(tmp_path / "s.db")
+    from context_curator.curator import config
+    # state 'ready' but missing port/token -> must raise CuratorUnavailable, not KeyError
+    runtime.write_runtime(config.runtime_path(db),
+                          {"state": "ready", "started_at": "2026-06-02T00:00:00+00:00"})
+    monkeypatch.setenv("CC_DB_PATH", db)
+    with pytest.raises(client.CuratorUnavailable):
+        client.request_onload("p", k=10, token_budget=None)
