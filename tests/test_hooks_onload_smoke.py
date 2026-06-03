@@ -56,7 +56,8 @@ def test_user_prompt_submit_recency_fallback_injects_any_session_chunk(tmp_path)
               "hook_event_name": "UserPromptSubmit"}, env)
     assert r.returncode == 0
     # recency fallback: no cosine gate -> off-topic chunk is injected
-    obj = json.loads(r.stdout)
+    obj = json.loads(r.stdout)                      # parses cleanly => no leading garbage
+    assert r.stdout == json.dumps(obj)              # EXACT bytes: no prefix/suffix/trailing newline
     assert "session:s:tool:c" in obj["hookSpecificOutput"]["additionalContext"]
     assert "recency-fallback" in r.stderr
 

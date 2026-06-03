@@ -74,13 +74,14 @@ def test_ups_curator_up_uses_keys_in_rank_order(tmp_path, monkeypatch):
     from context_curator.hooks import user_prompt_submit as ups
     s = _sqlite(tmp_path)
     s.store("session:x:tool:a", "alpha alpha")
-    s.store("session:x:tool:b", "beta beta")
-    # curator returns b THEN a (its rank) -> block must preserve that order
+    s.store("session:x:tool:b", "beta beta")          # b is NEWER -> all_live_chunks = [b, a]
+    # curator ranks a BEFORE b (the REVERSE of recency) -> the block must follow the curator,
+    # not seq order; a seq-order bug would put b first and fail this.
     monkeypatch.setattr(ups.client, "request_onload",
-                        lambda prompt, *, k, token_budget: ["session:x:tool:b", "session:x:tool:a"])
+                        lambda prompt, *, k, token_budget: ["session:x:tool:a", "session:x:tool:b"])
     r = ups.handle({"prompt": "anything", "hook_event_name": "UserPromptSubmit"}, s)
     ctx = r.additional_context
-    assert ctx.index("session:x:tool:b") < ctx.index("session:x:tool:a")
+    assert ctx.index("session:x:tool:a") < ctx.index("session:x:tool:b")
 
 
 def test_ups_curator_down_falls_back_to_recency_and_spawns(tmp_path, monkeypatch, capsys):
@@ -117,10 +118,11 @@ def test_ups_warming_falls_back_without_spawn(tmp_path, monkeypatch):
     assert spawned.get("yes") is None                            # warming -> NO respawn
 
 
-def test_ups_empty_prompt_no_injection(tmp_path):
+def test_ups_empty_prompt_no_injection(tmp_path, capsys):
     from context_curator.hooks import user_prompt_submit as ups
     s = _sqlite(tmp_path)
     assert ups.handle({"prompt": "   "}, s).additional_context is None
+    assert "empty prompt" in capsys.readouterr().err
 
 
 def test_session_start_seeds_pins_and_conventions(tmp_path):
