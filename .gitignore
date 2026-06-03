@@ -12,3 +12,5 @@ build/
 *-wal
 *-shm
 .context-curator/
+.curator.json
+.curator.lock

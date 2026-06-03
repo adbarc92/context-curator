@@ -1,29 +1,34 @@
-"""UserPromptSubmit onload hook (design §3.5): inject the task-relevant slice of the live
-store. Uniform HashingEmbedder live path (no model load); fail-open; stdout-only inject."""
+"""UserPromptSubmit onload hook (design §6.2): ask the curator for a bge selection; on any
+failure, fall back to in-process recency-only and (unless 'warming') spawn the curator.
+Constructs NO embedder/policy — embedding is the curator's job (round-1 I4)."""
 from __future__ import annotations
 
-from context_curator.embeddings import HashingEmbedder
+from context_curator.curator import client, runtime
 from context_curator.hooks._io import HookResult, log, run_hook
 from context_curator.onload.format import format_block
-from context_curator.onload.select import ONLOAD_K, ONLOAD_TOKEN_BUDGET, onload_select
-from context_curator.policy.relevance import RelevancePolicy
-from context_curator.policy.weights import ONLOAD_COSINE_THRESHOLD, ONLOAD_WEIGHTS
+from context_curator.onload.select import ONLOAD_K, ONLOAD_TOKEN_BUDGET, recency_select
 from context_curator.store.interface import Store
+from context_curator.store.paths import resolve_db_path
 
 _TITLE = "Relevant context from earlier in this project"
 
 
 def handle(event: dict, store: Store) -> HookResult:
     prompt = (event.get("prompt") or "").strip()
-    if not prompt:                                   # whitespace embeds to the zero vector
+    if not prompt:
         log("context-curator: onloaded 0 (empty prompt)")
         return HookResult(0)
-    policy = RelevancePolicy(HashingEmbedder(), ONLOAD_WEIGHTS)   # gate floor == score floor
-    chunks = onload_select(policy, prompt, store.all_live_chunks(),
-                           cos_threshold=ONLOAD_COSINE_THRESHOLD, k=ONLOAD_K,
-                           token_budget=ONLOAD_TOKEN_BUDGET)
-    log(f"context-curator: onloaded {len(chunks)} chunk(s)" if chunks
-        else "context-curator: onloaded 0 (off-topic)")
+    chunks_all = store.all_live_chunks()
+    try:
+        keys = client.request_onload(prompt, k=ONLOAD_K, token_budget=ONLOAD_TOKEN_BUDGET)
+        by_key = {c.key: c for c in chunks_all}
+        chunks = [by_key[k] for k in keys if k in by_key]        # preserve curator RANK order
+        log(f"context-curator: onloaded {len(chunks)} chunk(s) [curator]")
+    except client.CuratorUnavailable as e:
+        if e.respawn:
+            runtime.spawn_detached(resolve_db_path())            # fire-and-forget; skip if warming
+        chunks = recency_select(chunks_all, k=ONLOAD_K, token_budget=ONLOAD_TOKEN_BUDGET)
+        log(f"context-curator: onloaded {len(chunks)} chunk(s) [recency-fallback]")
     block = format_block(chunks, title=_TITLE)
     # format_block returns "" for no chunks; "" or None -> None suppresses the inject entirely
     return HookResult(0, additional_context=block or None)

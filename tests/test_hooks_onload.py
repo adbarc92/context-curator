@@ -70,58 +70,57 @@ def _sqlite(tmp_path):
     return SqliteStore(db_path=str(tmp_path / "o.db"), embedder=HashingEmbedder())
 
 
-def test_ups_relevant_chunk_named_in_block(tmp_path):
+def test_ups_curator_up_uses_keys_in_rank_order(tmp_path, monkeypatch):
     from context_curator.hooks import user_prompt_submit as ups
     s = _sqlite(tmp_path)
-    s.store("session:x:tool:c1", "authenticate authorize user session token")
-    r = ups.handle({"prompt": "authenticate authorize user session",
-                    "hook_event_name": "UserPromptSubmit"}, s)
-    assert r.additional_context is not None
-    assert "session:x:tool:c1" in r.additional_context
+    s.store("session:x:tool:a", "alpha alpha")
+    s.store("session:x:tool:b", "beta beta")
+    # curator returns b THEN a (its rank) -> block must preserve that order
+    monkeypatch.setattr(ups.client, "request_onload",
+                        lambda prompt, *, k, token_budget: ["session:x:tool:b", "session:x:tool:a"])
+    r = ups.handle({"prompt": "anything", "hook_event_name": "UserPromptSubmit"}, s)
+    ctx = r.additional_context
+    assert ctx.index("session:x:tool:b") < ctx.index("session:x:tool:a")
 
 
-def test_ups_offtopic_prompt_no_injection(tmp_path):
+def test_ups_curator_down_falls_back_to_recency_and_spawns(tmp_path, monkeypatch, capsys):
+    from context_curator.curator.client import CuratorUnavailable
     from context_curator.hooks import user_prompt_submit as ups
     s = _sqlite(tmp_path)
-    s.store("session:x:tool:c1", "quarterly financial revenue spreadsheet")
-    r = ups.handle({"prompt": "authenticate authorize user session"}, s)
-    assert r.additional_context is None
+    s.store("session:x:tool:a", "alpha")
+
+    def boom(prompt, *, k, token_budget):
+        raise CuratorUnavailable("down", respawn=True)
+
+    spawned = {}
+    monkeypatch.setattr(ups.client, "request_onload", boom)
+    monkeypatch.setattr(ups.runtime, "spawn_detached", lambda db: spawned.setdefault("yes", True))
+    r = ups.handle({"prompt": "anything"}, s)
+    assert "session:x:tool:a" in (r.additional_context or "")    # recency fallback injected
+    assert spawned.get("yes") is True
+    assert "recency-fallback" in capsys.readouterr().err
 
 
-def test_ups_whitespace_prompt_no_injection_and_breadcrumb(tmp_path, capsys):
+def test_ups_warming_falls_back_without_spawn(tmp_path, monkeypatch):
+    from context_curator.curator.client import CuratorUnavailable
     from context_curator.hooks import user_prompt_submit as ups
     s = _sqlite(tmp_path)
-    r = ups.handle({"prompt": "   "}, s)
-    assert r.additional_context is None
-    assert "empty prompt" in capsys.readouterr().err
+    s.store("session:x:tool:a", "alpha")
+
+    def warming(prompt, *, k, token_budget):
+        raise CuratorUnavailable("warming", respawn=False)
+
+    spawned = {}
+    monkeypatch.setattr(ups.client, "request_onload", warming)
+    monkeypatch.setattr(ups.runtime, "spawn_detached", lambda db: spawned.setdefault("yes", True))
+    ups.handle({"prompt": "anything"}, s)
+    assert spawned.get("yes") is None                            # warming -> NO respawn
 
 
-def test_ups_pins_and_conventions_excluded(tmp_path):
+def test_ups_empty_prompt_no_injection(tmp_path):
     from context_curator.hooks import user_prompt_submit as ups
     s = _sqlite(tmp_path)
-    s.store("pinnedkey", "authenticate authorize user session", pin=True)
-    s.store("proj:myapp:conventions", "authenticate authorize user session")
-    s.store("session:x:tool:c1", "authenticate authorize user session")
-    r = ups.handle({"prompt": "authenticate authorize user session"}, s)
-    ctx = r.additional_context or ""
-    assert "session:x:tool:c1" in ctx
-    assert "pinnedkey" not in ctx and "proj:myapp:conventions" not in ctx
-
-
-def test_ups_breadcrumb_reports_count(tmp_path, capsys):
-    from context_curator.hooks import user_prompt_submit as ups
-    s = _sqlite(tmp_path)
-    s.store("session:x:tool:c1", "authenticate authorize user session")
-    ups.handle({"prompt": "authenticate authorize user session"}, s)
-    assert "onloaded 1 chunk" in capsys.readouterr().err
-
-
-def test_ups_empty_store_no_injection(tmp_path):
-    from context_curator.hooks import user_prompt_submit as ups
-    s = _sqlite(tmp_path)
-    r = ups.handle({"prompt": "authenticate authorize user session",
-                    "hook_event_name": "UserPromptSubmit"}, s)
-    assert r.additional_context is None
+    assert ups.handle({"prompt": "   "}, s).additional_context is None
 
 
 def test_session_start_seeds_pins_and_conventions(tmp_path):
