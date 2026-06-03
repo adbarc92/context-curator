@@ -12,3 +12,4 @@ build/
 *-wal
 *-shm
 .context-curator/
+results/

@@ -1,0 +1,8 @@
+{"name": "feature-flags",
+ "chunks": [
+   {"key": "k_flag_check", "content": "check if a feature flag is enabled for a user: flag_service.is_enabled('new_checkout', user_id=user.id) returns True if the user is in the rollout group"},
+   {"key": "k_gradual_rollout", "content": "gradually roll out a feature by hashing the user_id modulo 100 and enabling for users below the rollout_percentage threshold"},
+   {"key": "k_graphql_resolver", "content": "define a GraphQL resolver for a field: @strawberry.field def user(self, info, id: int) -> User: return db.get_user(id)"},
+   {"key": "k_flag_override", "content": "allow staff users to force-enable any flag via a request header X-Feature-Override for testing in production without affecting real users"}],
+ "prompt": "how do I implement feature flags with gradual rollout",
+ "gold_keys": ["k_flag_check", "k_gradual_rollout"], "split": "test"}

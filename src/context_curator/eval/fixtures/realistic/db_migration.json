@@ -1,0 +1,8 @@
+{"name": "db-migration",
+ "chunks": [
+   {"key": "k_schema_v1", "content": "CREATE TABLE users (id SERIAL PRIMARY KEY, email TEXT NOT NULL, created_at TIMESTAMP)"},
+   {"key": "k_index_email", "content": "CREATE UNIQUE INDEX idx_users_email ON users(email)"},
+   {"key": "k_cache_evict", "content": "evict stale entries from the in-memory LRU cache when TTL expires"},
+   {"key": "k_migration_runner", "content": "apply pending migrations in order by reading migration files from the migrations/ directory and tracking applied versions in schema_migrations table"}],
+ "prompt": "how do I run database migrations and track schema versions",
+ "gold_keys": ["k_migration_runner", "k_schema_v1"], "split": "train"}

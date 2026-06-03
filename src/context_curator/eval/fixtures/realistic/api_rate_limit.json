@@ -1,0 +1,8 @@
+{"name": "api-rate-limit",
+ "chunks": [
+   {"key": "k_route_handler", "content": "async def get_user(user_id: int) -> UserResponse: fetch user by id from the database"},
+   {"key": "k_rate_limiter", "content": "implement token bucket rate limiting: each client gets N tokens per second, deducted on each request, with a burst cap"},
+   {"key": "k_retry_logic", "content": "retry failed requests with exponential backoff and jitter up to a maximum of 3 attempts"},
+   {"key": "k_middleware", "content": "add rate limit headers X-RateLimit-Remaining and X-RateLimit-Reset to every HTTP response"}],
+ "prompt": "how do I add rate limiting to my API endpoints",
+ "gold_keys": ["k_rate_limiter", "k_middleware"], "split": "train"}

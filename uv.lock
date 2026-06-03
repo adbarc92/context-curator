@@ -249,6 +249,7 @@ dependencies = [
 [package.optional-dependencies]
 embed = [
     { name = "fastembed" },
+    { name = "onnxruntime" },
 ]
 
 [package.dev-dependencies]
@@ -261,6 +262,7 @@ dev = [
 requires-dist = [
     { name = "fastembed", marker = "extra == 'embed'", specifier = ">=0.3" },
     { name = "mcp", specifier = ">=1.2" },
+    { name = "onnxruntime", marker = "extra == 'embed'", specifier = ">=1.17" },
     { name = "pydantic", specifier = ">=2.6" },
 ]
 provides-extras = ["embed"]
