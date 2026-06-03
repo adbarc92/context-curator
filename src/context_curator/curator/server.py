@@ -6,6 +6,7 @@ import json
 import os
 import socket
 import threading
+import traceback
 
 from context_curator.curator import config, reconcile, runtime
 from context_curator.curator.handler import handle_onload
@@ -14,7 +15,7 @@ from context_curator.models import utcnow_iso
 from context_curator.store.sqlite_store import SqliteStore
 
 
-def _make_embedder() -> Embedder:
+def make_embedder() -> Embedder:
     return HashingEmbedder() if config.CURATOR_EMBEDDER == "hashing" else FastEmbedEmbedder()
 
 
@@ -47,7 +48,10 @@ def serve_connection(conn: socket.socket, token: str, read_store, embedder: Embe
         f.write((json.dumps(resp) + "\n").encode())
         f.flush()
     except (OSError, ValueError):
-        pass
+        pass                                        # client bailed / malformed JSON -> drop conn
+    except Exception:                               # a handler bug must NOT kill the accept loop
+        if config.CURATOR_DEBUG:
+            traceback.print_exc()
     finally:
         try:
             conn.close()
@@ -66,14 +70,17 @@ def run(db_path: str) -> int:
     port = srv.getsockname()[1]
     token = runtime.new_token()
     started = utcnow_iso()
+    embedder = make_embedder()                        # cheap: model load is lazy (.dim known now)
     warming_state = "warming" if config.CURATOR_EMBEDDER == "hashing" else "provisioning"
     base = {"pid": os.getpid(), "port": port, "token": token,
-            "dim": config.BGE_DIM, "started_at": started, "embedder": config.CURATOR_EMBEDDER}
+            "dim": embedder.dim, "started_at": started, "embedder": config.CURATOR_EMBEDDER}
     runtime.write_runtime(rt, {"state": warming_state, **base})   # discoverable BEFORE load
     try:
-        embedder = _make_embedder()
-        embedder.embed("warmup")                 # force model load now (download if needed)
+        embedder.embed("warmup")                      # force model load now (download if needed)
     except Exception:
+        if config.CURATOR_DEBUG:                      # a persistent load failure must be visible
+            traceback.print_exc()
+        srv.close()                                       # C2: don't leak the bound socket/port
         runtime.remove_runtime(rt)                        # crash-cleanup: no frozen warming file
         runtime.release_lock(lock)
         return 1
