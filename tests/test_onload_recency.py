@@ -7,10 +7,13 @@ def _c(key, content, *, pin=False):
     return Chunk(key=key, content=content, pin=pin)        # newest-first = list order
 
 
+def _fail_embedder(self, *a, **k):
+    raise AssertionError("embedder built")
+
+
 def test_recency_newest_first_excludes_pins_and_conventions(monkeypatch):
     # guard: recency_select must construct NO embedder
-    monkeypatch.setattr(emb_mod.HashingEmbedder, "__init__",
-                        lambda self, *a, **k: (_ for _ in ()).throw(AssertionError("embedder built")))
+    monkeypatch.setattr(emb_mod.HashingEmbedder, "__init__", _fail_embedder)
     cands = [_c("session:x:tool:c2", "newer"),
              _c("pinnedkey", "p", pin=True),
              _c("proj:app:conventions", "conv"),
