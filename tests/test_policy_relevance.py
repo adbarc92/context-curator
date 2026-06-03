@@ -152,10 +152,14 @@ def test_scored_delegates_and_threads_query_tags():
 
 
 def test_scored_with_similarity_recency_only_when_task_emb_none():
+    # round-1 I5: a None task embedding (NullEmbedder) must degrade to recency, NOT crash in
+    # _cosine. Use 384-dim candidate embeddings so the candidate side does NOT short-circuit —
+    # this forces the code to the task-side guard (without it, _cosine(None, emb) -> TypeError).
     from context_curator.embeddings import NullEmbedder
-    p = RelevancePolicy(NullEmbedder())                       # embed() -> None
-    cands = [_chunk("new", "auth"), _chunk("old", "far")]     # any embeddings
-    triples = p.scored_with_similarity("auth q", cands)       # must NOT raise
+    p = RelevancePolicy(NullEmbedder())                       # embed() -> None, dim 384
+    cands = [_chunk("new", "x", emb=[0.1] * 384),
+             _chunk("old", "x", emb=[0.2] * 384)]             # 384-dim -> no reembed short-circuit
+    triples = p.scored_with_similarity("auth q", cands)       # must NOT raise (guard catches None)
     by_key = {c.key: (s, cos) for c, s, cos in triples}
-    assert by_key["new"][1] == 0.0 and by_key["old"][1] == 0.0   # cos 0 for all
-    assert by_key["new"][0] > by_key["old"][0]                # newer outranks (recency only)
+    assert by_key["new"][1] == 0.0 and by_key["old"][1] == 0.0   # cos 0 for all (recency only)
+    assert by_key["new"][0] > by_key["old"][0]                # newer outranks
