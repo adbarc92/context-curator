@@ -1,0 +1,8 @@
+{"name": "logging-observability",
+ "chunks": [
+   {"key": "k_structured_log", "content": "emit structured JSON logs with correlation_id, level, timestamp, and message fields using structlog or python-json-logger"},
+   {"key": "k_trace_context", "content": "propagate the OpenTelemetry trace context via W3C traceparent header through upstream and downstream HTTP calls"},
+   {"key": "k_orm_query", "content": "query related objects with SQLAlchemy: session.query(User).options(joinedload(User.orders)).filter(User.active == True).all()"},
+   {"key": "k_log_sampling", "content": "sample high-volume debug logs at 1% to reduce storage cost while preserving all error-level events"}],
+ "prompt": "how do I add structured logging with trace context propagation",
+ "gold_keys": ["k_structured_log", "k_trace_context"], "split": "train"}

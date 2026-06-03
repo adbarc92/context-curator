@@ -1,0 +1,8 @@
+{"name": "webhook-handler",
+ "chunks": [
+   {"key": "k_signature_verify", "content": "verify a webhook signature by computing HMAC-SHA256 of the raw request body with the shared secret and comparing it to the X-Hub-Signature-256 header"},
+   {"key": "k_idempotency", "content": "make webhook processing idempotent by storing the event_id in a delivered_events table and skipping duplicates"},
+   {"key": "k_docker_build", "content": "build a Docker image with a multi-stage build: a build stage compiles assets, a runtime stage copies only the built artifacts"},
+   {"key": "k_async_processing", "content": "enqueue the webhook payload to a task queue immediately and return HTTP 200 to the sender, then process asynchronously to avoid timeouts"}],
+ "prompt": "how do I securely handle incoming webhooks from third-party services",
+ "gold_keys": ["k_signature_verify", "k_idempotency"], "split": "test"}

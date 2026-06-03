@@ -27,6 +27,10 @@ class RelevancePolicy:
         self._embedder = embedder
         self._w = weights
 
+    @property
+    def embedder(self) -> Embedder:           # M3b: eval/RecencyOnlyTarget read this
+        return self._embedder
+
     def scored_with_similarity(
         self, task_text: str, candidates: list[Chunk], query_tags: list[str] | None = None
     ) -> list[tuple[Chunk, float, float]]:
