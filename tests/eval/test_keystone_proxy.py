@@ -54,3 +54,15 @@ def test_run_keystone_smoke_with_bge():
     from context_curator.eval.keystone import run_keystone
     rpt = run_keystone(str(Path(e.__file__).parent / "fixtures" / "realistic"), emb)
     assert rpt.n_test >= 1 and isinstance(rpt.verdict, str)
+
+
+def test_keystone_scores_three_arms_and_no_legacy_n30():
+    import inspect
+    from dataclasses import fields
+
+    from context_curator.eval import keystone
+
+    src = inspect.getsource(keystone)
+    assert "n>=~30" not in src and "n≥~30" not in src
+    names = {f.name for f in fields(keystone.KeystoneReport)}
+    assert "arm_bm25" in names
