@@ -59,7 +59,7 @@ def test_user_prompt_submit_recency_fallback_injects_any_session_chunk(tmp_path)
     obj = json.loads(r.stdout)                      # parses cleanly => no leading garbage
     assert r.stdout == json.dumps(obj)              # EXACT bytes: no prefix/suffix/trailing newline
     assert "session:s:tool:c" in obj["hookSpecificOutput"]["additionalContext"]
-    assert "recency-fallback" in r.stderr
+    assert "[recency]" in r.stderr
 
 
 def test_session_start_stdout_is_exactly_inject_json(tmp_path):

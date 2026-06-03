@@ -99,7 +99,7 @@ def test_ups_curator_down_falls_back_to_recency_and_spawns(tmp_path, monkeypatch
     r = ups.handle({"prompt": "anything"}, s)
     assert "session:x:tool:a" in (r.additional_context or "")    # recency fallback injected
     assert spawned.get("yes") is True
-    assert "recency-fallback" in capsys.readouterr().err
+    assert "[recency]" in capsys.readouterr().err
 
 
 def test_ups_warming_falls_back_without_spawn(tmp_path, monkeypatch):
@@ -163,3 +163,14 @@ def test_session_start_ignores_source(tmp_path, source):
     r = ss.handle({"hook_event_name": "SessionStart", "source": source}, s)
     assert r.additional_context is not None
     assert "pinnedkey" in r.additional_context
+
+
+def test_ups_curator_returns_empty_falls_back_to_recency(tmp_path, monkeypatch):
+    # the DARK DEFAULT: a warm curator with the flag off returns {keys:[]} (no exception);
+    # the hook must inject the recency floor, NOT nothing (final-review C1)
+    from context_curator.hooks import user_prompt_submit as ups
+    s = _sqlite(tmp_path)
+    s.store("session:x:tool:a", "alpha")
+    monkeypatch.setattr(ups.client, "request_onload", lambda prompt, *, k, token_budget: [])
+    r = ups.handle({"prompt": "anything", "hook_event_name": "UserPromptSubmit"}, s)
+    assert "session:x:tool:a" in (r.additional_context or "")    # recency floor injected

@@ -21,14 +21,21 @@ def handle(event: dict, store: Store) -> HookResult:
     chunks_all = store.all_live_chunks()
     try:
         keys = client.request_onload(prompt, k=ONLOAD_K, token_budget=ONLOAD_TOKEN_BUDGET)
-        by_key = {c.key: c for c in chunks_all}
-        chunks = [by_key[k] for k in keys if k in by_key]        # preserve curator RANK order
-        log(f"context-curator: onloaded {len(chunks)} chunk(s) [curator]")
     except client.CuratorUnavailable as e:
         if e.respawn:
             runtime.spawn_detached(resolve_db_path())            # fire-and-forget; skip if warming
+        keys = []                                                # -> recency floor below
+    if keys:
+        by_key = {c.key: c for c in chunks_all}
+        chunks = [by_key[k] for k in keys if k in by_key]        # preserve curator RANK order
+        log(f"context-curator: onloaded {len(chunks)} chunk(s) [curator]")
+    else:
+        # No keys: curator down/warming, OR the dark default (flag off) returns [], OR a genuinely
+        # empty selection. In ALL these the always-fast recency floor applies (spec §8: dark default
+        # = recency). NOTE for M3b: once CC_CURATOR_ONLOAD is on, a genuinely-empty SEMANTIC result
+        # also lands here -> recency; revisit then if flag-on-empty should instead inject nothing.
         chunks = recency_select(chunks_all, k=ONLOAD_K, token_budget=ONLOAD_TOKEN_BUDGET)
-        log(f"context-curator: onloaded {len(chunks)} chunk(s) [recency-fallback]")
+        log(f"context-curator: onloaded {len(chunks)} chunk(s) [recency]")
     block = format_block(chunks, title=_TITLE)
     # format_block returns "" for no chunks; "" or None -> None suppresses the inject entirely
     return HookResult(0, additional_context=block or None)
