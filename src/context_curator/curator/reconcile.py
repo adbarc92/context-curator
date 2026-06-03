@@ -3,7 +3,11 @@ transaction; touches ONLY `embedding` (never seq/created_at/expires_at). Subsume
 from __future__ import annotations
 
 import json
+import sqlite3
+import threading
+import traceback
 
+from context_curator.curator.config import CURATOR_DEBUG
 from context_curator.embeddings import Embedder
 from context_curator.store.sqlite_store import SqliteStore
 
@@ -57,19 +61,17 @@ def reconcile_once(store: SqliteStore, embedder: Embedder, *, batch: int) -> int
     return sum(1 for _, v in vecs if v is not None)
 
 
-def reconcile_loop(
-    store: SqliteStore,
-    embedder: Embedder,
-    *,
-    batch: int,
-    interval_s: float,
-    stop,
-) -> None:
-    """Runs on the curator's reconcile thread until `stop` (threading.Event) is set. Backs off on
-    transient SQLITE_BUSY rather than letting capture eat the busy_timeout (round-2 C4b)."""
+def reconcile_loop(store: SqliteStore, embedder: Embedder, *, batch: int, interval_s: float,
+                   stop: threading.Event) -> None:
+    """Runs on the curator's reconcile thread until `stop` is set. Backs off on transient
+    SQLITE_BUSY rather than letting capture eat the busy_timeout (round-2 C4b); unexpected errors
+    are surfaced under CC_CURATOR_DEBUG instead of being swallowed forever."""
     while not stop.is_set():
         try:
             reconcile_once(store, embedder, batch=batch)
-        except Exception:                               # incl. transient busy -> retry next tick
+        except sqlite3.OperationalError:                # transient busy/locked -> retry next tick
             pass
+        except Exception:                               # unexpected -> don't die, but make visible
+            if CURATOR_DEBUG:
+                traceback.print_exc()
         stop.wait(interval_s)

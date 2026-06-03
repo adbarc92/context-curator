@@ -47,3 +47,19 @@ def test_one_time_wrong_dim_migration(tmp_path):
     assert migrated == 1                               # NULLed the 256-dim row
     assert s.retrieve("session:x:tool:old").embedding is None
     assert reconcile.migrate_wrong_dim_once(s, dim=3) == 0     # flag set -> no-op second run
+
+
+def test_reconcile_once_returns_zero_when_all_embedded(tmp_path):
+    s = SqliteStore(db_path=str(tmp_path / "r.db"), embedder=NullEmbedder())
+    s.store("session:x:tool:a", "alpha")
+    reconcile.reconcile_once(s, _Emb(), batch=16)                  # fills the NULL
+    assert reconcile.reconcile_once(s, _Emb(), batch=16) == 0      # steady state: nothing to do
+
+
+def test_reconcile_respects_batch_bound(tmp_path):
+    s = SqliteStore(db_path=str(tmp_path / "r.db"), embedder=NullEmbedder())
+    s.store("session:x:tool:a", "alpha")
+    s.store("session:x:tool:b", "beta")                           # 2 NULL rows
+    assert reconcile.reconcile_once(s, _Emb(), batch=1) == 1      # only 1 per tick (LIMIT)
+    assert reconcile.reconcile_once(s, _Emb(), batch=1) == 1      # the second on the next tick
+    assert reconcile.reconcile_once(s, _Emb(), batch=1) == 0      # now all embedded
