@@ -91,8 +91,8 @@ class SqliteStore(Store):
               ttl_s: int | None = 86400, pin: bool = False,
               source: str = "tool:read", provenance: str | None = None) -> str:
         created_at = utcnow_iso()
-        # Embed BEFORE the transaction so the write lock is not held during embedding
-        # (round-3 fix; matters once the M3 embedder replaces the cheap HashingEmbedder).
+        # Embed BEFORE the transaction so the write lock is not held during embedding. With the
+        # NullEmbedder capture path this returns None (-> SQL NULL); the curator backfills bge.
         embedding = self._embedder.embed(content)
         chunk = Chunk(
             key=key, content=content, tags=list(tags or []), ttl_s=ttl_s, pin=pin,
@@ -113,7 +113,8 @@ class SqliteStore(Store):
                      expires_at=excluded.expires_at, seq=excluded.seq""",
                 (
                     key, content, json.dumps(chunk.tags), source, created_at, None,
-                    1 if pin else 0, ttl_s, provenance, json.dumps(chunk.embedding),
+                    1 if pin else 0, ttl_s, provenance,
+                    json.dumps(chunk.embedding) if chunk.embedding is not None else None,
                     _compute_expires_at(created_at, ttl_s, pin),
                 ),
             )

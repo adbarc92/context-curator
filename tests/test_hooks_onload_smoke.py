@@ -44,7 +44,9 @@ def test_user_prompt_submit_stdout_is_exactly_inject_json(tmp_path):
     assert "context-curator: onloaded" in r.stderr
 
 
-def test_user_prompt_submit_offtopic_stdout_empty(tmp_path):
+def test_user_prompt_submit_recency_fallback_injects_any_session_chunk(tmp_path):
+    # M4b: curator is unavailable in subprocess (no running curator) -> recency fallback runs.
+    # Recency-only has no cosine gate, so off-topic session chunks are injected regardless.
     db = str(tmp_path / "s.db")
     env = {**os.environ, "CC_DB_PATH": db}
     SqliteStore(db_path=db, embedder=HashingEmbedder()).store(
@@ -53,9 +55,11 @@ def test_user_prompt_submit_offtopic_stdout_empty(tmp_path):
              {"prompt": "authenticate authorize user session",
               "hook_event_name": "UserPromptSubmit"}, env)
     assert r.returncode == 0
-    # HashingEmbedder: "quarterly financial revenue spreadsheet" shares no tokens with the
-    # prompt -> cosine 0.0 -> below the 0.15 gate -> nothing selected -> empty stdout.
-    assert r.stdout == ""                            # no injection => empty stdout
+    # recency fallback: no cosine gate -> off-topic chunk is injected
+    obj = json.loads(r.stdout)                      # parses cleanly => no leading garbage
+    assert r.stdout == json.dumps(obj)              # EXACT bytes: no prefix/suffix/trailing newline
+    assert "session:s:tool:c" in obj["hookSpecificOutput"]["additionalContext"]
+    assert "[recency]" in r.stderr
 
 
 def test_session_start_stdout_is_exactly_inject_json(tmp_path):

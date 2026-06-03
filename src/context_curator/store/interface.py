@@ -19,7 +19,8 @@ class Store(ABC):
         source: str = "tool:read",
         provenance: str | None = None,
     ) -> str:
-        """Write/offload a chunk. Computes and stores its embedding. Returns the key."""
+        """Write/offload a chunk. Stores the embedder's vector, or NULL when the embedder
+        produces None (NullEmbedder — backfilled later). Returns the key."""
 
     @abstractmethod
     def retrieve(self, key: str) -> Chunk | None:

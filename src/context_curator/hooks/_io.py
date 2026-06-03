@@ -8,7 +8,7 @@ import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from context_curator.embeddings import HashingEmbedder
+from context_curator.embeddings import NullEmbedder
 from context_curator.store.interface import Store
 from context_curator.store.paths import resolve_db_path
 from context_curator.store.sqlite_store import SqliteStore, sweep_expired
@@ -35,7 +35,7 @@ def read_event() -> dict:
 
 
 def open_store() -> Store:
-    store = SqliteStore(db_path=resolve_db_path(), embedder=HashingEmbedder())
+    store = SqliteStore(db_path=resolve_db_path(), embedder=NullEmbedder())
     log(f"context-curator: capture DB = {resolve_db_path()}")
     try:
         sweep_expired(store)
