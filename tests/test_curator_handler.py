@@ -52,3 +52,20 @@ def test_on_demand_embeds_null_chunk_in_memory_without_writing(tmp_path, monkeyp
     assert "session:x:tool:fresh" in keys               # embedded on-demand IN MEMORY -> selected
     # handler wrote NOTHING (round-3 C-1)
     assert s.retrieve("session:x:tool:fresh").embedding is None
+
+
+def test_on_demand_cap_bounds_embeds(tmp_path, monkeypatch):
+    monkeypatch.setattr(handler.config, "CURATOR_ONLOAD_ENABLED", True)
+    monkeypatch.setattr(handler.config, "ONDEMAND_EMBED_CAP", 2)
+    embed_calls = []
+
+    class CountingEmb(_Emb):
+        def embed(self, text):
+            embed_calls.append(text)
+            return super().embed(text)
+
+    s = SqliteStore(db_path=str(tmp_path / "h.db"), embedder=NullEmbedder())
+    for i in range(5):
+        s.store(f"session:x:tool:c{i}", "auth content")        # 5 NULL chunks
+    handler.handle_onload(s, CountingEmb(), {"prompt": "auth q", "k": 10, "token_budget": None})
+    assert len(embed_calls) == 1 + 2     # 1 prompt embed + 2 on-demand (cap), not all 5
