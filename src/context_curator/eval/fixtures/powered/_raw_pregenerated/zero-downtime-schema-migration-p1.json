@@ -1,0 +1,23 @@
+{
+  "name": "zero-downtime-schema-migration-p1",
+  "prompt": "how can I add a NOT NULL column to a big table without locking it and taking the app down",
+  "chunks": [
+    {"key": "k_standup_note", "content": "standup: blocked on the staging seed data, will pair with Sam after lunch to unstick it", "tags": []},
+    {"key": "k_expand_contract", "content": "we will roll this out in two passes: first add the column as nullable with a default backfilled in batches, then flip it to required once every row is populated", "tags": []},
+    {"key": "k_batched_backfill", "content": "the backfill walks the table 5000 rows at a time inside short transactions so we never hold a long write lock on the whole relation", "tags": []},
+    {"key": "k_unique_constraint_decoy", "content": "adding the unique constraint on email rejected three duplicate accounts that had snuck in before validation existed", "tags": ["hard_neg"]},
+    {"key": "k_concurrent_index", "content": "create the supporting index CONCURRENTLY so readers and writers keep working while it builds in the background", "tags": []},
+    {"key": "k_orm_model", "content": "updated the ORM model to expose the new field, but kept it optional in code until the data is fully migrated", "tags": []},
+    {"key": "k_table_dropped_decoy", "content": "the old audit table was finally dropped after we confirmed nothing reads from it anymore, freeing a lot of disk", "tags": ["hard_neg"]},
+    {"key": "k_cache_invalidation", "content": "product cache entries are busted whenever a price write lands so customers never see a stale amount", "tags": []},
+    {"key": "k_s3_lifecycle", "content": "set a 90-day lifecycle rule to move old export files to cold storage automatically", "tags": []},
+    {"key": "k_grafana_panel", "content": "added a Grafana panel tracking p99 query time on the orders table", "tags": []},
+    {"key": "k_signup_email", "content": "new signups get a verification email with a 24-hour token before the account activates", "tags": []},
+    {"key": "k_retry_webhook", "content": "failed webhook deliveries retry three times with increasing delay before going to a dead letter queue", "tags": []},
+    {"key": "k_i18n_strings", "content": "extracted the remaining hardcoded UI strings into the translation catalog for the German launch", "tags": []},
+    {"key": "k_lint_ci", "content": "the CI now fails the build if ruff reports any unfixed lint errors", "tags": []}
+  ],
+  "gold_keys": ["k_expand_contract", "k_batched_backfill", "k_concurrent_index"],
+  "split": "train",
+  "recent_tools": []
+}

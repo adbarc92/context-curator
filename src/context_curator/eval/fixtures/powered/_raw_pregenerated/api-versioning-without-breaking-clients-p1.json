@@ -1,0 +1,23 @@
+{
+  "name": "api-versioning-without-breaking-clients-p1",
+  "prompt": "how do I evolve our public API without breaking the apps already calling the old endpoints",
+  "chunks": [
+    {"key": "k_grid_layout", "content": "the docs site got a two-column layout so navigation stays visible while scrolling", "tags": []},
+    {"key": "k_db_index", "content": "added a partial index on active subscriptions to speed the renewal sweep", "tags": []},
+    {"key": "k_db_schema_version_decoy", "content": "the migration tool stamps a schema version row so it knows which up-scripts still need to run against the database", "tags": ["hard_neg"]},
+    {"key": "k_email_bounce", "content": "hard email bounces now mark the address undeliverable so we stop retrying them", "tags": []},
+    {"key": "k_app_update_decoy", "content": "we force users on app builds older than six months to update before they can log in, since those old clients miss critical security fixes", "tags": ["hard_neg"]},
+    {"key": "k_rate_limit", "content": "per-key rate limits return a Retry-After header when a caller is throttled", "tags": []},
+    {"key": "k_search_typeahead", "content": "the search box debounces input and shows typeahead suggestions after two characters", "tags": []},
+    {"key": "k_csv_streaming", "content": "large CSV exports stream chunked so the browser starts downloading immediately", "tags": []},
+    {"key": "k_oauth_refresh", "content": "third-party tokens refresh silently in the background before they expire", "tags": []},
+    {"key": "k_feature_flag", "content": "the redesigned billing page is behind a flag for internal users only", "tags": []},
+    {"key": "k_additive_only", "content": "within a version we only make additive changes: new optional fields and new endpoints are fine, but we never remove a field or change its meaning so existing callers keep working untouched", "tags": []},
+    {"key": "k_version_negotiation", "content": "clients pin a version through the URL prefix or an Accept header, and an unspecified request defaults to the oldest supported contract so old integrations are never silently upgraded", "tags": []},
+    {"key": "k_deprecation_window", "content": "a retiring version keeps running for a published sunset window while we emit a Deprecation header and email the affected API keys, giving old apps time to migrate before anything is removed", "tags": []},
+    {"key": "k_request_logging", "content": "each API call logs its version and key so we can see who is still on the old contract", "tags": []}
+  ],
+  "gold_keys": ["k_additive_only", "k_version_negotiation", "k_deprecation_window"],
+  "split": "train",
+  "recent_tools": []
+}
