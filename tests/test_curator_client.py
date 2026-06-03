@@ -16,23 +16,23 @@ def _fake_server(token, *, good_proof=True, then_keys=None, delay=0.0):
     def serve():
         import json
         import time
-        conn, _ = srv.accept()
-        f = conn.makefile("rwb")
-        hello = json.loads(f.readline())
-        received["hello_has_prompt"] = "prompt" in hello
-        if delay:
-            time.sleep(delay)
-        proof = runtime.make_proof(token, hello["nonce"]) if good_proof else "bad"
-        f.write((json.dumps({"server": "context-curator", "proof": proof}) + "\n").encode())
-        f.flush()
-        try:
+        try:                                       # the client may bail early (timeout/bad proof);
+            conn, _ = srv.accept()                 # swallow the resulting socket errors so the
+            f = conn.makefile("rwb")               # daemon thread exits cleanly (no noisy warning)
+            hello = json.loads(f.readline())
+            received["hello_has_prompt"] = "prompt" in hello
+            if delay:
+                time.sleep(delay)
+            proof = runtime.make_proof(token, hello["nonce"]) if good_proof else "bad"
+            f.write((json.dumps({"server": "context-curator", "proof": proof}) + "\n").encode())
+            f.flush()
             line = f.readline()
             received["sent_prompt"] = bool(line) and "prompt" in json.loads(line)
-        except Exception:
-            received["sent_prompt"] = False
-        f.write((json.dumps({"ok": True, "keys": then_keys or []}) + "\n").encode())
-        f.flush()
-        conn.close()
+            f.write((json.dumps({"ok": True, "keys": then_keys or []}) + "\n").encode())
+            f.flush()
+            conn.close()
+        except OSError:
+            pass
 
     t = threading.Thread(target=serve, daemon=True)
     t.start()
@@ -100,16 +100,19 @@ def test_server_ok_false_raises_unavailable():
 
     def serve():
         import json
-        conn, _ = s2.accept()
-        f = conn.makefile("rwb")
-        hello = json.loads(f.readline())
-        proof = runtime.make_proof(token, hello["nonce"])
-        f.write((json.dumps({"server": "context-curator", "proof": proof}) + "\n").encode())
-        f.flush()
-        f.readline()
-        f.write((json.dumps({"ok": False}) + "\n").encode())
-        f.flush()
-        conn.close()
+        try:
+            conn, _ = s2.accept()
+            f = conn.makefile("rwb")
+            hello = json.loads(f.readline())
+            proof = runtime.make_proof(token, hello["nonce"])
+            f.write((json.dumps({"server": "context-curator", "proof": proof}) + "\n").encode())
+            f.flush()
+            f.readline()
+            f.write((json.dumps({"ok": False}) + "\n").encode())
+            f.flush()
+            conn.close()
+        except OSError:
+            pass
 
     threading.Thread(target=serve, daemon=True).start()
     with pytest.raises(client.CuratorUnavailable):
