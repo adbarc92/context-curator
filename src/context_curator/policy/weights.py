@@ -23,3 +23,13 @@ class PolicyWeights:
 # 0.15 is an UNTUNED placeholder for HashingEmbedder; re-derived on the bge swap (M4b).
 ONLOAD_COSINE_THRESHOLD: float = 0.15
 ONLOAD_WEIGHTS = PolicyWeights(sim_floor=ONLOAD_COSINE_THRESHOLD)
+
+
+# bge (curator) operating point (design §5.4). bge-small is anisotropic — unrelated text sits
+# ~0.3-0.5, related ~0.6-0.8 — so the HashingEmbedder gate of 0.15 would pass everything.
+# 0.55 is a reasoned-but-UNMEASURED placeholder (mid-band, precision-biased); M3b tunes it
+# from precision/recall and flips CC_CURATOR_ONLOAD on. sim_floor == threshold keeps the
+# round-2-C1 gate<->floor reconciliation. (The hashing ONLOAD_* above stay as the
+# legacy/test operating point.)
+ONLOAD_BGE_COSINE_THRESHOLD: float = 0.55
+ONLOAD_BGE_WEIGHTS = PolicyWeights(sim_floor=ONLOAD_BGE_COSINE_THRESHOLD)
