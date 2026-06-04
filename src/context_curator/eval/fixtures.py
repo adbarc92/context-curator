@@ -23,6 +23,7 @@ class Fixture(BaseModel):
     recent_tools: list[str] = []
     gold_keys: list[str]
     split: Literal["train", "test"] = "train"
+    session_id: str | None = None        # M4d: source-transcript identity for session-clustered CI
 
 
 def load_fixtures(directory: str) -> list[Fixture]:

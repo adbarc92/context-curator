@@ -40,3 +40,15 @@ def test_load_controlled_corpus():
     fixtures = load_fixtures(str(Path(e.__file__).parent / "fixtures" / "controlled"))
     assert len(fixtures) >= 4
     assert any(f.name == "adversarial-arm2-wins" for f in fixtures)
+
+
+def test_fixture_carries_session_id():
+    fx = Fixture(name="f", chunks=[FixtureChunk(key="a", content="A")],
+                 prompt="p", gold_keys=["a"], split="test", session_id="sess-1")
+    assert fx.session_id == "sess-1"
+
+
+def test_fixture_session_id_defaults_none():
+    fx = Fixture(name="f", chunks=[FixtureChunk(key="a", content="A")],
+                 prompt="p", gold_keys=["a"], split="test")
+    assert fx.session_id is None
