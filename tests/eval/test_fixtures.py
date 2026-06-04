@@ -20,6 +20,18 @@ def test_no_pin_field():
         FixtureChunk(key="a", content="x", pin=True)   # pin forbidden (M3)
 
 
+def test_load_fixtures_skips_underscore_metadata(tmp_path):
+    import json
+
+    (tmp_path / "good.json").write_text(json.dumps(
+        {"name": "g", "chunks": [{"key": "k", "content": "c"}],
+         "prompt": "p", "gold_keys": ["k"], "split": "test"}), encoding="utf-8")
+    # a co-located metadata file (e.g. the frozen cosine matrix) must NOT be parsed as a Fixture
+    (tmp_path / "_bge_cosines.json").write_text(json.dumps({"meta": 1}), encoding="utf-8")
+    fixtures = load_fixtures(str(tmp_path))
+    assert [f.name for f in fixtures] == ["g"]
+
+
 def test_load_controlled_corpus():
     from pathlib import Path
 
