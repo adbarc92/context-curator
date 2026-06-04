@@ -29,16 +29,18 @@ def _gold_third(fx: Fixture) -> int:
     return 0 if frac < 1 / 3 else (1 if frac < 2 / 3 else 2)
 
 
-def audit_corpus(fixtures: list[Fixture], *, n_chunks_min: int = 12) -> AuditReport:
+def audit_corpus(fixtures: list[Fixture], *, n_chunks_min: int = 12,
+                 require_hard_neg: bool = True) -> AuditReport:
     n = len(fixtures)
     counts = [0, 0, 0]
     for fx in fixtures:
         if len(fx.chunks) < n_chunks_min:
             return AuditReport(False, f"fixture {fx.name} has <{n_chunks_min} chunks", (0, 0, 0), n)
-        n_hard = sum(1 for c in fx.chunks if "hard_neg" in c.tags)
-        if n_hard < _HARD_NEG_MIN:
-            return AuditReport(False, f"fixture {fx.name} has <{_HARD_NEG_MIN} hard negatives",
-                               (0, 0, 0), n)
+        if require_hard_neg:
+            n_hard = sum(1 for c in fx.chunks if "hard_neg" in c.tags)
+            if n_hard < _HARD_NEG_MIN:
+                return AuditReport(False, f"fixture {fx.name} has <{_HARD_NEG_MIN} hard negatives",
+                                   (0, 0, 0), n)
         counts[_gold_third(fx)] += 1
     if n == 0:
         return AuditReport(False, "empty corpus", (0, 0, 0), 0)
