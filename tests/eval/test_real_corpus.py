@@ -1,6 +1,10 @@
+from pathlib import Path
+
+import context_curator.eval as e
 from context_curator.eval.real_corpus import (
     entities_match,
     extract_entities,
+    harvest_corpus,
     harvest_trace,
 )
 from context_curator.replay.schema import ToolCall, ToolResult, Trace, UserPrompt
@@ -89,3 +93,14 @@ def test_drops_turns_below_min_candidates():
         ToolResult(call_id="r", content="x2"),
     ]
     assert harvest_trace(_trace(events), w=5, min_candidates=5) == []
+
+
+def test_harvest_corpus_from_sample_jsonl_splits_by_session():
+    sample = str(Path(e.__file__).parent.parent.parent.parent
+                 / "tests" / "eval" / "_traces" / "sample.jsonl")
+    fxs = harvest_corpus([sample], w=5, min_candidates=5, test_frac=0.5, seed=0)
+    assert fxs, "sample must yield >=1 fixture"
+    sessions = {f.session_id for f in fxs}
+    for s in sessions:
+        splits = {f.split for f in fxs if f.session_id == s}
+        assert len(splits) == 1, f"session {s} straddles train/test"

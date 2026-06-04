@@ -6,8 +6,10 @@ chunk key)."""
 from __future__ import annotations
 
 import os
+import random
 
 from context_curator.eval.fixtures import Fixture, FixtureChunk
+from context_curator.replay.capture.transcript import parse_transcript
 from context_curator.replay.schema import ToolCall, ToolResult, Trace, UserPrompt
 
 _PATH_ARGS = ("file_path", "notebook_path", "path")        # structured path args (Bash deferred)
@@ -113,3 +115,24 @@ def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5) -> list[
             split="train", session_id=trace.session_id,
         ))
     return fixtures
+
+
+def harvest_corpus(paths: list[str], *, w: int = 5, min_candidates: int = 5,
+                   test_frac: float = 0.75, seed: int = 0) -> list[Fixture]:
+    """Harvest every transcript, then assign train/test BY WHOLE SESSION (no session straddles a
+    split — prevents leakage, design §3.4). `test_frac` = fraction of SESSIONS placed in test."""
+    by_session: dict[str, list[Fixture]] = {}
+    for p in paths:
+        for fx in harvest_trace(parse_transcript(p), w=w, min_candidates=min_candidates):
+            by_session.setdefault(fx.session_id or "unknown", []).append(fx)
+    sessions = sorted(by_session)
+    rng = random.Random(seed)
+    rng.shuffle(sessions)
+    n_test = max(1, round(len(sessions) * test_frac)) if sessions else 0
+    test_sessions = set(sessions[:n_test])
+    out: list[Fixture] = []
+    for s in sessions:
+        split = "test" if s in test_sessions else "train"
+        for fx in by_session[s]:
+            out.append(fx.model_copy(update={"split": split}))
+    return out
