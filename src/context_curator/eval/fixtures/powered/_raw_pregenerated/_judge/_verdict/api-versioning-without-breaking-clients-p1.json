@@ -1,0 +1,16 @@
+{"name": "api-versioning-without-breaking-clients-p1", "judgments": {
+"k_additive_only": {"relevant": true, "why": "additive-only changes keep old callers working"},
+"k_app_update_decoy": {"relevant": false, "why": "forcing app updates, not API versioning"},
+"k_csv_streaming": {"relevant": false, "why": "CSV export streaming, unrelated"},
+"k_db_index": {"relevant": false, "why": "DB index, unrelated"},
+"k_db_schema_version_decoy": {"relevant": false, "why": "DB migration schema version, not API versioning"},
+"k_deprecation_window": {"relevant": true, "why": "sunset window/deprecation lets old apps migrate"},
+"k_email_bounce": {"relevant": false, "why": "email bounces, unrelated"},
+"k_feature_flag": {"relevant": false, "why": "feature flag, unrelated"},
+"k_grid_layout": {"relevant": false, "why": "docs layout, unrelated"},
+"k_oauth_refresh": {"relevant": false, "why": "token refresh, unrelated"},
+"k_rate_limit": {"relevant": false, "why": "rate limiting, unrelated"},
+"k_request_logging": {"relevant": true, "why": "logs version/key to track old-contract callers"},
+"k_search_typeahead": {"relevant": false, "why": "search UI, unrelated"},
+"k_version_negotiation": {"relevant": true, "why": "version pinning via URL/Accept header, no silent upgrade"}
+}}

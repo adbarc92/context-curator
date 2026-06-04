@@ -1,0 +1,15 @@
+{"name": "safe-deploy-rollback-p1", "judgments": {
+  "k_audit_log": {"relevant": false, "why": "audit log, unrelated"},
+  "k_blue_green": {"relevant": true, "why": "blue-green flip enables fast revert to old stack"},
+  "k_canary_autorevert": {"relevant": true, "why": "canary auto-reverts on error spike"},
+  "k_config_reload": {"relevant": false, "why": "config reload, not release rollback"},
+  "k_css_refactor": {"relevant": false, "why": "CSS refactor, unrelated"},
+  "k_db_rollback_decoy": {"relevant": false, "why": "migration down step, not release rollback"},
+  "k_email_queue": {"relevant": false, "why": "email queue, unrelated"},
+  "k_image_lazy": {"relevant": false, "why": "lazy images, unrelated"},
+  "k_immutable_artifact": {"relevant": true, "why": "redeploy known good tag for fast rollback"},
+  "k_metrics_dashboard": {"relevant": true, "why": "deploy marker on error graph to spot release spikes"},
+  "k_pagination": {"relevant": false, "why": "pagination, unrelated"},
+  "k_timezone_ui": {"relevant": false, "why": "timezone display, unrelated"},
+  "k_transaction_rollback_decoy": {"relevant": false, "why": "DB transaction rollback, not deploy"}
+}}

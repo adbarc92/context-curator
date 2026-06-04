@@ -1,0 +1,24 @@
+{
+  "name": "json-schema-validation-p5",
+  "prompt": "what is a good way to reject malformed request bodies at the edge before they reach my handler logic",
+  "chunks": [
+    {"key": "k_css_dark", "content": "added a dark mode toggle that persists the choice in local storage", "tags": []},
+    {"key": "k_db_pool", "content": "raised the connection pool cap to 80 after seeing checkout timeouts under load", "tags": []},
+    {"key": "k_cron_cleanup", "content": "a nightly cron purges soft-deleted rows older than 90 days", "tags": []},
+    {"key": "k_password_rules", "content": "the signup form enforces a minimum password length and rejects entries found in a breached-password list", "tags": ["hard_neg"]},
+    {"key": "k_tls_renew", "content": "automated certificate renewal so the gateway swaps in a fresh cert 30 days before expiry", "tags": []},
+    {"key": "k_schema_coerce", "content": "the validator coerces obvious types like numeric strings to numbers but refuses unknown properties so a typo'd field is caught instead of silently ignored", "tags": []},
+    {"key": "k_schema_shared", "content": "the same request shapes are defined once and shared between the server validator and the generated client types so the contract stays in sync", "tags": []},
+    {"key": "k_schema_gate", "content": "decided to validate every incoming payload against a declared JSON Schema in middleware and return 422 with the offending field paths before the controller ever runs", "tags": []},
+    {"key": "k_dns_failover", "content": "set a low TTL on the API record so failover to the secondary region propagates quickly", "tags": []},
+    {"key": "k_input_sanitize_xss", "content": "escape user-supplied HTML in comments so a malformed script payload can't run in another viewer's browser", "tags": ["hard_neg"]},
+    {"key": "k_schema_error_shape", "content": "malformed bodies return a consistent error envelope listing each invalid pointer and the rule it broke, so the frontend can highlight the bad inputs", "tags": []},
+    {"key": "k_metrics_dash", "content": "the ops dashboard charts request volume and error rate per endpoint", "tags": []},
+    {"key": "k_email_template", "content": "moved the receipt email into a templating engine with localized strings", "tags": []},
+    {"key": "k_flag_kill", "content": "added a kill switch flag to instantly disable the recommendations widget if it misbehaves", "tags": []},
+    {"key": "k_audit_log", "content": "record every permission grant in an append-only audit log", "tags": []}
+  ],
+  "gold_keys": ["k_schema_gate", "k_schema_coerce", "k_schema_shared", "k_schema_error_shape"],
+  "split": "train",
+  "recent_tools": []
+}

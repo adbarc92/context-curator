@@ -1,0 +1,15 @@
+{"name": "jwt-refresh-rotation-p1", "judgments": {
+  "k_avatar_upload": {"relevant": false, "why": "avatar storage, unrelated to auth sessions"},
+  "k_cors_setup": {"relevant": false, "why": "CORS allowlist, not session longevity"},
+  "k_db_pool_size": {"relevant": false, "why": "connection pool sizing, unrelated"},
+  "k_email_template": {"relevant": false, "why": "email template, unrelated"},
+  "k_feature_flag_beta": {"relevant": false, "why": "feature flag, unrelated"},
+  "k_healthz": {"relevant": false, "why": "readiness probe, unrelated"},
+  "k_login_form_validation": {"relevant": false, "why": "form validation, not staying logged in"},
+  "k_metrics_export": {"relevant": false, "why": "metrics scraping, unrelated"},
+  "k_password_reset_hour": {"relevant": false, "why": "password reset link expiry, different mechanism"},
+  "k_rate_limit_login": {"relevant": false, "why": "login throttling, not session persistence"},
+  "k_refresh_rotate": {"relevant": true, "why": "short access token plus rotating refresh keeps users logged in"},
+  "k_refresh_store": {"relevant": true, "why": "server-side refresh storage enabling secure long sessions"},
+  "k_reuse_detection": {"relevant": true, "why": "refresh reuse detection secures persistent sessions"}
+}}

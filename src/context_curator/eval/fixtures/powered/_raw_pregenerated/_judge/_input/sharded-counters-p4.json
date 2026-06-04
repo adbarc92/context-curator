@@ -1,0 +1,66 @@
+{
+ "name": "sharded-counters-p4",
+ "prompt": "how can I count a very hot metric without all the writers contending on one row",
+ "chunks": [
+  {
+   "key": "k_counter_atomic",
+   "content": "each shard increment is a single atomic update so we avoid a read-modify-write race and never lose a tick under load"
+  },
+  {
+   "key": "k_counter_readsum",
+   "content": "to read the total we sum across all 64 shards in one query and cache the result for a few seconds since an exact instantaneous value is not required"
+  },
+  {
+   "key": "k_counter_shardcount",
+   "content": "we sized the shard count to roughly match peak concurrent writers, since too few shards still contend and too many slows the read-time fan-in sum"
+  },
+  {
+   "key": "k_counter_shards",
+   "content": "decided to split the hot like-counter across 64 shard rows chosen at random per increment, so concurrent writers update different rows and stop fighting over a single hot row"
+  },
+  {
+   "key": "k_cron_archive",
+   "content": "closed tickets are archived to cold storage after 90 days"
+  },
+  {
+   "key": "k_css_badge",
+   "content": "the unread notification badge now animates when the count changes"
+  },
+  {
+   "key": "k_db_vacuum",
+   "content": "tuned autovacuum to run more aggressively on the high-churn sessions table"
+  },
+  {
+   "key": "k_email_bounce",
+   "content": "hard bounces are recorded and the address is suppressed from future sends"
+  },
+  {
+   "key": "k_feature_flag",
+   "content": "the experimental recommendations widget is flag-gated to ten percent of staff"
+  },
+  {
+   "key": "k_inventory_count_decoy",
+   "content": "the warehouse job recounts physical stock nightly and flags any SKU whose counted quantity drifts from the recorded amount"
+  },
+  {
+   "key": "k_locale_rtl",
+   "content": "added right-to-left layout support for Arabic"
+  },
+  {
+   "key": "k_log_rotation",
+   "content": "application logs rotate daily and keep 14 compressed archives"
+  },
+  {
+   "key": "k_pdf_export",
+   "content": "invoices can be exported to PDF with the company letterhead"
+  },
+  {
+   "key": "k_search_suggest",
+   "content": "type-ahead suggestions come from a prefix index refreshed hourly"
+  },
+  {
+   "key": "k_word_count_decoy",
+   "content": "the editor shows a live word count and character count in the footer as you type"
+  }
+ ]
+}

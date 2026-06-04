@@ -1,0 +1,17 @@
+{"name": "api-key-scoping-p5", "judgments": {
+"k_backup_test": {"relevant": false, "why": "database restore drill, unrelated to key scoping"},
+"k_cache_layer": {"relevant": false, "why": "caching, not API key permissions"},
+"k_css_responsive": {"relevant": false, "why": "UI responsiveness, unrelated"},
+"k_db_shard": {"relevant": false, "why": "sharding, unrelated"},
+"k_email_digest": {"relevant": false, "why": "email digest, unrelated"},
+"k_flag_canary": {"relevant": false, "why": "feature flag canary, unrelated"},
+"k_key_least_priv": {"relevant": true, "why": "least-privilege key minting limits scope directly"},
+"k_key_rotate_revoke": {"relevant": false, "why": "revocation/rotation, not scoping to resources"},
+"k_key_scope_check": {"relevant": true, "why": "middleware enforces key scopes per request"},
+"k_key_scopes": {"relevant": true, "why": "keys carry explicit permitted scopes, rejects out-of-scope"},
+"k_locale_plural": {"relevant": false, "why": "localization, unrelated"},
+"k_log_redact": {"relevant": false, "why": "log redaction, not scoping"},
+"k_metrics_p99": {"relevant": false, "why": "latency metrics, unrelated"},
+"k_oauth_consent": {"relevant": false, "why": "OAuth consent screen, not API key scoping"},
+"k_rbac_admin_ui": {"relevant": false, "why": "user role UI, not API key scoping"}
+}}

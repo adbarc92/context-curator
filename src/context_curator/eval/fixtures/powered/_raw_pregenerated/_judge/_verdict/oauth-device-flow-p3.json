@@ -1,0 +1,16 @@
+{"name": "oauth-device-flow-p3", "judgments": {
+  "k_cdn_purge": {"relevant": false, "why": "CDN purge, unrelated"},
+  "k_dark_mode": {"relevant": false, "why": "dark theme, unrelated"},
+  "k_db_pool": {"relevant": false, "why": "connection pool, unrelated"},
+  "k_device_code_grant": {"relevant": true, "why": "device authorization grant for browserless TV login"},
+  "k_device_poll": {"relevant": true, "why": "polling token endpoint with device code"},
+  "k_healthz": {"relevant": false, "why": "health endpoint, unrelated"},
+  "k_i18n": {"relevant": false, "why": "string extraction, unrelated"},
+  "k_invoice_pdf": {"relevant": false, "why": "invoice PDF, unrelated"},
+  "k_metrics_export": {"relevant": false, "why": "metrics export, unrelated"},
+  "k_qr_marketing": {"relevant": false, "why": "marketing QR code, not device auth"},
+  "k_remote_pairing_decoy": {"relevant": false, "why": "local remote pairing, not OAuth login"},
+  "k_retry_jitter": {"relevant": false, "why": "webhook retry, unrelated"},
+  "k_soft_delete": {"relevant": false, "why": "soft delete, unrelated"},
+  "k_verification_uri": {"relevant": true, "why": "verification URI plus user code for headless client auth"}
+}}

@@ -1,0 +1,24 @@
+{
+  "name": "dead-letter-queue-p3",
+  "prompt": "what should I do with messages that keep failing processing so they stop blocking the queue but are not lost",
+  "chunks": [
+    {"key": "k_css_theme", "content": "switched the dashboard to a dark theme using CSS custom properties", "tags": []},
+    {"key": "k_db_pool", "content": "added a 50-connection database pool with a health-check ping on checkout", "tags": []},
+    {"key": "k_failed_login_lock_decoy", "content": "after a message of five failed login attempts the account is locked and the user must reset their password before retrying", "tags": ["hard_neg"]},
+    {"key": "k_metrics", "content": "export request latency histograms to Prometheus on /metrics", "tags": []},
+    {"key": "k_invoice", "content": "generate the monthly invoice as a PDF and email it to the billing contact", "tags": []},
+    {"key": "k_dlq_route", "content": "decided that once a message has been retried a few times and still fails, the consumer moves it onto a separate dead-letter queue instead of letting it stall the main queue, so the poison record is parked rather than discarded", "tags": []},
+    {"key": "k_dlq_replay", "content": "an operator can inspect the parked failures and replay them back onto the primary queue after the underlying bug is fixed, so no message is permanently lost", "tags": []},
+    {"key": "k_dlq_alert", "content": "the consumer increments a failure counter on each message and side-channels the record to the failure queue when the counter trips, then alerts on the depth of that queue so stuck work is visible", "tags": []},
+    {"key": "k_validation_reject_decoy", "content": "the signup form rejects messages with malformed email addresses and shows an inline error before submission", "tags": ["hard_neg"]},
+    {"key": "k_pagination", "content": "switch the list endpoint to keyset pagination using the last seen id", "tags": []},
+    {"key": "k_feature_flag", "content": "gate the new checkout flow behind a feature flag defaulting to off", "tags": []},
+    {"key": "k_audit_log", "content": "record every admin action in an append-only audit log", "tags": []},
+    {"key": "k_tz", "content": "store all timestamps in UTC and convert in the UI", "tags": []},
+    {"key": "k_gzip", "content": "enabled gzip compression on responses larger than 1 KB", "tags": []},
+    {"key": "k_healthz", "content": "the /healthz endpoint returns 200 once the database pool is ready", "tags": []}
+  ],
+  "gold_keys": ["k_dlq_route", "k_dlq_replay", "k_dlq_alert"],
+  "split": "train",
+  "recent_tools": []
+}

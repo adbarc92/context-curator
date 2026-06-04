@@ -1,0 +1,16 @@
+{"name": "backpressure-streaming-p4", "judgments": {
+"k_backpressure_bounded": {"relevant": true, "why": "bounded buffer blocks fast producer, pacing it"},
+"k_backpressure_credit": {"relevant": true, "why": "credit window paces sender to receiver"},
+"k_backpressure_demand": {"relevant": true, "why": "pull-based demand signaling prevents overrun"},
+"k_backpressure_drop": {"relevant": true, "why": "dropping oldest keeps producer unblocked, a strategy"},
+"k_blood_pressure_decoy": {"relevant": false, "why": "blood pressure UI, unrelated"},
+"k_cron_digest": {"relevant": false, "why": "daily digest cron, unrelated"},
+"k_css_toast": {"relevant": false, "why": "toast UI, unrelated"},
+"k_db_replica": {"relevant": false, "why": "read replica routing, unrelated"},
+"k_email_throttle": {"relevant": false, "why": "marketing email rate cap, not streaming backpressure"},
+"k_feature_flag": {"relevant": false, "why": "feature flag, unrelated"},
+"k_locale_plural": {"relevant": false, "why": "plural rules, unrelated"},
+"k_oauth_refresh": {"relevant": false, "why": "token rotation, unrelated"},
+"k_pressure_wash_decoy": {"relevant": false, "why": "pressure washing dock, unrelated"},
+"k_search_relevance": {"relevant": false, "why": "search ranking, unrelated"}
+}}

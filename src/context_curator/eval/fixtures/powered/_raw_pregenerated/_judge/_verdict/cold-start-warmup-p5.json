@@ -1,0 +1,17 @@
+{"name": "cold-start-warmup-p5", "judgments": {
+"k_audit_log": {"relevant": false, "why": "audit log, unrelated"},
+"k_cache_first_slow": {"relevant": false, "why": "describes cold cache symptom, no warmup solution"},
+"k_css_lazy": {"relevant": false, "why": "lazy-load images, unrelated"},
+"k_db_vacuum": {"relevant": false, "why": "DB vacuum, unrelated"},
+"k_email_queue": {"relevant": false, "why": "email queue, unrelated"},
+"k_flag_dark": {"relevant": false, "why": "dark launch flag, unrelated"},
+"k_locale": {"relevant": false, "why": "localization, unrelated"},
+"k_login_slow_hash": {"relevant": false, "why": "deliberate slow hash, not cold start"},
+"k_metrics_cold": {"relevant": false, "why": "measures cold penalty, no warmup fix"},
+"k_pagination": {"relevant": false, "why": "pagination, unrelated"},
+"k_queue_drain": {"relevant": false, "why": "queue backlog drain, not request warmup"},
+"k_warm_keepalive": {"relevant": true, "why": "always-on floor avoids routing to booting process"},
+"k_warm_lazy_init": {"relevant": true, "why": "moves client init to boot, not first request"},
+"k_warm_prefetch": {"relevant": true, "why": "readiness only after priming pool and config"},
+"k_warm_synthetic": {"relevant": true, "why": "synthetic startup requests warm JIT and caches"}
+}}

@@ -1,0 +1,17 @@
+{"name": "signed-url-expiry-p5", "judgments": {
+  "k_audit": {"relevant": false, "why": "access logging, not temporary link"},
+  "k_cache_ttl_catalog": {"relevant": false, "why": "catalog cache TTL, unrelated"},
+  "k_css_anim": {"relevant": false, "why": "page transitions, unrelated"},
+  "k_db_index": {"relevant": false, "why": "activity feed index, unrelated"},
+  "k_email_send": {"relevant": false, "why": "welcome email, unrelated"},
+  "k_flag_rollout": {"relevant": false, "why": "feature flag, unrelated"},
+  "k_locale_fmt": {"relevant": false, "why": "currency formatting, unrelated"},
+  "k_metrics": {"relevant": false, "why": "metrics export, unrelated"},
+  "k_pagination": {"relevant": false, "why": "pagination, unrelated"},
+  "k_session_expiry_logout": {"relevant": false, "why": "login session expiry, not file link"},
+  "k_signed_url": {"relevant": true, "why": "pre-signed link with expiry and signature"},
+  "k_storage_class": {"relevant": false, "why": "storage tier cost, unrelated"},
+  "k_url_no_relist": {"relevant": true, "why": "link scoped to one object only"},
+  "k_url_short_window": {"relevant": true, "why": "five-minute link lifetime then rejected as expired"},
+  "k_url_tamper_proof": {"relevant": true, "why": "HMAC-signed path/expiry prevents deadline tampering"}
+}}

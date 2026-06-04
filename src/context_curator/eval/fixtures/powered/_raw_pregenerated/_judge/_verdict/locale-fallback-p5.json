@@ -1,0 +1,18 @@
+{"name": "locale-fallback-p5", "judgments": {
+  "k_audit": {"relevant": false, "why": "logging locale changes, not missing-string display"},
+  "k_cache_warm": {"relevant": false, "why": "preloading bundles, not fallback behavior"},
+  "k_css_rtl": {"relevant": false, "why": "RTL layout, not missing translations"},
+  "k_currency_round": {"relevant": false, "why": "currency rounding, unrelated"},
+  "k_db_collation": {"relevant": false, "why": "collation, unrelated"},
+  "k_dns_failover": {"relevant": false, "why": "DNS failover, unrelated"},
+  "k_flag_beta": {"relevant": false, "why": "feature flag, unrelated"},
+  "k_locale_chain": {"relevant": true, "why": "fallback chain to base then default English"},
+  "k_locale_log_gap": {"relevant": false, "why": "logging untranslated keys, not what UI shows"},
+  "k_locale_no_blank": {"relevant": true, "why": "never show blank/raw key; fall back to default phrasing"},
+  "k_locale_partial": {"relevant": true, "why": "untranslated label borrows base-language wording"},
+  "k_metrics": {"relevant": false, "why": "error rate chart, unrelated"},
+  "k_pdf": {"relevant": false, "why": "PDF invoice, unrelated"},
+  "k_queue": {"relevant": false, "why": "outbox queue, unrelated"},
+  "k_sitemap_gen": {"relevant": false, "why": "sitemap, unrelated"},
+  "k_tz_fallback_utc": {"relevant": false, "why": "timezone fallback, not translation string"}
+}}

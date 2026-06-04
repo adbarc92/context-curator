@@ -1,0 +1,16 @@
+{"name": "webhook-delivery-retry-p2", "judgments": {
+  "k_css_modal": {"relevant": false, "why": "modal styling, unrelated"},
+  "k_db_vacuum": {"relevant": false, "why": "VACUUM maintenance, unrelated"},
+  "k_endpoint_down_alert": {"relevant": false, "why": "our own ingress alert, not outbound delivery"},
+  "k_feature_toggle": {"relevant": false, "why": "feature toggle, unrelated"},
+  "k_idempotency_header": {"relevant": true, "why": "idempotency key makes retried delivery safe"},
+  "k_incoming_webhook_verify": {"relevant": false, "why": "verifying incoming webhooks, not outbound retry"},
+  "k_jwt_login": {"relevant": false, "why": "login key rotation, unrelated"},
+  "k_locale_format": {"relevant": false, "why": "currency formatting, unrelated"},
+  "k_rate_limit_dash": {"relevant": false, "why": "consumer dashboard, unrelated"},
+  "k_report_export": {"relevant": false, "why": "CSV export, unrelated"},
+  "k_signup_email": {"relevant": false, "why": "signup email, unrelated"},
+  "k_webhook_outbox": {"relevant": true, "why": "durable outbox so delivery not lost if receiver down"},
+  "k_webhook_redelivery": {"relevant": true, "why": "scheduled retry attempts then dead-letter"},
+  "k_webhook_status": {"relevant": true, "why": "per-event delivery status to confirm acknowledgement"}
+}}

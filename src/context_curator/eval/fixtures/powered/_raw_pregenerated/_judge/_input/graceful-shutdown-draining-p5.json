@@ -1,0 +1,62 @@
+{
+ "name": "graceful-shutdown-draining-p5",
+ "prompt": "how do I stop my service without killing requests that are still in flight when it gets a shutdown signal",
+ "chunks": [
+  {
+   "key": "k_audit_trail",
+   "content": "every config change is appended to an immutable audit trail with the actor and timestamp"
+  },
+  {
+   "key": "k_cache_warm",
+   "content": "preload the country list into memory at boot so the first dropdown render is fast"
+  },
+  {
+   "key": "k_css_tokens",
+   "content": "migrated the spacing scale to design tokens so padding is consistent across cards"
+  },
+  {
+   "key": "k_db_migrate",
+   "content": "ran the pending migration adding a nullable phone column to the accounts table"
+  },
+  {
+   "key": "k_drain_inflight",
+   "content": "decided that on SIGTERM the server stops accepting new connections but keeps serving the requests already being handled until they finish, then exits"
+  },
+  {
+   "key": "k_drain_timeout",
+   "content": "give in-progress handlers a 25-second grace window to complete during shutdown; anything still running past that is forcibly cut and logged"
+  },
+  {
+   "key": "k_email_retry",
+   "content": "transactional emails that bounce are requeued twice before being parked for manual review"
+  },
+  {
+   "key": "k_feature_flag",
+   "content": "put the redesigned checkout behind a flag defaulting off until QA signs off"
+  },
+  {
+   "key": "k_lb_deregister",
+   "content": "before draining begins we flip the readiness probe to failing so the load balancer pulls the instance out of rotation and no fresh traffic arrives"
+  },
+  {
+   "key": "k_metrics_export",
+   "content": "ship p95 and p99 latency histograms to the metrics backend on a 15-second scrape"
+  },
+  {
+   "key": "k_session_kill",
+   "content": "an admin can forcibly terminate a user's active login session, which signs them out everywhere and revokes their tokens immediately"
+  },
+  {
+   "key": "k_signal_handler_kill9",
+   "content": "if the watchdog notices the process is wedged it escalates from a normal signal to SIGKILL, which kills it instantly with no cleanup"
+  },
+  {
+   "key": "k_tz_store",
+   "content": "store all event times in UTC and localize only at render time"
+  },
+  {
+   "key": "k_worker_inflight",
+   "content": "the background worker checks a stop flag between jobs so a long-running export is allowed to finish cleanly rather than being interrupted mid-write"
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+{"name": "file-upload-streaming-p2", "judgments": {
+"k_audit_trail": {"relevant": false, "why": "audit trail, unrelated"},
+"k_css_dropzone": {"relevant": false, "why": "dropzone styling, unrelated"},
+"k_db_pool_size": {"relevant": false, "why": "connection pool, unrelated"},
+"k_email_digest": {"relevant": false, "why": "email digest, unrelated"},
+"k_flag_cleanup": {"relevant": false, "why": "stale flag cleanup, unrelated"},
+"k_image_resize": {"relevant": false, "why": "post-upload resize, not memory-safe upload"},
+"k_login_throttle": {"relevant": false, "why": "login throttle, unrelated"},
+"k_memory_leak_fix": {"relevant": false, "why": "logger memory leak, not streaming uploads"},
+"k_multipart_parser": {"relevant": true, "why": "streaming multipart parser avoids buffering attachment"},
+"k_s3_multipart": {"relevant": true, "why": "S3 multipart forwards chunks as they arrive"},
+"k_stream_to_disk": {"relevant": true, "why": "pipe body to temp file in fixed buffers"},
+"k_timezone_store": {"relevant": false, "why": "UTC timestamps, unrelated"},
+"k_upload_progress_ui": {"relevant": false, "why": "progress bar UI, not memory handling"},
+"k_upload_size_cap": {"relevant": true, "why": "reject oversized request before reading body"}
+}}

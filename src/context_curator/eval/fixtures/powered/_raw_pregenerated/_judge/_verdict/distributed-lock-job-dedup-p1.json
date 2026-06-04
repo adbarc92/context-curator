@@ -1,0 +1,15 @@
+{"name": "distributed-lock-job-dedup-p1", "judgments": {
+"k_advisory_lock": {"relevant": true, "why": "named lock so only one runner proceeds"},
+"k_csv_import": {"relevant": false, "why": "CSV import streaming, unrelated"},
+"k_db_transaction_decoy": {"relevant": false, "why": "transfer transaction atomicity, not job dedup"},
+"k_leader_election": {"relevant": true, "why": "single leader owns scheduled work, prevents duplicates"},
+"k_lock_ttl_fencing": {"relevant": true, "why": "lock TTL plus fencing token stops zombie double-run"},
+"k_logging_jobid": {"relevant": false, "why": "logging job id, not preventing concurrency"},
+"k_memory_limit": {"relevant": false, "why": "container memory limit, unrelated"},
+"k_queue_setup": {"relevant": false, "why": "queue ack, not scheduled-job dedup"},
+"k_retry_backoff": {"relevant": false, "why": "retry backoff, unrelated"},
+"k_scheduler_overview": {"relevant": false, "why": "describes the duplicate-run problem, no solution"},
+"k_swagger_docs": {"relevant": false, "why": "OpenAPI docs, unrelated"},
+"k_thread_pool_decoy": {"relevant": false, "why": "thread pool parallelism, not job dedup"},
+"k_timezone_cron": {"relevant": false, "why": "cron timezone normalization, not concurrency dedup"}
+}}

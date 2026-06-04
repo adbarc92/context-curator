@@ -1,0 +1,17 @@
+{"name": "read-replica-lag-p5", "judgments": {
+  "k_cache_stale": {"relevant": false, "why": "product cache staleness, not replica reads"},
+  "k_css_grid": {"relevant": false, "why": "layout grid, unrelated"},
+  "k_flag_rollout": {"relevant": false, "why": "feature flag rollout, unrelated"},
+  "k_healthz": {"relevant": false, "why": "health endpoint, unrelated"},
+  "k_index_rebuild": {"relevant": false, "why": "index rebuild, unrelated"},
+  "k_lag_threshold": {"relevant": true, "why": "pulls lagging replicas from pool to avoid stale reads"},
+  "k_locale_money": {"relevant": false, "why": "currency formatting, unrelated"},
+  "k_log_sample": {"relevant": false, "why": "log sampling, unrelated"},
+  "k_lsn_token": {"relevant": true, "why": "position token ensures replica applied the write"},
+  "k_pdf_invoice": {"relevant": false, "why": "invoice PDF, unrelated"},
+  "k_queue_worker": {"relevant": false, "why": "email worker, unrelated"},
+  "k_rate_limit": {"relevant": false, "why": "rate limiting, unrelated"},
+  "k_read_your_write": {"relevant": true, "why": "route reads to primary after a write"},
+  "k_stale_token_auth": {"relevant": false, "why": "expired refresh token, not replica data"},
+  "k_sticky_read": {"relevant": true, "why": "pin updated account to leader briefly"}
+}}

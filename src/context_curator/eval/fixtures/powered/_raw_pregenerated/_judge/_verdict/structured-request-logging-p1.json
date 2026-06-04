@@ -1,0 +1,14 @@
+{"name": "structured-request-logging-p1", "judgments": {
+  "k_correlation_id": {"relevant": true, "why": "correlation id propagated to trace one request"},
+  "k_csv_export": {"relevant": false, "why": "CSV export, unrelated"},
+  "k_dark_mode": {"relevant": false, "why": "dark mode, unrelated"},
+  "k_db_replica": {"relevant": false, "why": "read replica, unrelated"},
+  "k_disk_alert": {"relevant": false, "why": "disk alert, not log searchability"},
+  "k_json_logs": {"relevant": true, "why": "structured JSON logs with trace key for indexing"},
+  "k_log_shipping": {"relevant": true, "why": "central store queried by trace id across hops"},
+  "k_login_audit_decoy": {"relevant": false, "why": "login audit, not cross-service tracing"},
+  "k_pii_scrub": {"relevant": false, "why": "PII redaction, not searchability/tracing"},
+  "k_request_validation_decoy": {"relevant": false, "why": "request schema validation, unrelated"},
+  "k_stripe_webhook": {"relevant": false, "why": "webhook signature, unrelated"},
+  "k_thumbnail_cache": {"relevant": false, "why": "thumbnail caching, unrelated"}
+}}

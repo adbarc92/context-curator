@@ -1,5 +1,5 @@
-"""Paired bootstrap CI (design §3.6). NOTE: meaningful only once n is adequate (n≳30);
-at the M3b starter corpus size it is a width-of-ignorance display, not a verdict.
+"""Paired bootstrap CI (design §3.6). NOTE: meaningful only once n meets the power target for the
+pre-registered effect (design §6); below that it is a width-of-ignorance display, not a verdict.
 stdlib only (random.Random(seed) -> reproducible RESAMPLING; not the underlying values)."""
 from __future__ import annotations
 

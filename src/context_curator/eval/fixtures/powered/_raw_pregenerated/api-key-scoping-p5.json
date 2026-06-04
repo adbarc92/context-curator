@@ -1,0 +1,24 @@
+{
+  "name": "api-key-scoping-p5",
+  "prompt": "how do I let a customer's API key only touch the specific resources and actions they're allowed to instead of granting full account access",
+  "chunks": [
+    {"key": "k_css_responsive", "content": "made the settings page responsive so the sidebar collapses under 768px", "tags": []},
+    {"key": "k_metrics_p99", "content": "added p99 latency tracking on the public API gateway", "tags": []},
+    {"key": "k_oauth_consent", "content": "the third-party OAuth consent screen lists which profile fields the app is requesting before the user approves", "tags": ["hard_neg"]},
+    {"key": "k_cache_layer", "content": "added a read-through cache in front of the catalog service with a 5-minute TTL", "tags": []},
+    {"key": "k_db_shard", "content": "sharded the events table by tenant id to spread write load", "tags": []},
+    {"key": "k_key_scopes", "content": "decided each issued key carries an explicit list of permitted scopes like reads:invoices and writes:none, and the gateway rejects any call outside that grant", "tags": []},
+    {"key": "k_key_least_priv", "content": "keys are minted with the narrowest set of permissions for their job so a leaked read-only reporting key can never mutate billing data", "tags": []},
+    {"key": "k_key_rotate_revoke", "content": "every key has its own id so a single compromised credential can be revoked or rotated without disturbing the customer's other integrations", "tags": []},
+    {"key": "k_rbac_admin_ui", "content": "the admin console lets an owner assign staff to roles that bundle which dashboard pages each person can open", "tags": ["hard_neg"]},
+    {"key": "k_key_scope_check", "content": "on each request the middleware intersects the route's required permission with the key's granted scopes and returns 403 if the action isn't covered", "tags": []},
+    {"key": "k_email_digest", "content": "send a weekly digest summarizing each team's open tickets", "tags": []},
+    {"key": "k_locale_plural", "content": "handle plural forms correctly when translating item-count labels", "tags": []},
+    {"key": "k_log_redact", "content": "redact authorization headers from request logs before shipping them", "tags": []},
+    {"key": "k_flag_canary", "content": "canary the new pricing engine to internal accounts behind a flag", "tags": []},
+    {"key": "k_backup_test", "content": "automated a monthly restore drill from the latest database backup", "tags": []}
+  ],
+  "gold_keys": ["k_key_scopes", "k_key_least_priv", "k_key_rotate_revoke", "k_key_scope_check"],
+  "split": "train",
+  "recent_tools": []
+}

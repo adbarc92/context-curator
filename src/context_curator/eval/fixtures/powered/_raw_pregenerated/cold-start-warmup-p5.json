@@ -1,0 +1,24 @@
+{
+  "name": "cold-start-warmup-p5",
+  "prompt": "how do I stop the first request after a deploy or a scale-up from being painfully slow",
+  "chunks": [
+    {"key": "k_css_lazy", "content": "lazy-load below-the-fold images so the initial paint is lighter", "tags": []},
+    {"key": "k_db_vacuum", "content": "scheduled a nightly vacuum to keep query plans fresh", "tags": []},
+    {"key": "k_cache_first_slow", "content": "the very first product page after a cache flush is slow because nothing is cached yet, then it warms up", "tags": ["hard_neg"]},
+    {"key": "k_queue_drain", "content": "the worker drains the backlog queue oldest-first after a deploy", "tags": []},
+    {"key": "k_login_slow_hash", "content": "the first login feels slow because we deliberately use an expensive password hash to resist brute force", "tags": ["hard_neg"]},
+    {"key": "k_pagination", "content": "report list uses cursor pagination on the last id", "tags": []},
+    {"key": "k_metrics_cold", "content": "track time-to-first-successful-request per instance so we can see the cold penalty", "tags": []},
+    {"key": "k_locale", "content": "localize the date picker to the viewer's region", "tags": []},
+    {"key": "k_email_queue", "content": "outbound email is pushed to a background queue and sent by a worker", "tags": []},
+    {"key": "k_flag_dark", "content": "dark-launch the new ranking model to staff behind a flag", "tags": []},
+    {"key": "k_warm_synthetic", "content": "a startup hook fires a handful of synthetic requests against the heaviest routes to trigger JIT compilation and fill the local caches before traffic is routed in", "tags": []},
+    {"key": "k_warm_prefetch", "content": "decided that a freshly started instance hits its readiness probe only after it has primed the connection pool and pulled the hot config into memory, so the first real request isn't paying that cost", "tags": []},
+    {"key": "k_warm_keepalive", "content": "we keep a small floor of always-on instances so a scale-up event never routes users to a process that's booting from scratch", "tags": []},
+    {"key": "k_warm_lazy_init", "content": "moved expensive client initialization out of the request path and into boot, so the first caller doesn't trigger lazy setup of the database and storage clients", "tags": []},
+    {"key": "k_audit_log", "content": "append every admin action to an immutable audit log", "tags": []}
+  ],
+  "gold_keys": ["k_warm_prefetch", "k_warm_synthetic", "k_warm_keepalive", "k_warm_lazy_init"],
+  "split": "train",
+  "recent_tools": []
+}

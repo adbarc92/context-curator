@@ -1,0 +1,23 @@
+{
+  "name": "multipart-form-parsing-p4",
+  "prompt": "how do I correctly parse a multipart form upload without buffering the whole request body in memory",
+  "chunks": [
+    {"key": "k_multipart_stream", "content": "decided to parse the multipart body incrementally off the socket, writing each file part straight to a temp file on disk so a large upload never inflates the heap", "tags": []},
+    {"key": "k_multipart_boundary", "content": "the parser reads the boundary delimiter from the Content-Type header and splits parts on it, treating the trailing CRLF before each boundary as part of the framing not the payload", "tags": []},
+    {"key": "k_login_form_decoy", "content": "the login form posts username and password as url-encoded fields and we validate them server-side before issuing a token", "tags": ["hard_neg"]},
+    {"key": "k_css_button", "content": "the submit button now shows a progress bar while the request is in flight", "tags": []},
+    {"key": "k_multipart_limits", "content": "we cap each individual part at 25 MB and reject the whole request early once the cumulative size crosses 100 MB, before reading further bytes, to bound resource use", "tags": []},
+    {"key": "k_db_index", "content": "added an index on uploads(user_id, created_at) for the file history view", "tags": []},
+    {"key": "k_form_validation_decoy", "content": "the checkout form validates the postal code field against a regex and shows an inline error if the multipart of the address is malformed", "tags": ["hard_neg"]},
+    {"key": "k_queue_worker", "content": "background workers pull jobs from the queue in batches of 50", "tags": []},
+    {"key": "k_multipart_filename", "content": "we sanitize the filename from each part's Content-Disposition, stripping path separators so an upload cannot escape the destination directory", "tags": []},
+    {"key": "k_multipart_field", "content": "non-file parts like a description text field are decoded with the charset from the part header and surfaced as ordinary form fields to the handler", "tags": []},
+    {"key": "k_metrics_p99", "content": "added p99 latency tracking to the checkout endpoint", "tags": []},
+    {"key": "k_email_digest", "content": "the weekly digest email is assembled from the activity feed each Monday", "tags": []},
+    {"key": "k_oauth_scope", "content": "narrowed the read-only token scope so it can no longer mutate resources", "tags": []},
+    {"key": "k_cache_warm", "content": "warm the homepage cache on deploy to avoid a cold first hit", "tags": []}
+  ],
+  "gold_keys": ["k_multipart_stream", "k_multipart_boundary", "k_multipart_limits", "k_multipart_filename"],
+  "split": "train",
+  "recent_tools": []
+}

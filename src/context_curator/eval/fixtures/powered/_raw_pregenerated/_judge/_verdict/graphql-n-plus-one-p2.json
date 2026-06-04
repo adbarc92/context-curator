@@ -1,0 +1,17 @@
+{"name": "graphql-n-plus-one-p2", "judgments": {
+"k_batch_select": {"relevant": true, "why": "collect ids into one WHERE IN, not per-row query"},
+"k_css_table": {"relevant": false, "why": "table styling, unrelated"},
+"k_dataloader": {"relevant": true, "why": "DataLoader batches per-row lookups into one query"},
+"k_health_endpoint": {"relevant": false, "why": "health endpoint, unrelated"},
+"k_image_cdn": {"relevant": false, "why": "image CDN, unrelated"},
+"k_join_preload": {"relevant": true, "why": "eager-join related rows in one round trip"},
+"k_jwt_expiry": {"relevant": false, "why": "JWT expiry, unrelated"},
+"k_locale_switch": {"relevant": false, "why": "language switch, unrelated"},
+"k_log_sampling": {"relevant": false, "why": "log sampling, unrelated"},
+"k_pagination_keyset": {"relevant": false, "why": "keyset pagination, not N+1 batching"},
+"k_query_depth_limit": {"relevant": false, "why": "query depth limit, not N+1 query"},
+"k_request_cache": {"relevant": true, "why": "memoize identical entity loads within request"},
+"k_retry_backoff": {"relevant": false, "why": "payment retry backoff, unrelated"},
+"k_schema_design": {"relevant": false, "why": "schema modeling, not query batching"},
+"k_slow_query_log": {"relevant": false, "why": "slow query log full scan, not N+1"}
+}}

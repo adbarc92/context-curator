@@ -1,0 +1,16 @@
+{"name": "feature-flag-percentage-rollout-p4", "judgments": {
+"k_audit_admin": {"relevant": false, "why": "flag change audit, not percentage bucketing"},
+"k_cron_billing": {"relevant": false, "why": "billing cron, unrelated"},
+"k_css_switch": {"relevant": false, "why": "toggle UI, unrelated"},
+"k_db_readmodel": {"relevant": false, "why": "summary table, unrelated"},
+"k_discount_percent_decoy": {"relevant": false, "why": "discount percentage, not rollout"},
+"k_email_open_rate_decoy": {"relevant": false, "why": "email open-rate percentage, not rollout"},
+"k_flag_hash_bucket": {"relevant": true, "why": "hash user id into buckets, sticky decision"},
+"k_flag_kill_switch": {"relevant": false, "why": "kill switch, not gradual percentage ramp"},
+"k_flag_override_list": {"relevant": false, "why": "allow-list override, not percentage rollout"},
+"k_flag_ramp": {"relevant": true, "why": "raise threshold gradually, deterministic bucketing"},
+"k_locale_first_day": {"relevant": false, "why": "locale calendar, unrelated"},
+"k_metrics_dash": {"relevant": false, "why": "ops dashboard, unrelated"},
+"k_oauth_consent": {"relevant": false, "why": "OAuth consent, unrelated"},
+"k_search_synonyms": {"relevant": false, "why": "search synonyms, unrelated"}
+}}

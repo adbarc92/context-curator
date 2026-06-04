@@ -1,0 +1,23 @@
+{
+  "name": "circuit-breaker-tuning-p4",
+  "prompt": "how should I tune the failure threshold and cool-down so a flaky dependency does not keep getting hammered",
+  "chunks": [
+    {"key": "k_breaker_threshold", "content": "decided to open the breaker once 50 percent of the last 20 calls to the dependency error out, rather than a fixed count, so a slow degradation trips it the same as a hard outage", "tags": []},
+    {"key": "k_breaker_cooldown", "content": "after tripping we wait 30 seconds in open state before allowing a single trial request, doubling the wait each time the trial keeps failing so we stop pounding a service that is still down", "tags": []},
+    {"key": "k_login_lockout", "content": "the login form locks an account after 5 wrong password attempts and shows a cool-down timer before the user can try again", "tags": ["hard_neg"]},
+    {"key": "k_css_spinner", "content": "replaced the loading spinner with a skeleton placeholder on the dashboard cards", "tags": []},
+    {"key": "k_breaker_halfopen", "content": "in the half-open probe we let exactly one request through and close the breaker only if it succeeds, otherwise we re-open and reset the back-off clock", "tags": []},
+    {"key": "k_db_pool_size", "content": "bumped the postgres connection pool from 20 to 40 after seeing checkout latency spikes under load", "tags": []},
+    {"key": "k_threshold_alert", "content": "the on-call alert threshold was tuned to fire when error rate stays above 50 percent for two minutes so we stop getting paged for brief blips", "tags": ["hard_neg"]},
+    {"key": "k_email_template", "content": "moved the password-reset email copy into the localized template bundle", "tags": []},
+    {"key": "k_breaker_fallback", "content": "while the breaker is open we serve a cached last-known-good response instead of letting the request pile up waiting on the dead dependency", "tags": []},
+    {"key": "k_metrics_export", "content": "export breaker state transitions and trip counts to Prometheus so we can graph how often each dependency degrades", "tags": []},
+    {"key": "k_image_resize", "content": "thumbnails are generated at upload time in three sizes and stored alongside the original", "tags": []},
+    {"key": "k_cron_cleanup", "content": "a nightly job purges soft-deleted rows older than 30 days from the audit table", "tags": []},
+    {"key": "k_feature_flag", "content": "gated the new search ranking behind a flag defaulting to off", "tags": []},
+    {"key": "k_healthz", "content": "the /healthz probe returns 200 only after the cache warm-up finishes", "tags": []}
+  ],
+  "gold_keys": ["k_breaker_threshold", "k_breaker_cooldown", "k_breaker_halfopen", "k_breaker_fallback"],
+  "split": "train",
+  "recent_tools": []
+}

@@ -1,0 +1,17 @@
+{"name": "json-schema-validation-p5", "judgments": {
+"k_audit_log": {"relevant": false, "why": "audit log, unrelated"},
+"k_cron_cleanup": {"relevant": false, "why": "cleanup cron, unrelated"},
+"k_css_dark": {"relevant": false, "why": "dark mode, unrelated"},
+"k_db_pool": {"relevant": false, "why": "connection pool, unrelated"},
+"k_dns_failover": {"relevant": false, "why": "DNS failover, unrelated"},
+"k_email_template": {"relevant": false, "why": "email template, unrelated"},
+"k_flag_kill": {"relevant": false, "why": "kill switch flag, unrelated"},
+"k_input_sanitize_xss": {"relevant": false, "why": "XSS escaping output, not request-body validation"},
+"k_metrics_dash": {"relevant": false, "why": "metrics dashboard, unrelated"},
+"k_password_rules": {"relevant": false, "why": "password rules, not general schema validation"},
+"k_schema_coerce": {"relevant": true, "why": "validator coerces types and rejects unknown properties"},
+"k_schema_error_shape": {"relevant": true, "why": "malformed bodies return consistent error with invalid pointers"},
+"k_schema_gate": {"relevant": true, "why": "JSON Schema middleware returns 422 before controller"},
+"k_schema_shared": {"relevant": false, "why": "shared schema for client/server sync, not rejection at edge"},
+"k_tls_renew": {"relevant": false, "why": "cert renewal, unrelated"}
+}}

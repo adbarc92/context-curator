@@ -1,0 +1,88 @@
+{
+ "name": "file-upload-streaming-p2",
+ "prompt": "how can I accept very large file uploads without the server running out of memory",
+ "chunks": [
+  {
+   "key": "k_css_dropzone",
+   "content": "styled the drag-and-drop upload area with a dashed border and a hover highlight",
+   "tags": []
+  },
+  {
+   "key": "k_upload_progress_ui",
+   "content": "the upload widget shows a progress bar driven by the browser's progress events as bytes are sent",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_image_resize",
+   "content": "after a photo lands we resize it to a max edge of 2000px for the gallery view",
+   "tags": []
+  },
+  {
+   "key": "k_login_throttle",
+   "content": "throttle repeated failed logins from the same IP to slow credential stuffing",
+   "tags": []
+  },
+  {
+   "key": "k_db_pool_size",
+   "content": "raised the connection pool ceiling to 40 after seeing checkout timeouts under load",
+   "tags": []
+  },
+  {
+   "key": "k_stream_to_disk",
+   "content": "decided to pipe the incoming request body straight to a temp file on disk in fixed-size buffers instead of reading the whole upload into memory",
+   "tags": []
+  },
+  {
+   "key": "k_multipart_parser",
+   "content": "swapped to a streaming multipart parser that emits each part as a readable stream so we never buffer an entire attachment in RAM",
+   "tags": []
+  },
+  {
+   "key": "k_s3_multipart",
+   "content": "for big files we open an S3 multipart upload and forward chunks as they arrive, completing the upload once the last part is flushed",
+   "tags": []
+  },
+  {
+   "key": "k_upload_size_cap",
+   "content": "reject any request whose declared content length exceeds the per-plan upload limit before we start reading the body",
+   "tags": []
+  },
+  {
+   "key": "k_email_digest",
+   "content": "send a weekly digest email summarizing each team's activity",
+   "tags": []
+  },
+  {
+   "key": "k_memory_leak_fix",
+   "content": "fixed a memory leak where the request logger held references to completed responses and the heap kept growing",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_timezone_store",
+   "content": "store event times in UTC and render them in the viewer's zone",
+   "tags": []
+  },
+  {
+   "key": "k_flag_cleanup",
+   "content": "removed a stale feature flag that had been fully rolled out for months",
+   "tags": []
+  },
+  {
+   "key": "k_audit_trail",
+   "content": "append every permission change to an immutable audit trail",
+   "tags": []
+  }
+ ],
+ "gold_keys": [
+  "k_stream_to_disk",
+  "k_multipart_parser",
+  "k_s3_multipart",
+  "k_upload_size_cap"
+ ],
+ "split": "test",
+ "recent_tools": []
+}

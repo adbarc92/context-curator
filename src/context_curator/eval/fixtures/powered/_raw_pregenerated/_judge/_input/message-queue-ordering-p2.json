@@ -1,0 +1,62 @@
+{
+ "name": "message-queue-ordering-p2",
+ "prompt": "how do I make sure events for the same account are processed in the order they happened when I have multiple queue workers",
+ "chunks": [
+  {
+   "key": "k_css_queue_ui",
+   "content": "the admin queue viewer shows pending and in-flight job counts with a refresh every five seconds"
+  },
+  {
+   "key": "k_db_partition",
+   "content": "partitioned the events table by month to keep indexes small"
+  },
+  {
+   "key": "k_dead_letter_decoy",
+   "content": "messages that fail five times are moved to a dead-letter queue for manual inspection"
+  },
+  {
+   "key": "k_email_worker",
+   "content": "a pool of workers drains the email queue and sends through the transactional provider"
+  },
+  {
+   "key": "k_flag_remove",
+   "content": "deleted a long-since-launched feature flag and its dead branches"
+  },
+  {
+   "key": "k_image_pipeline",
+   "content": "the image pipeline runs resize and watermark as two queued steps"
+  },
+  {
+   "key": "k_inflight_lock",
+   "content": "while an account's message is in flight we hold a per-account lock so a second worker cannot start the next event for that account early"
+  },
+  {
+   "key": "k_locale_money",
+   "content": "format totals in the buyer's currency at render time"
+  },
+  {
+   "key": "k_metrics_lag",
+   "content": "alert when consumer lag on any partition exceeds 10k messages"
+  },
+  {
+   "key": "k_partition_key",
+   "content": "decided to hash each message onto a partition by account id, so every event for one account always lands on the same partition and is consumed in arrival order"
+  },
+  {
+   "key": "k_priority_decoy",
+   "content": "high-priority jobs jump ahead by living on a separate queue the workers poll first"
+  },
+  {
+   "key": "k_retry_jitter",
+   "content": "failed jobs are retried with jittered backoff to avoid a thundering herd"
+  },
+  {
+   "key": "k_sequence_number",
+   "content": "stamp each event with a monotonic sequence number per account and drop any message that arrives out of order so we never apply an older state after a newer one"
+  },
+  {
+   "key": "k_single_consumer_per_partition",
+   "content": "only one worker is allowed to consume a given partition at a time, which preserves per-account sequencing even though the overall pool is parallel"
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "safe-deploy-rollback-p1",
+  "prompt": "how can I ship a release and undo it fast if error rates spike after it goes out",
+  "chunks": [
+    {"key": "k_css_refactor", "content": "rebuilt the settings page layout with a responsive grid and removed three dead stylesheets", "tags": []},
+    {"key": "k_db_rollback_decoy", "content": "the failed migration was reverted by running its down step, which dropped the half-added column and restored the previous schema", "tags": ["hard_neg"]},
+    {"key": "k_email_queue", "content": "outbound notifications are queued and sent by a background worker so the web tier stays responsive", "tags": []},
+    {"key": "k_pagination", "content": "switched the activity list to keyset pagination using the last seen id", "tags": []},
+    {"key": "k_transaction_rollback_decoy", "content": "if any step of the order placement fails the whole database transaction rolls back so we never half-charge a customer", "tags": ["hard_neg"]},
+    {"key": "k_timezone_ui", "content": "timestamps are stored in UTC and rendered in the viewer's local zone", "tags": []},
+    {"key": "k_image_lazy", "content": "below-the-fold images now lazy-load to improve first paint", "tags": []},
+    {"key": "k_audit_log", "content": "every admin change is written to an append-only audit log", "tags": []},
+    {"key": "k_config_reload", "content": "config reloads on signal without dropping in-flight requests", "tags": []},
+    {"key": "k_blue_green", "content": "we deploy the new version onto an idle stack and only flip the load balancer to it once health checks pass, so reverting is just pointing traffic back at the still-warm old stack", "tags": []},
+    {"key": "k_canary_autorevert", "content": "the release first takes one percent of traffic while we watch error rate and latency; if either crosses the threshold the pipeline automatically shifts everyone back to the prior build", "tags": []},
+    {"key": "k_immutable_artifact", "content": "each build is an immutable, versioned artifact, so going back to the last good release is redeploying a known tag rather than rebuilding from source", "tags": []},
+    {"key": "k_metrics_dashboard", "content": "a release dashboard overlays the deploy marker on the error-rate graph so spikes line up with rollouts", "tags": []}
+  ],
+  "gold_keys": ["k_blue_green", "k_canary_autorevert", "k_immutable_artifact"],
+  "split": "train",
+  "recent_tools": []
+}

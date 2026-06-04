@@ -1,0 +1,17 @@
+{"name": "dead-letter-queue-p3", "judgments": {
+"k_audit_log": {"relevant": false, "why": "audit log, unrelated"},
+"k_css_theme": {"relevant": false, "why": "dark theme, unrelated"},
+"k_db_pool": {"relevant": false, "why": "DB pool, unrelated"},
+"k_dlq_alert": {"relevant": true, "why": "side-channels failures to queue and alerts on depth"},
+"k_dlq_replay": {"relevant": true, "why": "replay parked failures so nothing is lost"},
+"k_dlq_route": {"relevant": true, "why": "moves repeatedly-failing message to dead-letter queue"},
+"k_failed_login_lock_decoy": {"relevant": false, "why": "login lockout, not message queue"},
+"k_feature_flag": {"relevant": false, "why": "feature flag, unrelated"},
+"k_gzip": {"relevant": false, "why": "gzip, unrelated"},
+"k_healthz": {"relevant": false, "why": "health endpoint, unrelated"},
+"k_invoice": {"relevant": false, "why": "invoice PDF, unrelated"},
+"k_metrics": {"relevant": false, "why": "metrics, unrelated"},
+"k_pagination": {"relevant": false, "why": "pagination, unrelated"},
+"k_tz": {"relevant": false, "why": "UTC timestamps, unrelated"},
+"k_validation_reject_decoy": {"relevant": false, "why": "form validation, not queue failures"}
+}}

@@ -1,0 +1,24 @@
+{
+  "name": "graphql-n-plus-one-p2",
+  "prompt": "my GraphQL resolver fires a separate database query for every item in a list, how do I stop that",
+  "chunks": [
+    {"key": "k_schema_design", "content": "modeled the orders graph so an order exposes its line items and the customer who placed it", "tags": []},
+    {"key": "k_query_depth_limit", "content": "added a maximum query depth so a malicious client cannot nest fields and force an enormous resolution tree", "tags": ["hard_neg"]},
+    {"key": "k_css_table", "content": "made the orders table sticky-header and zebra-striped for readability", "tags": []},
+    {"key": "k_jwt_expiry", "content": "shortened refresh token lifetime and added rotation on every use", "tags": []},
+    {"key": "k_image_cdn", "content": "serve product images from the CDN with a one-day cache header", "tags": []},
+    {"key": "k_dataloader", "content": "decided to batch the per-row lookups through a DataLoader so all the author fetches in one list collapse into a single keyed query", "tags": []},
+    {"key": "k_batch_select", "content": "the comments resolver now collects every parent id in the page and issues one WHERE id IN (...) select instead of one query per comment", "tags": []},
+    {"key": "k_request_cache", "content": "memoize identical entity loads within a single request so the same user row is not fetched twice while resolving one response", "tags": []},
+    {"key": "k_slow_query_log", "content": "turned on the slow query log and found the activity feed doing a full table scan", "tags": ["hard_neg"]},
+    {"key": "k_pagination_keyset", "content": "switched the feed to keyset pagination using the last seen id", "tags": []},
+    {"key": "k_join_preload", "content": "for the detail page we eager-join the related rows in one round trip rather than letting each field resolver lazily hit the database", "tags": []},
+    {"key": "k_locale_switch", "content": "let users switch the UI language from a header dropdown", "tags": []},
+    {"key": "k_retry_backoff", "content": "wrap the payment gateway call in exponential backoff capped at three tries", "tags": []},
+    {"key": "k_health_endpoint", "content": "the health endpoint reports 200 once migrations have applied", "tags": []},
+    {"key": "k_log_sampling", "content": "sample debug logs at one percent in production to control volume", "tags": []}
+  ],
+  "gold_keys": ["k_dataloader", "k_batch_select", "k_request_cache", "k_join_preload"],
+  "split": "train",
+  "recent_tools": []
+}

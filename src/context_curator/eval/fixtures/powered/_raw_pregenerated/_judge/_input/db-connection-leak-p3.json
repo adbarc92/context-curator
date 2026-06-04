@@ -1,0 +1,70 @@
+{
+ "name": "db-connection-leak-p3",
+ "prompt": "my service keeps exhausting the database connection pool under load, how do I find and stop the leak",
+ "chunks": [
+  {
+   "key": "k_audit_log",
+   "content": "record every admin action in an append-only audit log"
+  },
+  {
+   "key": "k_cache",
+   "content": "cache the product catalog for 10 minutes and bust it on any write"
+  },
+  {
+   "key": "k_context_manager",
+   "content": "decided to wrap every database session in a context manager so the connection is always released back to the pool even on error, which stopped the slow creep toward the connection cap"
+  },
+  {
+   "key": "k_css_grid",
+   "content": "rebuilt the report layout with a responsive CSS grid"
+  },
+  {
+   "key": "k_dark_mode",
+   "content": "switched the dashboard to a dark theme using CSS custom properties"
+  },
+  {
+   "key": "k_email_queue",
+   "content": "outbound email is pushed onto a background queue and sent by a worker"
+  },
+  {
+   "key": "k_feature_flag",
+   "content": "gate the new checkout flow behind a feature flag defaulting to off"
+  },
+  {
+   "key": "k_gzip",
+   "content": "enabled gzip compression on responses larger than 1 KB"
+  },
+  {
+   "key": "k_healthz",
+   "content": "the /healthz endpoint returns 200 once the database pool is ready"
+  },
+  {
+   "key": "k_i18n",
+   "content": "extracted all UI strings into a message catalog for translation"
+  },
+  {
+   "key": "k_memory_leak_decoy",
+   "content": "profiling found the image resizer leaks heap memory under load because it never frees the decoded bitmap buffer"
+  },
+  {
+   "key": "k_pagination",
+   "content": "switch the list endpoint to keyset pagination using the last seen id"
+  },
+  {
+   "key": "k_pool_exhaust_pipe_decoy",
+   "content": "the connection pool of swimmers at the public pool is exhausted on hot days, so the city added a second lane reservation system"
+  },
+  {
+   "key": "k_pool_metrics",
+   "content": "added a gauge for checked-out connections versus pool size and saw it climb monotonically under load, confirming connections were being acquired but not freed"
+  },
+  {
+   "key": "k_tz",
+   "content": "store all timestamps in UTC and convert in the UI"
+  },
+  {
+   "key": "k_unclosed_cursor",
+   "content": "traced the pool exhaustion to a code path that opened a database connection inside a loop and never returned it to the pool when an exception was thrown partway through"
+  }
+ ]
+}

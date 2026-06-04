@@ -1,0 +1,18 @@
+{"name": "tls-cert-renewal-p4", "judgments": {
+  "k_audit_trail": {"relevant": false, "why": "audit table, unrelated"},
+  "k_cert_expiry_monitor": {"relevant": true, "why": "monitors notAfter to renew before expiry"},
+  "k_cert_hot_reload": {"relevant": true, "why": "hot-reload cert without dropping existing connections"},
+  "k_cert_ocsp": {"relevant": true, "why": "OCSP staple with rotated cert, part of renewal"},
+  "k_cert_pin_decoy": {"relevant": false, "why": "cert pinning against MITM, not renewal"},
+  "k_cert_renew_acme": {"relevant": true, "why": "ACME auto-renew before expiry without touching listener"},
+  "k_cron_report": {"relevant": false, "why": "usage report cron, unrelated"},
+  "k_css_nav": {"relevant": false, "why": "nav styling, unrelated"},
+  "k_db_backup": {"relevant": false, "why": "DB backup, unrelated"},
+  "k_feature_toggle": {"relevant": false, "why": "feature toggle, unrelated"},
+  "k_image_cdn": {"relevant": false, "why": "CDN cache header, unrelated"},
+  "k_locale_currency": {"relevant": false, "why": "currency rendering, unrelated"},
+  "k_log_sampling": {"relevant": false, "why": "log sampling, unrelated"},
+  "k_queue_dlq": {"relevant": false, "why": "dead-letter queue, unrelated"},
+  "k_search_index": {"relevant": false, "why": "search reindex, unrelated"},
+  "k_signup_email_decoy": {"relevant": false, "why": "welcome email over https, not cert rotation"}
+}}

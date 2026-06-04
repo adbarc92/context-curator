@@ -1,0 +1,17 @@
+{"name": "optimistic-locking-version-p3", "judgments": {
+  "k_advisory_lock_decoy": {"relevant": false, "why": "advisory lock for cron jobs, not record edits"},
+  "k_audit_log": {"relevant": false, "why": "audit log, unrelated"},
+  "k_cache_ttl": {"relevant": false, "why": "cache TTL, unrelated"},
+  "k_conflict_retry": {"relevant": true, "why": "compare-and-set zero rows surfaces conflict, prevents lost update"},
+  "k_css_theme": {"relevant": false, "why": "dark theme, unrelated"},
+  "k_db_pool": {"relevant": false, "why": "connection pool, unrelated"},
+  "k_email_queue": {"relevant": false, "why": "email queue, unrelated"},
+  "k_etag_check": {"relevant": true, "why": "If-Match version header returns 412 on stale, prevents lost update"},
+  "k_git_merge_decoy": {"relevant": false, "why": "git merge conflict, not DB concurrency"},
+  "k_gzip": {"relevant": false, "why": "gzip compression, unrelated"},
+  "k_healthz": {"relevant": false, "why": "health endpoint, unrelated"},
+  "k_metrics": {"relevant": false, "why": "metrics, unrelated"},
+  "k_pagination": {"relevant": false, "why": "pagination, unrelated"},
+  "k_tz": {"relevant": false, "why": "timezone storage, unrelated"},
+  "k_version_column": {"relevant": true, "why": "version column rejects stale save, the core technique"}
+}}

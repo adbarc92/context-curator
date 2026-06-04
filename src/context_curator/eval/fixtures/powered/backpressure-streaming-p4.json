@@ -1,0 +1,88 @@
+{
+ "name": "backpressure-streaming-p4",
+ "prompt": "how do I keep a fast producer from overwhelming a slow consumer when streaming records through a pipeline",
+ "chunks": [
+  {
+   "key": "k_css_toast",
+   "content": "transient success messages now appear as a toast that fades after three seconds",
+   "tags": []
+  },
+  {
+   "key": "k_db_replica",
+   "content": "read-only analytics queries are routed to the standby replica",
+   "tags": []
+  },
+  {
+   "key": "k_pressure_wash_decoy",
+   "content": "the facilities ticket about pressure-washing the loading dock was closed after the contractor finished",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_email_throttle",
+   "content": "marketing sends are throttled to 500 messages a minute to stay under the provider's rate cap",
+   "tags": []
+  },
+  {
+   "key": "k_blood_pressure_decoy",
+   "content": "the health-tracker screen plots the user's blood pressure readings over the last month with a slow upward trend line",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_search_relevance",
+   "content": "boosted exact title matches above body matches in the search ranking",
+   "tags": []
+  },
+  {
+   "key": "k_locale_plural",
+   "content": "fixed plural rules for languages with more than two plural forms",
+   "tags": []
+  },
+  {
+   "key": "k_oauth_refresh",
+   "content": "refresh tokens rotate on every use and the old one is revoked",
+   "tags": []
+  },
+  {
+   "key": "k_cron_digest",
+   "content": "the daily digest is compiled at 6am in the recipient's timezone",
+   "tags": []
+  },
+  {
+   "key": "k_backpressure_bounded",
+   "content": "decided to give the pipeline a bounded buffer so when the slow consumer falls behind the channel fills and the fast producer blocks on send, naturally pacing itself to the consumer's rate",
+   "tags": []
+  },
+  {
+   "key": "k_backpressure_demand",
+   "content": "switched to a pull-based reactive stream where the consumer signals demand for n items and the producer only emits up to what was requested, so it can never get ahead of what the consumer can handle",
+   "tags": []
+  },
+  {
+   "key": "k_backpressure_credit",
+   "content": "the network layer uses a credit window: the receiver advertises how many records it has room for and the sender stops once credits run out until more are granted",
+   "tags": []
+  },
+  {
+   "key": "k_backpressure_drop",
+   "content": "for the non-critical metrics stream we instead drop the oldest buffered samples when full, trading completeness for keeping the producer unblocked",
+   "tags": []
+  },
+  {
+   "key": "k_feature_flag",
+   "content": "the new onboarding tour is behind a flag for a staged rollout",
+   "tags": []
+  }
+ ],
+ "gold_keys": [
+  "k_backpressure_bounded",
+  "k_backpressure_demand",
+  "k_backpressure_credit",
+  "k_backpressure_drop"
+ ],
+ "split": "train",
+ "recent_tools": []
+}

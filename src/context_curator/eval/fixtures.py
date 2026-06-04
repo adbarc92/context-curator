@@ -28,5 +28,7 @@ class Fixture(BaseModel):
 def load_fixtures(directory: str) -> list[Fixture]:
     out: list[Fixture] = []
     for path in sorted(Path(directory).glob("*.json")):
+        if path.name.startswith("_"):       # skip co-located metadata (e.g. _bge_cosines.json)
+            continue
         out.append(Fixture(**json.loads(path.read_text(encoding="utf-8"))))
     return out

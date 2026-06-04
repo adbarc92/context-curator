@@ -1,0 +1,23 @@
+{
+  "name": "pagination-cursors-p2",
+  "prompt": "how do I paginate a feed so rows do not get skipped or repeated when new items are inserted while a user is scrolling",
+  "chunks": [
+    {"key": "k_feed_schema", "content": "the activity feed joins posts with their authors and orders newest first", "tags": []},
+    {"key": "k_offset_limit_decoy", "content": "the admin report still uses LIMIT and OFFSET because its dataset is tiny and never changes mid-read", "tags": ["hard_neg"]},
+    {"key": "k_css_infinite", "content": "the infinite-scroll sentinel loads the next page when it enters the viewport", "tags": []},
+    {"key": "k_email_verify", "content": "require email verification before a new account can post", "tags": []},
+    {"key": "k_rate_headers", "content": "return X-RateLimit-Remaining on every API response", "tags": []},
+    {"key": "k_keyset_cursor", "content": "decided to page by an opaque cursor encoding the last row's sort key and id, so inserts above the reader's position do not shift later pages", "tags": []},
+    {"key": "k_stable_sort_key", "content": "the cursor sorts on (created_at, id) so ties are broken deterministically and no row is duplicated across page boundaries", "tags": []},
+    {"key": "k_seek_after", "content": "each request seeks to rows strictly after the supplied cursor with WHERE (created_at, id) < (:ts, :id), avoiding the skip bug that plain offsets cause when items are added", "tags": []},
+    {"key": "k_page_count_decoy", "content": "the dashboard shows a total page count by dividing the row count by the page size", "tags": ["hard_neg"]},
+    {"key": "k_cursor_encoding", "content": "base64-encode the cursor payload so clients treat it as an opaque token and cannot tamper with the sort position", "tags": []},
+    {"key": "k_db_index2", "content": "added a covering index on (created_at, id) so the seek query stays an index range scan", "tags": []},
+    {"key": "k_dark_theme", "content": "added a system-default dark theme option", "tags": []},
+    {"key": "k_webhook_sign", "content": "sign outgoing webhooks with an hmac the receiver can verify", "tags": []},
+    {"key": "k_cache_bust", "content": "bust the catalog cache whenever a product is edited", "tags": []}
+  ],
+  "gold_keys": ["k_keyset_cursor", "k_stable_sort_key", "k_seek_after", "k_cursor_encoding", "k_db_index2"],
+  "split": "train",
+  "recent_tools": []
+}

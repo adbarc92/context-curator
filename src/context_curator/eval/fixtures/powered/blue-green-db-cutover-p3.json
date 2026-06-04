@@ -1,0 +1,92 @@
+{
+ "name": "blue-green-db-cutover-p3",
+ "prompt": "what is the safe way to cut traffic over from the old primary database to the new replica with minimal downtime",
+ "chunks": [
+  {
+   "key": "k_replica_promote",
+   "content": "decided to keep replication streaming until lag hits zero, then briefly pause writes, promote the standby to primary, and flip the connection string so the application points at the freshly promoted node",
+   "tags": []
+  },
+  {
+   "key": "k_cutover_checklist",
+   "content": "the cutover runbook stops new writes for a few seconds, confirms the green database has caught up, repoints the service, and only then drains the old primary out of rotation",
+   "tags": []
+  },
+  {
+   "key": "k_traffic_split_canary",
+   "content": "the canary deploy sends 5 percent of HTTP traffic to the new app version and rolls back automatically if its error rate climbs above the baseline",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_thumbnail_job",
+   "content": "a nightly job regenerates product thumbnails whenever the source image checksum changes",
+   "tags": []
+  },
+  {
+   "key": "k_dns_ttl",
+   "content": "lowered the DNS TTL to 30 seconds a day ahead of the migration so the database hostname can be repointed quickly once the new node takes over as primary",
+   "tags": []
+  },
+  {
+   "key": "k_oauth_scopes",
+   "content": "the integration now requests read-only calendar scopes instead of full account access",
+   "tags": []
+  },
+  {
+   "key": "k_old_primary_replica",
+   "content": "after promotion the former primary is demoted to a read replica so it stays warm and the old database can be promoted back if the cutover misbehaves",
+   "tags": []
+  },
+  {
+   "key": "k_email_template",
+   "content": "rebuilt the receipt email template to render correctly in Outlook",
+   "tags": []
+  },
+  {
+   "key": "k_blue_green_lb_decoy",
+   "content": "the blue-green load balancer keeps the green stack idle until the smoke tests pass, then shifts all user traffic over and retires the blue stack",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_rate_limit",
+   "content": "throttle anonymous API callers to 60 requests per minute per IP",
+   "tags": []
+  },
+  {
+   "key": "k_gzip",
+   "content": "enabled gzip compression on JSON responses larger than 1 KB",
+   "tags": []
+  },
+  {
+   "key": "k_cron_dst",
+   "content": "the billing cron now runs in UTC to avoid a double run during daylight saving",
+   "tags": []
+  },
+  {
+   "key": "k_audit_table",
+   "content": "every config change is appended to an immutable audit table with the actor id",
+   "tags": []
+  },
+  {
+   "key": "k_health_probe",
+   "content": "the readiness probe returns 503 until the cache is warm",
+   "tags": []
+  },
+  {
+   "key": "k_log_sampling",
+   "content": "sample debug logs at 1 percent in production to control volume",
+   "tags": []
+  }
+ ],
+ "gold_keys": [
+  "k_replica_promote",
+  "k_cutover_checklist",
+  "k_old_primary_replica"
+ ],
+ "split": "train",
+ "recent_tools": []
+}

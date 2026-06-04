@@ -1,0 +1,24 @@
+{
+  "name": "optimistic-locking-version-p3",
+  "prompt": "how do I stop two concurrent edits from silently overwriting each other when saving the same record",
+  "chunks": [
+    {"key": "k_css_theme", "content": "switched the dashboard to a dark theme using CSS custom properties", "tags": []},
+    {"key": "k_db_pool", "content": "added a 50-connection database pool with a health-check ping on checkout", "tags": []},
+    {"key": "k_advisory_lock_decoy", "content": "the nightly batch grabs a Postgres advisory lock so two cron hosts cannot run the same report job concurrently", "tags": ["hard_neg"]},
+    {"key": "k_metrics", "content": "export request latency histograms to Prometheus on /metrics", "tags": []},
+    {"key": "k_email_queue", "content": "outbound email is pushed onto a background queue and sent by a worker", "tags": []},
+    {"key": "k_cache_ttl", "content": "cache the product catalog for 10 minutes and bust it on any write", "tags": []},
+    {"key": "k_git_merge_decoy", "content": "resolved a merge conflict where two branches edited the same config file and combined both concurrent changes by hand", "tags": ["hard_neg"]},
+    {"key": "k_pagination", "content": "switch the list endpoint to keyset pagination using the last seen id", "tags": []},
+    {"key": "k_audit_log", "content": "record every admin action in an append-only audit log", "tags": []},
+    {"key": "k_gzip", "content": "enabled gzip compression on responses larger than 1 KB", "tags": []},
+    {"key": "k_version_column", "content": "decided to add a version number column and only commit an update when the row's current version still matches the one the editor read, so a stale save is rejected instead of clobbering a newer change", "tags": []},
+    {"key": "k_conflict_retry", "content": "when the compare-and-set update affects zero rows we surface a conflict to the client and ask them to reload and reapply their edit, so neither concurrent writer's change is silently lost", "tags": []},
+    {"key": "k_etag_check", "content": "the API requires an If-Match header carrying the record's last known version, and returns 412 when the stored version has moved on, preventing a lost update from a second simultaneous edit", "tags": []},
+    {"key": "k_tz", "content": "store all timestamps in UTC and convert in the UI", "tags": []},
+    {"key": "k_healthz", "content": "the /healthz endpoint returns 200 once the database pool is ready", "tags": []}
+  ],
+  "gold_keys": ["k_version_column", "k_conflict_retry", "k_etag_check"],
+  "split": "train",
+  "recent_tools": []
+}
