@@ -35,3 +35,31 @@ def test_audit_fails_missing_hard_negatives():
     rep = audit_corpus(corpus, n_chunks_min=8)
     assert rep.ok is False
     assert "hard negative" in rep.reason.lower()
+
+
+def _fx_real(name, gold_pos, n=12):
+    chunks = [FixtureChunk(key=f"{name}:c{i}", content=f"content {i}") for i in range(n)]  # no tags
+    return Fixture(name=name, chunks=chunks, prompt="p", gold_keys=[f"{name}:c{gold_pos}"],
+                   split="test")
+
+
+def test_audit_real_mode_ignores_missing_hard_negs():
+    positions = [1, 5, 9, 1, 6, 10, 2, 7, 11]   # gold spread across all three recency thirds
+    corpus = [_fx_real(f"f{i}", p) for i, p in enumerate(positions)]
+    rep = audit_corpus(corpus, n_chunks_min=8, require_hard_neg=False)
+    assert rep.ok is True
+
+
+def test_audit_real_mode_flags_degenerate_recency():
+    corpus = [_fx_real(f"f{i}", 11) for i in range(9)]   # all gold newest -> recency-trivial
+    rep = audit_corpus(corpus, n_chunks_min=8, require_hard_neg=False)
+    assert rep.ok is False and "recency" in rep.reason.lower()
+
+
+def test_audit_does_not_crash_when_gold_absent_from_chunks():
+    # a malformed fixture whose gold key isn't among its chunks must not raise (robustness guard)
+    from context_curator.eval.fixtures import Fixture, FixtureChunk
+    fx = Fixture(name="bad", chunks=[FixtureChunk(key=f"c{i}", content="x") for i in range(12)],
+                 prompt="p", gold_keys=["missing"], split="test")
+    rep = audit_corpus([fx], n_chunks_min=8, require_hard_neg=False)
+    assert rep is not None        # no ValueError raised

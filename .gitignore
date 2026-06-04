@@ -15,3 +15,6 @@ build/
 .curator.json
 .curator.lock
 results/
+
+# M4d: local-only real-transcript corpus (privacy §9 — never commit)
+src/context_curator/eval/fixtures/_real_local/
