@@ -95,12 +95,15 @@ def test_drops_turns_below_min_candidates():
     assert harvest_trace(_trace(events), w=5, min_candidates=5) == []
 
 
-def test_harvest_corpus_from_sample_jsonl_splits_by_session():
-    sample = str(Path(e.__file__).parent.parent.parent.parent
-                 / "tests" / "eval" / "_traces" / "sample.jsonl")
-    fxs = harvest_corpus([sample], w=5, min_candidates=5, test_frac=0.5, seed=0)
-    assert fxs, "sample must yield >=1 fixture"
+def test_harvest_corpus_splits_distinct_sessions_across_splits():
+    base = Path(e.__file__).parent.parent.parent.parent / "tests" / "eval" / "_traces"
+    paths = [str(base / "sample_a.jsonl"), str(base / "sample_b.jsonl")]
+    fxs = harvest_corpus(paths, w=5, min_candidates=5, test_frac=0.5, seed=0)
+    assert fxs, "samples must yield >=1 fixture"
     sessions = {f.session_id for f in fxs}
+    assert len(sessions) >= 2, "expected >=2 distinct sessions (one per file)"
+    # no session straddles a split
     for s in sessions:
-        splits = {f.split for f in fxs if f.session_id == s}
-        assert len(splits) == 1, f"session {s} straddles train/test"
+        assert len({f.split for f in fxs if f.session_id == s}) == 1
+    # with test_frac=0.5 over 2 sessions, the split is genuinely exercised: both splits present
+    assert {f.split for f in fxs} == {"train", "test"}

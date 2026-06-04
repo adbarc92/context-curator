@@ -19,24 +19,3 @@
 {"type": "user", "isSidechain": false, "sessionId": "A", "message": {"role": "user", "content": "search the auth dir for login"}}
 {"type": "assistant", "isSidechain": false, "sessionId": "A", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "A-g", "name": "Grep", "input": {"path": "/proj/a"}}]}}
 {"type": "user", "isSidechain": false, "sessionId": "A", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "A-g", "content": "auth.py: def login"}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": "open the auth file"}}
-{"type": "assistant", "isSidechain": false, "sessionId": "B", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "B-c0", "name": "Read", "input": {"file_path": "/proj/b/auth.py"}}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "B-c0", "content": "def login(): ..."}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": "look at helper 1"}}
-{"type": "assistant", "isSidechain": false, "sessionId": "B", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "B-c1", "name": "Read", "input": {"file_path": "/proj/b/helper_1.py"}}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "B-c1", "content": "helper 1 body"}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": "look at helper 2"}}
-{"type": "assistant", "isSidechain": false, "sessionId": "B", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "B-c2", "name": "Read", "input": {"file_path": "/proj/b/helper_2.py"}}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "B-c2", "content": "helper 2 body"}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": "look at helper 3"}}
-{"type": "assistant", "isSidechain": false, "sessionId": "B", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "B-c3", "name": "Read", "input": {"file_path": "/proj/b/helper_3.py"}}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "B-c3", "content": "helper 3 body"}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": "look at helper 4"}}
-{"type": "assistant", "isSidechain": false, "sessionId": "B", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "B-c4", "name": "Read", "input": {"file_path": "/proj/b/helper_4.py"}}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "B-c4", "content": "helper 4 body"}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": "look at helper 5"}}
-{"type": "assistant", "isSidechain": false, "sessionId": "B", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "B-c5", "name": "Read", "input": {"file_path": "/proj/b/helper_5.py"}}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "B-c5", "content": "helper 5 body"}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": "search the auth dir for login"}}
-{"type": "assistant", "isSidechain": false, "sessionId": "B", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "B-g", "name": "Grep", "input": {"path": "/proj/b"}}]}}
-{"type": "user", "isSidechain": false, "sessionId": "B", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "B-g", "content": "auth.py: def login"}]}}
