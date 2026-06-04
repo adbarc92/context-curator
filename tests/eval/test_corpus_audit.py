@@ -54,3 +54,12 @@ def test_audit_real_mode_flags_degenerate_recency():
     corpus = [_fx_real(f"f{i}", 11) for i in range(9)]   # all gold newest -> recency-trivial
     rep = audit_corpus(corpus, n_chunks_min=8, require_hard_neg=False)
     assert rep.ok is False and "recency" in rep.reason.lower()
+
+
+def test_audit_does_not_crash_when_gold_absent_from_chunks():
+    # a malformed fixture whose gold key isn't among its chunks must not raise (robustness guard)
+    from context_curator.eval.fixtures import Fixture, FixtureChunk
+    fx = Fixture(name="bad", chunks=[FixtureChunk(key=f"c{i}", content="x") for i in range(12)],
+                 prompt="p", gold_keys=["missing"], split="test")
+    rep = audit_corpus([fx], n_chunks_min=8, require_hard_neg=False)
+    assert rep is not None        # no ValueError raised

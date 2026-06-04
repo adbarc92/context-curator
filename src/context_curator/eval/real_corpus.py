@@ -97,6 +97,8 @@ def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5) -> list[
             continue
         refetched: set[str] = set()
         for tw in turns[i: i + w + 1]:
+            # per-turn reset: excludes a SAME-TURN verify-Read-after-Edit only (pinned rule §3.3);
+            # a cross-turn re-read of an edited entity still counts as a genuine re-fetch.
             edited_here: set[str] = set()
             for call in tw.calls:
                 ents = extract_entities(call)
