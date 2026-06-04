@@ -1,13 +1,17 @@
 import pytest
 
+from context_curator.eval.bm25 import Bm25Target
 from context_curator.eval.eviction_regret import (
+    RegretReport,
     Session,
     SessionTurn,
     eviction_regret,
 )
 from context_curator.eval.fixtures import FixtureChunk
 from context_curator.policy.relevance import RelevancePolicy
+from context_curator.replay.schema import TaskSignal
 from context_curator.replay.target import PolicyTarget, RecencyOnlyTarget
+from context_curator.store.memory import InMemoryStore
 from tests.eval.conftest import KeywordEmbedder
 
 
@@ -65,3 +69,37 @@ def test_validation_rejects_duplicate_key():
     ])
     with pytest.raises(ValueError):
         eviction_regret([s], RecencyOnlyTarget(), KeywordEmbedder())
+
+
+def test_lag_too_large_excludes_the_need():
+    # age(gold)=3 < lag 4 -> no old need-events -> rate None
+    r = eviction_regret([_stale_auth()], RecencyOnlyTarget(), KeywordEmbedder(), k=5, lag=4)
+    assert r.old_need_events == 0 and r.rate is None
+
+
+def test_larger_k_admits_the_buried_chunk():
+    # k=7 over the 7-chunk pool admits gold (recency position 7) -> recency regret 0.0
+    r = eviction_regret([_stale_auth()], RecencyOnlyTarget(), KeywordEmbedder(), k=7, lag=2)
+    assert r.rate == 0.0
+
+
+def test_candidates_is_full_pool_for_all_arms():
+    emb = KeywordEmbedder()
+    chunks = [c for turn in _stale_auth().turns for c in turn.new_chunks]   # the 7 chunks
+    store = InMemoryStore(embedder=emb)
+    for c in chunks:
+        store.store(c.key, c.content, tags=c.tags, ttl_s=None)
+    sig = TaskSignal(turn_index=3, prompt="A B C", subtask_id=None, recent_tool_calls=[])
+    for target in (RecencyOnlyTarget(), Bm25Target(), PolicyTarget(RelevancePolicy(emb))):
+        assert len(target.decide(sig, store).candidates) == len(chunks)   # full pool, not truncated
+
+
+def test_bm25_arm_runs_and_reports():
+    r = eviction_regret([_stale_auth()], Bm25Target(), KeywordEmbedder(), k=5, lag=2)
+    assert isinstance(r, RegretReport) and r.arm == "bm25" and r.old_need_events == 1
+
+
+def test_empty_session_does_not_throw():
+    s = Session(name="empty", turns=[SessionTurn(prompt="p")])
+    r = eviction_regret([s], RecencyOnlyTarget(), KeywordEmbedder(), k=5, lag=2)
+    assert r.rate is None and r.old_need_events == 0
