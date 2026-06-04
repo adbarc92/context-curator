@@ -20,7 +20,8 @@ and the flip/decommission decision is explicitly deferred.
 2. **`eval/real_corpus.py`** — harvest per-turn fixtures with downstream-use gold + `session_id`.
 3. **`Fixture.session_id`** (schema add) and a **keystone seam** that threads per-fixture session ids
    into the delta vector.
-4. **`stats.cluster_bootstrap_ci`** — session-clustered CI (the true-N statistic).
+4. **`stats.cluster_bootstrap_ci`** — session-clustered CI (the true-N statistic) + the §5.4
+   **self-correcting precision gate** (verdict-or-needed-N).
 5. **Adapted/diagnostic `corpus_audit.py`** + a **lexical-bias diagnostic** (§5.2, symmetric).
 6. **Flag-on regression tests** (deferred from M4b/M4c).
 7. The real keystone run + the contingent flip / framework (§6).
@@ -122,14 +123,29 @@ Contract (pinned + tested):
 The keystone is extended to emit per-fixture `session_id` alongside `per_fixture_ndcg_delta`; **every
 CI in §6 is this clustered CI.** The verdict reports **n_sessions** as the true sample size.
 
-### 5.4 Minimum-sessions precondition (resolves "undeliverable as a flip")
-n_sessions is the real N. **Pre-registered floor `MIN_SESSIONS = 8`** (§5.7) — a provisional value
-from a rough clustered-power sketch (a session-clustered analog of M4c's n_test≈25; revisable only
-with documented justification recorded *before* the effect is examined). If fewer than `MIN_SESSIONS`
-independent sessions survive §3.4, M4d is declared **underpowered-by-construction → harness-only, NO
-verdict/flip/decommission attempted**, and that finding (plus "capture N more sessions") is the
-deliverable. Decided *before* looking at the effect; the expected outcome on a small local corpus —
-not a failure.
+### 5.4 Self-correcting precision gate (replaces a fixed minimum-sessions guess)
+A fixed `MIN_SESSIONS` is an arbitrary guess — nobody can know up front whether N is "enough." Instead
+the gate is **data-driven and self-correcting**: the session-clustered CI already widens exactly when
+the corpus carries too little independent information, so let *its width* decide, and have the harness
+report how much more data closes the gap.
+- **Definitional floor:** `n_sessions ≥ 3`. Below this the clustered bootstrap cannot estimate
+  between-session variance (`n_sessions==1`→`(-inf,+inf)`; `==2` is degenerate). This is a hard
+  *definitional* minimum, not a power guess.
+- **Precision gate (the real rule, pre-registered):** a substantive verdict (GREEN / any NEGATIVE
+  branch / baseline-wins) is rendered ONLY if the clustered 90% CI is precise enough to *place* the
+  effect against both decision boundaries (0 and MEI) — operationally **`(hi − lo) ≤ MEI`** (width
+  ≤ 0.10). Wider than that → **INCONCLUSIVE-underpowered**, regardless of the point estimate. This
+  ties "enough data" to the achieved estimate precision, not to a session count anyone had to guess.
+- **Self-correcting feedback (the mechanism):** on INCONCLUSIVE-underpowered the harness reports the
+  **additional sessions needed** to hit the precision target. Since clustered CI width scales
+  ≈ ∝ 1/√n_sessions, `needed_n ≈ ceil(n_sessions × ((hi − lo) / MEI)²)` (first-order; assumes the
+  between-session variance is roughly stable as sessions are added — stated as an estimate, not a
+  promise). The verdict doc records "have X sessions; precision target needs ~Y; capture ~(Y−X) more
+  and re-run."
+- **M4d is re-runnable/incremental:** each run consumes whatever sessions exist and *either* renders a
+  verdict *or* emits a concrete needed-N ask; adding sessions and re-running converges. On a small
+  local corpus the expected first outcome is INCONCLUSIVE-underpowered with a needed-N — that is the
+  designed behavior and the honest deliverable, not a failure.
 
 ### 5.5 Selection-bias report
 The ≥1-gold filter keeps file-path-centric, revisit-heavy tasks and drops pure-reasoning / first-try
@@ -149,7 +165,9 @@ to "pass."** `hard_neg` count becomes an optional flag (off for real corpora; on
 | `MEI` | +0.10 nDCG | §6 verdict |
 | CI | two-sided 90%, session-clustered | §5.3, §6 |
 | `W` (forward window) | 5 turns | §3.3 gold |
-| `MIN_SESSIONS` | 8 | §5.4 precondition |
+| session definitional floor | `n_sessions ≥ 3` | §5.4 |
+| precision gate (verdict requires) | clustered CI width `(hi−lo) ≤ MEI` (0.10) | §5.4 |
+| needed-N feedback | `ceil(n_sessions × ((hi−lo)/MEI)²)` | §5.4 |
 | lexical-bias margin | +0.15 absolute BM25 R@3 over control | §5.2 |
 | lexical-bias control | per-fixture random non-gold, same count as gold, seeded | §5.2 |
 | min candidates / min gold per kept turn | ≥5 / ≥1 | §3.4 |
@@ -161,7 +179,9 @@ These are revisable only with justification documented *before* the effect is ex
 ## 6. Decision & flip mechanics
 Pre-registered (§5.7): **MEI = +0.10 nDCG**, two-sided **90% session-clustered CI** (§5.3). `m` = mean
 per-fixture delta (semantic − max(recency,BM25)); `[lo,hi]` = clustered CI; `L` = §5.2 lexical-bias
-("degenerate" trips). **All conditions below presume §5.4 passed; else → harness-only, no verdict.**
+("degenerate" trips). **Gating order (§5.4):** if `n_sessions < 3` → harness-only, no verdict. Else
+if the clustered CI width `(hi − lo) > MEI` → **INCONCLUSIVE-underpowered** + the needed-N ask (no
+flip/decommission). Only when `n_sessions ≥ 3` AND width `≤ MEI` is the table below applied.
 
 | Outcome | Condition | Action |
 |---|---|---|
@@ -193,7 +213,9 @@ warm-daemon handshake and recency-fallback on empty, via monkeypatched config.
   + each tool-pair path-equivalence** (Read↔Grep-dir, pattern-Glob no-match); the retrieval-only W=5
   gold rule (**an edit/run must NOT create gold; a verify-Read-after-Edit must NOT; a true re-Read
   must**); keep/drop; `session_id` provenance. `cluster_bootstrap_ci` tests (clustered CI ≥ iid CI on
-  the same deltas; **n_sessions=1 → (-inf,+inf)**; length-mismatch raises). Adapted `corpus_audit`
+  the same deltas; **n_sessions=1 → (-inf,+inf)**; length-mismatch raises). **Precision-gate tests:**
+  width > MEI → INCONCLUSIVE-underpowered with the needed-N formula; width ≤ MEI → table applied;
+  n_sessions < 3 → harness-only. Adapted `corpus_audit`
   tests (optional `hard_neg`, pinned distractor fraction, degenerate-recency downgrade).
 - **Flag-on regression:** `tests/curator/test_onload_flag_on.py` (known-irrelevant-excluded contract).
 - **Real keystone run:** bge + real data, CI-skipped like M4c's bge tests; produces the verdict doc.
@@ -258,3 +280,12 @@ into a **pinned table (§5.7)**; and three doc-precision fixes — the `call_id`
 (§3.3), the exact flip target (`curator/config.py:23` `CC_CURATOR_ONLOAD` `"0"`→`"1"`, §6), and the
 threshold constant's real home (`policy/weights.py`, not config.py — §6/§8). No further design round
 needed.
+
+### Post-review refinement (user feedback)
+The user flagged that the pinned `MIN_SESSIONS = 8` was an unjustifiable guess and asked for a
+**self-correcting** mechanism. Replaced the fixed floor with the §5.4 **precision gate**: a hard
+*definitional* floor (`n_sessions ≥ 3`, so the clustered bootstrap is defined) plus a data-driven
+rule — a substantive verdict is rendered only when the clustered CI is precise enough to place the
+effect (`width ≤ MEI`); otherwise INCONCLUSIVE-underpowered with a computed **needed-N**
+(`ceil(n_sessions × (width/MEI)²)`). M4d becomes re-runnable: it converges as sessions accumulate and
+tells the user exactly how many more to capture, instead of relying on a guessed threshold.
