@@ -1,0 +1,16 @@
+{"name": "websocket-reconnect-p2", "judgments": {
+  "k_css_chat": {"relevant": false, "why": "chat bubble styling, unrelated"},
+  "k_db_messages": {"relevant": false, "why": "message persistence schema, not reconnect"},
+  "k_emoji_picker": {"relevant": false, "why": "emoji picker, unrelated"},
+  "k_flag_sunset": {"relevant": false, "why": "flag retirement, unrelated"},
+  "k_heartbeat_ping": {"relevant": true, "why": "heartbeat detects dead connection and triggers reconnect"},
+  "k_image_paste": {"relevant": false, "why": "image paste, unrelated"},
+  "k_metrics_p99": {"relevant": false, "why": "latency metric, unrelated"},
+  "k_outbound_buffer": {"relevant": true, "why": "local buffer flushes queued sends after reconnect"},
+  "k_presence_decoy": {"relevant": false, "why": "presence indicators, unrelated"},
+  "k_push_fallback": {"relevant": false, "why": "push notification fallback, not socket recovery"},
+  "k_reconnect_backoff": {"relevant": true, "why": "auto reconnect with exponential backoff and jitter"},
+  "k_resume_cursor": {"relevant": true, "why": "replay after last-received id so nothing missed"},
+  "k_typing_decoy": {"relevant": false, "why": "typing indicators, unrelated"},
+  "k_ws_handshake": {"relevant": false, "why": "initial upgrade handshake, not reconnect recovery"}
+}}

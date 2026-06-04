@@ -1,0 +1,66 @@
+{
+ "name": "signed-url-expiry-p5",
+ "prompt": "how do I hand out a temporary download link to a private file that stops working after a short time",
+ "chunks": [
+  {
+   "key": "k_audit",
+   "content": "log every file access request with the requester id for the audit trail"
+  },
+  {
+   "key": "k_cache_ttl_catalog",
+   "content": "the product catalog cache holds entries for 10 minutes and busts on any write"
+  },
+  {
+   "key": "k_css_anim",
+   "content": "softened the page transitions with a 150ms fade so navigation feels less jarring"
+  },
+  {
+   "key": "k_db_index",
+   "content": "added an index on (user_id, created_at) to speed up the activity feed"
+  },
+  {
+   "key": "k_email_send",
+   "content": "the welcome email goes out through the transactional provider after signup"
+  },
+  {
+   "key": "k_flag_rollout",
+   "content": "ramp the new uploader UI to 10% of users behind a flag"
+  },
+  {
+   "key": "k_locale_fmt",
+   "content": "format currency to the buyer's locale in the checkout summary"
+  },
+  {
+   "key": "k_metrics",
+   "content": "export request latency histograms to the metrics backend every 15 seconds"
+  },
+  {
+   "key": "k_pagination",
+   "content": "switched the report list to keyset pagination on the last seen id"
+  },
+  {
+   "key": "k_session_expiry_logout",
+   "content": "an idle login session expires after 30 minutes and the user is bounced to the sign-in page"
+  },
+  {
+   "key": "k_signed_url",
+   "content": "decided to serve private attachments through a pre-signed object-storage link that embeds an expiry timestamp and a signature, so the URL is only valid for a brief window"
+  },
+  {
+   "key": "k_storage_class",
+   "content": "moved cold archive files to an infrequent-access storage tier to cut costs"
+  },
+  {
+   "key": "k_url_no_relist",
+   "content": "the temporary link grants access to exactly that one object and can't be used to browse or enumerate other files in the bucket"
+  },
+  {
+   "key": "k_url_short_window",
+   "content": "the link's lifetime is set to five minutes, just long enough for the browser to start the download, after which the storage layer rejects it as expired"
+  },
+  {
+   "key": "k_url_tamper_proof",
+   "content": "because the path and expiry are HMAC-signed with our secret, a client can't extend the deadline or point the link at someone else's file without invalidating it"
+  }
+ ]
+}

@@ -1,0 +1,88 @@
+{
+ "name": "websocket-reconnect-p2",
+ "prompt": "how should the browser client recover its realtime connection after the websocket drops without losing messages",
+ "chunks": [
+  {
+   "key": "k_ws_handshake",
+   "content": "the realtime endpoint upgrades the HTTP request to a websocket after checking the auth cookie",
+   "tags": []
+  },
+  {
+   "key": "k_presence_decoy",
+   "content": "presence indicators show which teammates currently have the document open",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_typing_decoy",
+   "content": "typing indicators broadcast a short-lived event while a user is composing a message",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_css_chat",
+   "content": "styled the chat bubbles with tails and grouped consecutive messages from one sender",
+   "tags": []
+  },
+  {
+   "key": "k_emoji_picker",
+   "content": "added an emoji picker to the composer toolbar",
+   "tags": []
+  },
+  {
+   "key": "k_db_messages",
+   "content": "messages persist to the messages table with a server-assigned sequence id",
+   "tags": []
+  },
+  {
+   "key": "k_push_fallback",
+   "content": "if the tab is backgrounded we fall back to a push notification",
+   "tags": []
+  },
+  {
+   "key": "k_image_paste",
+   "content": "let users paste an image directly into the composer",
+   "tags": []
+  },
+  {
+   "key": "k_flag_sunset",
+   "content": "retired an old experiment flag now that the feature is default-on",
+   "tags": []
+  },
+  {
+   "key": "k_reconnect_backoff",
+   "content": "decided that on a socket close the client reconnects automatically with exponential backoff and jitter so a flaky network does not hammer the server",
+   "tags": []
+  },
+  {
+   "key": "k_resume_cursor",
+   "content": "the client remembers the id of the last message it received and on reconnect asks the server to replay everything after that cursor so nothing is missed during the gap",
+   "tags": []
+  },
+  {
+   "key": "k_heartbeat_ping",
+   "content": "a periodic ping/pong heartbeat detects a silently dead connection quickly and triggers the reconnect logic instead of waiting for a TCP timeout",
+   "tags": []
+  },
+  {
+   "key": "k_outbound_buffer",
+   "content": "messages the user sends while offline are queued in a local outbound buffer and flushed once the socket is healthy again, so a drop does not drop their input",
+   "tags": []
+  },
+  {
+   "key": "k_metrics_p99",
+   "content": "track p99 message delivery latency on the realtime path",
+   "tags": []
+  }
+ ],
+ "gold_keys": [
+  "k_reconnect_backoff",
+  "k_resume_cursor",
+  "k_heartbeat_ping",
+  "k_outbound_buffer"
+ ],
+ "split": "test",
+ "recent_tools": []
+}

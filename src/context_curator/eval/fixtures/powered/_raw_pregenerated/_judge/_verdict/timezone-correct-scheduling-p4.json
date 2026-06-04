@@ -1,0 +1,16 @@
+{"name": "timezone-correct-scheduling-p4", "judgments": {
+  "k_css_calendar": {"relevant": false, "why": "calendar styling, unrelated"},
+  "k_db_partition": {"relevant": false, "why": "table partitioning, unrelated"},
+  "k_email_unsub": {"relevant": false, "why": "unsubscribe link, unrelated"},
+  "k_feature_flag": {"relevant": false, "why": "feature flag, unrelated"},
+  "k_flight_time_decoy": {"relevant": false, "why": "displaying flight times, not recurring scheduling"},
+  "k_locale_number": {"relevant": false, "why": "number formatting, unrelated"},
+  "k_meeting_invite_decoy": {"relevant": false, "why": "displaying invite times, not DST scheduling"},
+  "k_metrics_slo": {"relevant": false, "why": "SLO definition, unrelated"},
+  "k_oauth_pkce": {"relevant": false, "why": "PKCE login, unrelated"},
+  "k_search_typo": {"relevant": false, "why": "fuzzy search, unrelated"},
+  "k_tz_dst_recompute": {"relevant": true, "why": "recompute occurrence with current DST offset keeps wall-clock"},
+  "k_tz_fold_ambiguous": {"relevant": true, "why": "handles fall-back fold to avoid double delivery"},
+  "k_tz_skip_gap": {"relevant": true, "why": "rolls spring-forward gap to next valid instant"},
+  "k_tz_store_zone": {"relevant": true, "why": "store IANA zone plus local time, recompute each firing"}
+}}

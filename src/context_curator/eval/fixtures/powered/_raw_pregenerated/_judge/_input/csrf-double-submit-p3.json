@@ -1,0 +1,66 @@
+{
+ "name": "csrf-double-submit-p3",
+ "prompt": "how do I protect my form POST endpoints from cross-site request forgery without a server-side session store",
+ "chunks": [
+  {
+   "key": "k_audit_log",
+   "content": "record every admin action in an append-only audit log"
+  },
+  {
+   "key": "k_cache_ttl",
+   "content": "cache the product catalog for 10 minutes and bust it on any write"
+  },
+  {
+   "key": "k_cors_origin_decoy",
+   "content": "configured CORS to allow cross-site requests only from the partner dashboard origin and to reject every other domain on preflight"
+  },
+  {
+   "key": "k_css_grid",
+   "content": "rebuilt the settings page layout with a responsive CSS grid"
+  },
+  {
+   "key": "k_db_index",
+   "content": "added a composite index on (tenant_id, created_at) to speed up the activity feed"
+  },
+  {
+   "key": "k_double_submit_token",
+   "content": "decided on the double-submit pattern: set a random token in a cookie and require the form to echo the same value in a hidden field, then reject the POST when the header value and the cookie do not match, which needs no server session"
+  },
+  {
+   "key": "k_email_queue",
+   "content": "outbound email is pushed onto a background queue and sent by a worker"
+  },
+  {
+   "key": "k_forgery_fraud_decoy",
+   "content": "the fraud team flagged a forged signature on a request to change the payout bank account and froze the cross-border transfer pending review"
+  },
+  {
+   "key": "k_gzip",
+   "content": "enabled gzip compression on responses larger than 1 KB"
+  },
+  {
+   "key": "k_healthz",
+   "content": "the /healthz endpoint returns 200 once the database pool is ready"
+  },
+  {
+   "key": "k_metrics",
+   "content": "export request latency histograms to Prometheus on /metrics"
+  },
+  {
+   "key": "k_pagination",
+   "content": "switch the list endpoint to keyset pagination using the last seen id"
+  },
+  {
+   "key": "k_samesite_cookie",
+   "content": "marked the auth cookie SameSite=Strict so the browser will not attach it on requests triggered by another site, blocking the forged form submission at the cookie layer"
+  },
+  {
+   "key": "k_token_verify",
+   "content": "each state-changing request must carry an unpredictable anti-forgery token that the server validates against the one bound to the cookie before mutating any data, defeating a malicious cross-origin form post"
+  },
+  {
+   "key": "k_tz",
+   "content": "store all timestamps in UTC and convert in the UI"
+  }
+ ]
+}

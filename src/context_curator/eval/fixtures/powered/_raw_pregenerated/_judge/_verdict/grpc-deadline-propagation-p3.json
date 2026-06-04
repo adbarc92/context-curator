@@ -1,0 +1,18 @@
+{"name": "grpc-deadline-propagation-p3", "judgments": {
+"k_audit_log": {"relevant": false, "why": "audit log, unrelated"},
+"k_cache_ttl": {"relevant": false, "why": "catalog caching, unrelated"},
+"k_cancel_on_expiry": {"relevant": true, "why": "deadline exceeded cancels down call chain"},
+"k_config_reload": {"relevant": false, "why": "SIGHUP config reload, not deadline propagation"},
+"k_css_grid": {"relevant": false, "why": "CSS layout, unrelated"},
+"k_db_index": {"relevant": false, "why": "DB index, unrelated"},
+"k_deadline_context": {"relevant": true, "why": "thread deadline through context, downstream inherits budget"},
+"k_deadline_propagate": {"relevant": true, "why": "fan-out RPCs pass propagated deadline, not fresh timeout"},
+"k_email_queue": {"relevant": false, "why": "email queue, unrelated"},
+"k_feature_flag": {"relevant": false, "why": "feature flag, unrelated"},
+"k_gzip": {"relevant": false, "why": "gzip, unrelated"},
+"k_pagination": {"relevant": false, "why": "pagination, unrelated"},
+"k_request_timeout_lock_decoy": {"relevant": false, "why": "login throttle lockout, not deadline propagation"},
+"k_session_timeout_decoy": {"relevant": false, "why": "idle session timeout, unrelated"},
+"k_soft_delete": {"relevant": false, "why": "soft delete, unrelated"},
+"k_tz": {"relevant": false, "why": "UTC timestamps, unrelated"}
+}}

@@ -1,0 +1,54 @@
+{
+ "name": "structured-request-logging-p1",
+ "prompt": "how should I make our logs searchable so I can trace one request across services",
+ "chunks": [
+  {
+   "key": "k_correlation_id",
+   "content": "we mint a correlation id at the edge gateway and propagate it through every downstream call, so a single trace can be reassembled by filtering on that one field"
+  },
+  {
+   "key": "k_csv_export",
+   "content": "the reports page can now export the current filter as a CSV download"
+  },
+  {
+   "key": "k_dark_mode",
+   "content": "added a dark mode toggle that remembers the choice in local storage"
+  },
+  {
+   "key": "k_db_replica",
+   "content": "read-heavy analytics queries were moved to a read replica to take pressure off the primary"
+  },
+  {
+   "key": "k_disk_alert",
+   "content": "an alert fires when any node's disk passes 85 percent so we can prune before it fills"
+  },
+  {
+   "key": "k_json_logs",
+   "content": "switched every emitter to structured JSON lines with consistent keys (level, ts, service, trace) instead of free-form text, so the aggregator can index them"
+  },
+  {
+   "key": "k_log_shipping",
+   "content": "logs are shipped to the central store where you can query by the propagated trace identifier and see all hops of one request in order"
+  },
+  {
+   "key": "k_login_audit_decoy",
+   "content": "every failed login is recorded with the username and source IP so security can review suspicious access patterns"
+  },
+  {
+   "key": "k_pii_scrub",
+   "content": "a redaction filter strips emails and tokens from log fields before they leave the process"
+  },
+  {
+   "key": "k_request_validation_decoy",
+   "content": "the request body is validated against a schema and a 422 is returned listing every field that failed"
+  },
+  {
+   "key": "k_stripe_webhook",
+   "content": "verify the Stripe webhook signature before trusting any payment event"
+  },
+  {
+   "key": "k_thumbnail_cache",
+   "content": "thumbnails are generated lazily on first request and then cached at the CDN"
+  }
+ ]
+}

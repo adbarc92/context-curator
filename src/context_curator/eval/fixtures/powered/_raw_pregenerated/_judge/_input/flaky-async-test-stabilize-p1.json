@@ -1,0 +1,70 @@
+{
+ "name": "flaky-async-test-stabilize-p1",
+ "prompt": "how do I fix tests that pass locally but fail randomly in CI",
+ "chunks": [
+  {
+   "key": "k_await_condition",
+   "content": "the worst offenders used a fixed sleep waiting for an async result; replacing each sleep with a poll-until-condition with a timeout removed the timing races"
+  },
+  {
+   "key": "k_cache_warm",
+   "content": "the cache warmer now runs on deploy so the first users do not eat a cold start"
+  },
+  {
+   "key": "k_ci_intro",
+   "content": "the integration suite has been red about one run in five this week and it is eroding trust in the pipeline"
+  },
+  {
+   "key": "k_db_vacuum",
+   "content": "scheduled a weekly vacuum analyze on the largest tables"
+  },
+  {
+   "key": "k_docs_update",
+   "content": "updated the contributor guide with how to run the suite locally"
+  },
+  {
+   "key": "k_feature_toggle",
+   "content": "the export-to-pdf feature is behind a toggle while we finish the layout"
+  },
+  {
+   "key": "k_fixture_db",
+   "content": "each test gets a fresh transactional database that rolls back at teardown"
+  },
+  {
+   "key": "k_freeze_clock",
+   "content": "froze the system clock in date-sensitive tests so a midnight boundary no longer flips an assertion"
+  },
+  {
+   "key": "k_isolate_shared_state",
+   "content": "two tests were sharing a module-level cache, so order made them flap; giving each test its own instance and resetting globals between runs stopped the intermittent CI-only failures"
+  },
+  {
+   "key": "k_lint_rule",
+   "content": "added a lint rule banning bare except clauses"
+  },
+  {
+   "key": "k_load_test_decoy",
+   "content": "the load test drove 2000 requests per second and the p99 stayed under 200ms, so the autoscaler config is validated"
+  },
+  {
+   "key": "k_mock_payment",
+   "content": "the payment gateway is mocked in tests so we never hit the real sandbox during a run"
+  },
+  {
+   "key": "k_parametrize",
+   "content": "parametrized the currency formatter test across twelve locales to catch rounding edge cases"
+  },
+  {
+   "key": "k_seed_random",
+   "content": "discovered one suite seeded the RNG from the clock; pinning a fixed seed made the shuffle-order failures reproducible and then fixable"
+  },
+  {
+   "key": "k_snapshot",
+   "content": "snapshot tests for the email HTML are regenerated whenever the template intentionally changes"
+  },
+  {
+   "key": "k_test_coverage_decoy",
+   "content": "raised the coverage gate to 85 percent and added cases for the previously untested refund path"
+  }
+ ]
+}

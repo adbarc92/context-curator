@@ -1,0 +1,18 @@
+{"name": "flaky-async-test-stabilize-p1", "judgments": {
+"k_await_condition": {"relevant": true, "why": "poll-until-condition replaces sleep, removes timing races"},
+"k_cache_warm": {"relevant": false, "why": "cache warmer, unrelated to flaky tests"},
+"k_ci_intro": {"relevant": false, "why": "describes flaky symptom, no fix"},
+"k_db_vacuum": {"relevant": false, "why": "DB vacuum, unrelated"},
+"k_docs_update": {"relevant": false, "why": "contributor guide docs, unrelated"},
+"k_feature_toggle": {"relevant": false, "why": "feature toggle, unrelated"},
+"k_fixture_db": {"relevant": true, "why": "fresh transactional DB per test prevents cross-contamination flakes"},
+"k_freeze_clock": {"relevant": true, "why": "froze clock to stop midnight-boundary flaky assertion"},
+"k_isolate_shared_state": {"relevant": true, "why": "isolating shared state fixed order-dependent CI flakes"},
+"k_lint_rule": {"relevant": false, "why": "lint rule, unrelated"},
+"k_load_test_decoy": {"relevant": false, "why": "load test, not flaky tests"},
+"k_mock_payment": {"relevant": false, "why": "mocked gateway, not addressing flakiness"},
+"k_parametrize": {"relevant": false, "why": "parametrize for edge cases, not flakiness"},
+"k_seed_random": {"relevant": true, "why": "pinning RNG seed fixed shuffle-order failures"},
+"k_snapshot": {"relevant": false, "why": "snapshot regeneration, unrelated"},
+"k_test_coverage_decoy": {"relevant": false, "why": "coverage gate, unrelated"}
+}}

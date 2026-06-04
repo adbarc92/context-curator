@@ -1,0 +1,18 @@
+{"name": "soft-delete-cascade-p5", "judgments": {
+  "k_cascade_fk_delete": {"relevant": false, "why": "physical cascade delete, opposite of soft delete"},
+  "k_cdn_purge": {"relevant": false, "why": "CDN purge, unrelated"},
+  "k_css_skeleton": {"relevant": false, "why": "skeleton loaders, unrelated"},
+  "k_flag_beta": {"relevant": false, "why": "feature flag, unrelated"},
+  "k_hard_delete_gdpr": {"relevant": false, "why": "permanent GDPR wipe, not soft delete"},
+  "k_healthcheck": {"relevant": false, "why": "readiness probe, unrelated"},
+  "k_jwt_exp": {"relevant": false, "why": "token lifetime, unrelated"},
+  "k_locale_date": {"relevant": false, "why": "date formatting, unrelated"},
+  "k_pdf_export": {"relevant": false, "why": "PDF export, unrelated"},
+  "k_queue_dlq": {"relevant": false, "why": "dead-letter queue, unrelated"},
+  "k_rate_window": {"relevant": false, "why": "rate limiting, unrelated"},
+  "k_search_synonyms": {"relevant": false, "why": "search synonyms, unrelated"},
+  "k_soft_cascade": {"relevant": true, "why": "stamp deleted_at on children so they vanish with parent"},
+  "k_soft_flag": {"relevant": true, "why": "deleted_at flag filtered from default queries"},
+  "k_soft_restore": {"relevant": true, "why": "undelete clears deleted_at on parent and descendants"},
+  "k_soft_scope": {"relevant": true, "why": "global ORM scope hides tombstoned records"}
+}}

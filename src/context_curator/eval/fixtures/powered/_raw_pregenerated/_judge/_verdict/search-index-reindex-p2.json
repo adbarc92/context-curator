@@ -1,0 +1,17 @@
+{"name": "search-index-reindex-p2", "judgments": {
+  "k_alias_swap": {"relevant": true, "why": "atomic alias swap avoids half-populated index"},
+  "k_autocomplete_ui": {"relevant": false, "why": "autocomplete UI, unrelated"},
+  "k_backfill_job": {"relevant": true, "why": "backfill new index before promoting it"},
+  "k_cron_cleanup": {"relevant": false, "why": "soft-delete cleanup, unrelated"},
+  "k_csv_import": {"relevant": false, "why": "CSV import tool, unrelated"},
+  "k_dark_mode": {"relevant": false, "why": "dark mode, unrelated"},
+  "k_db_replica": {"relevant": false, "why": "read replica, not reindex"},
+  "k_dual_write": {"relevant": true, "why": "dual-write keeps new index fresh during rebuild"},
+  "k_health_probe": {"relevant": false, "why": "readiness probe, unrelated"},
+  "k_image_thumbs": {"relevant": false, "why": "thumbnails, unrelated"},
+  "k_metrics_export": {"relevant": false, "why": "metrics, unrelated"},
+  "k_oauth_scopes": {"relevant": false, "why": "OAuth scopes, unrelated"},
+  "k_pdf_invoice": {"relevant": false, "why": "invoice PDF, unrelated"},
+  "k_reindex_progress": {"relevant": true, "why": "track coverage and flip alias only at 100 percent"},
+  "k_search_analyzer": {"relevant": false, "why": "analyzer normalization, not safe rebuild"}
+}}

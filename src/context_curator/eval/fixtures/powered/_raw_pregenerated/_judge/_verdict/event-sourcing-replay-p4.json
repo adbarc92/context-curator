@@ -1,0 +1,17 @@
+{"name": "event-sourcing-replay-p4", "judgments": {
+"k_audit_replay_decoy": {"relevant": false, "why": "session recording replay, not event sourcing"},
+"k_css_grid": {"relevant": false, "why": "CSS layout, unrelated"},
+"k_csv_import": {"relevant": false, "why": "CSV import, unrelated"},
+"k_dark_mode": {"relevant": false, "why": "dark theme, unrelated"},
+"k_db_migration": {"relevant": false, "why": "online migration, not event replay"},
+"k_locale_dates": {"relevant": false, "why": "ISO date formatting, unrelated"},
+"k_rate_limiter": {"relevant": false, "why": "rate limiter, unrelated"},
+"k_replay_checkpoint": {"relevant": true, "why": "checkpoint position so crash resumes mid-replay"},
+"k_replay_idempotent": {"relevant": true, "why": "idempotent handlers safe for replaying events"},
+"k_replay_rebuild": {"relevant": true, "why": "rebuild projection from offset zero, atomic swap"},
+"k_replay_version": {"relevant": true, "why": "upcaster translates old event versions during replay"},
+"k_search_facets": {"relevant": false, "why": "faceted search, unrelated"},
+"k_smtp_retry": {"relevant": false, "why": "SMTP retry, unrelated"},
+"k_snapshot_optimize": {"relevant": true, "why": "snapshots let replay start from latest state"},
+"k_video_replay_decoy": {"relevant": false, "why": "video replay, unrelated"}
+}}

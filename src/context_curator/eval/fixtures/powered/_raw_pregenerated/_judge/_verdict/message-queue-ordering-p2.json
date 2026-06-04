@@ -1,0 +1,16 @@
+{"name": "message-queue-ordering-p2", "judgments": {
+  "k_css_queue_ui": {"relevant": false, "why": "queue viewer UI, not ordering"},
+  "k_db_partition": {"relevant": false, "why": "table partitioning, unrelated to queue ordering"},
+  "k_dead_letter_decoy": {"relevant": false, "why": "dead-letter queue, not ordering"},
+  "k_email_worker": {"relevant": false, "why": "email worker pool, not per-account ordering"},
+  "k_flag_remove": {"relevant": false, "why": "feature flag removal, unrelated"},
+  "k_image_pipeline": {"relevant": false, "why": "image pipeline steps, not ordering"},
+  "k_inflight_lock": {"relevant": true, "why": "per-account lock prevents out-of-order concurrent processing"},
+  "k_locale_money": {"relevant": false, "why": "currency formatting, unrelated"},
+  "k_metrics_lag": {"relevant": false, "why": "consumer lag alert, not ordering"},
+  "k_partition_key": {"relevant": true, "why": "hash by account id keeps events ordered per account"},
+  "k_priority_decoy": {"relevant": false, "why": "priority queue, not ordering guarantee"},
+  "k_retry_jitter": {"relevant": false, "why": "retry backoff, unrelated"},
+  "k_sequence_number": {"relevant": true, "why": "per-account sequence number drops out-of-order events"},
+  "k_single_consumer_per_partition": {"relevant": true, "why": "one consumer per partition preserves sequencing"}
+}}

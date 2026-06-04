@@ -1,0 +1,58 @@
+{
+ "name": "jwt-refresh-rotation-p1",
+ "prompt": "how do I keep users logged in securely without forcing a re-login every hour",
+ "chunks": [
+  {
+   "key": "k_avatar_upload",
+   "content": "profile avatars are resized to 256px and stored in object storage with a content hash filename"
+  },
+  {
+   "key": "k_cors_setup",
+   "content": "added the frontend origin to the CORS allowlist so the SPA can call the API with credentials"
+  },
+  {
+   "key": "k_db_pool_size",
+   "content": "bumped the connection pool to 40 after we saw checkout timeouts under load"
+  },
+  {
+   "key": "k_email_template",
+   "content": "rewrote the welcome email template to use the new brand colors and a single CTA button"
+  },
+  {
+   "key": "k_feature_flag_beta",
+   "content": "the new dashboard is gated behind a beta flag that defaults off for everyone"
+  },
+  {
+   "key": "k_healthz",
+   "content": "the readiness probe returns 200 only after the cache warmer has finished its first pass"
+  },
+  {
+   "key": "k_login_form_validation",
+   "content": "the login form now blocks submission until the email field matches a valid pattern and the password is at least 12 characters"
+  },
+  {
+   "key": "k_metrics_export",
+   "content": "request latency percentiles are now scraped by Prometheus at /metrics every 15 seconds"
+  },
+  {
+   "key": "k_password_reset_hour",
+   "content": "the password reset link expires one hour after it is emailed, forcing the user to request a new login link if they wait too long"
+  },
+  {
+   "key": "k_rate_limit_login",
+   "content": "throttle login attempts to 5 per minute per IP to slow credential stuffing"
+  },
+  {
+   "key": "k_refresh_rotate",
+   "content": "decided to issue a short-lived access token plus a longer refresh credential, and to swap the refresh credential for a fresh one on every use so a stolen one is single-use"
+  },
+  {
+   "key": "k_refresh_store",
+   "content": "the refresh credentials live server-side in a hashed table keyed by family id, so we can revoke a whole device lineage at once"
+  },
+  {
+   "key": "k_reuse_detection",
+   "content": "if a refresh credential is presented twice we treat the lineage as compromised and invalidate every token in that family, logging the user out everywhere"
+  }
+ ]
+}

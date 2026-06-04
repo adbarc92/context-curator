@@ -1,0 +1,16 @@
+{"name": "zero-downtime-schema-migration-p1", "judgments": {
+  "k_batched_backfill": {"relevant": true, "why": "batched backfill avoids long write lock"},
+  "k_cache_invalidation": {"relevant": false, "why": "cache busting, unrelated"},
+  "k_concurrent_index": {"relevant": true, "why": "CREATE INDEX CONCURRENTLY avoids blocking writers"},
+  "k_expand_contract": {"relevant": true, "why": "nullable-then-required two-pass adds NOT NULL safely"},
+  "k_grafana_panel": {"relevant": false, "why": "Grafana panel, unrelated"},
+  "k_i18n_strings": {"relevant": false, "why": "string extraction, unrelated"},
+  "k_lint_ci": {"relevant": false, "why": "CI lint gate, unrelated"},
+  "k_orm_model": {"relevant": true, "why": "keep field optional in code until data migrated"},
+  "k_retry_webhook": {"relevant": false, "why": "webhook retry, unrelated"},
+  "k_s3_lifecycle": {"relevant": false, "why": "S3 lifecycle, unrelated"},
+  "k_signup_email": {"relevant": false, "why": "verification email, unrelated"},
+  "k_standup_note": {"relevant": false, "why": "standup note, unrelated"},
+  "k_table_dropped_decoy": {"relevant": false, "why": "dropping old table, not adding column"},
+  "k_unique_constraint_decoy": {"relevant": false, "why": "unique constraint on email, not NOT NULL column"}
+}}

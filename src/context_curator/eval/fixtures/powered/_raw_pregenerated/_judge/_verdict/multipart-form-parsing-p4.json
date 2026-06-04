@@ -1,0 +1,16 @@
+{"name": "multipart-form-parsing-p4", "judgments": {
+  "k_cache_warm": {"relevant": false, "why": "cache warming, unrelated"},
+  "k_css_button": {"relevant": false, "why": "progress bar UI, unrelated"},
+  "k_db_index": {"relevant": false, "why": "uploads index, not parsing"},
+  "k_email_digest": {"relevant": false, "why": "digest email, unrelated"},
+  "k_form_validation_decoy": {"relevant": false, "why": "postal code validation, not multipart parsing"},
+  "k_login_form_decoy": {"relevant": false, "why": "url-encoded login form, not multipart streaming"},
+  "k_metrics_p99": {"relevant": false, "why": "latency tracking, unrelated"},
+  "k_multipart_boundary": {"relevant": true, "why": "reading boundary delimiter to split multipart parts"},
+  "k_multipart_field": {"relevant": true, "why": "decoding non-file parts as form fields"},
+  "k_multipart_filename": {"relevant": true, "why": "sanitizing filename from Content-Disposition part"},
+  "k_multipart_limits": {"relevant": true, "why": "size caps bounding resource use during parse"},
+  "k_multipart_stream": {"relevant": true, "why": "incremental parse to temp file avoids buffering heap"},
+  "k_oauth_scope": {"relevant": false, "why": "OAuth scope, unrelated"},
+  "k_queue_worker": {"relevant": false, "why": "queue workers, unrelated"}
+}}

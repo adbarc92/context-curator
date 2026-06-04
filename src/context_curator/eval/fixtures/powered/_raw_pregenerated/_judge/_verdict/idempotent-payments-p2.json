@@ -1,0 +1,16 @@
+{"name": "idempotent-payments-p2", "judgments": {
+"k_atomic_insert": {"relevant": true, "why": "atomic insert with key prevents second charge row"},
+"k_card_validation_decoy": {"relevant": false, "why": "card form validation, not double-charge"},
+"k_checkout_ui": {"relevant": false, "why": "disabling button is cosmetic, not reliable dedup"},
+"k_currency_round": {"relevant": false, "why": "currency rounding, unrelated"},
+"k_db_index_orders": {"relevant": false, "why": "orders index, unrelated"},
+"k_dedupe_table": {"relevant": true, "why": "unique-constrained key table replays saved response"},
+"k_fraud_decoy": {"relevant": false, "why": "fraud detection, not double-charge"},
+"k_idempotency_key": {"relevant": true, "why": "client idempotency key returns original result on repeat"},
+"k_invoice_pdf": {"relevant": false, "why": "invoice PDF, unrelated"},
+"k_key_ttl": {"relevant": true, "why": "idempotency key TTL distinguishes retry from fresh purchase"},
+"k_locale_date": {"relevant": false, "why": "locale dates, unrelated"},
+"k_refund_flow": {"relevant": false, "why": "refund flow, unrelated"},
+"k_tax_calc": {"relevant": false, "why": "tax calc, unrelated"},
+"k_webhook_capture": {"relevant": false, "why": "capture after webhook, not double-charge prevention"}
+}}

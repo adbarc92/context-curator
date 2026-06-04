@@ -1,0 +1,66 @@
+{
+ "name": "read-replica-lag-p5",
+ "prompt": "how do I stop users from reading stale data off a replica right after they just wrote to the primary",
+ "chunks": [
+  {
+   "key": "k_cache_stale",
+   "content": "the product page cache can serve data up to 10 minutes old, which is fine because catalog edits are rare"
+  },
+  {
+   "key": "k_css_grid",
+   "content": "rebuilt the analytics layout with a responsive grid that collapses to one column on mobile"
+  },
+  {
+   "key": "k_flag_rollout",
+   "content": "ramp the new search ranking to 5% of traffic behind a flag before going wider"
+  },
+  {
+   "key": "k_healthz",
+   "content": "the /healthz endpoint returns 200 once the connection pool has warmed up"
+  },
+  {
+   "key": "k_index_rebuild",
+   "content": "rebuilt the composite index on the orders table concurrently to avoid locking writes"
+  },
+  {
+   "key": "k_lag_threshold",
+   "content": "the router checks each follower's replication delay and pulls any node more than 2 seconds behind out of the read pool until it catches up"
+  },
+  {
+   "key": "k_locale_money",
+   "content": "format prices using the buyer's locale and currency in the cart"
+  },
+  {
+   "key": "k_log_sample",
+   "content": "sample debug logs at 1% in production to keep volume manageable"
+  },
+  {
+   "key": "k_lsn_token",
+   "content": "after a commit we hand the client a position token and only serve its reads from a replica that has already applied at least that log position"
+  },
+  {
+   "key": "k_pdf_invoice",
+   "content": "render the monthly invoice as a PDF and attach it to the billing email"
+  },
+  {
+   "key": "k_queue_worker",
+   "content": "the email worker pulls from the outbox queue and sends in batches of fifty"
+  },
+  {
+   "key": "k_rate_limit",
+   "content": "throttle anonymous API callers to 60 requests per minute per IP"
+  },
+  {
+   "key": "k_read_your_write",
+   "content": "decided that immediately after a write we route that user's next few reads to the primary so they never see a copy that hasn't caught up yet"
+  },
+  {
+   "key": "k_stale_token_auth",
+   "content": "an expired refresh token is rejected and the user is forced to log in again rather than being handed stale credentials"
+  },
+  {
+   "key": "k_sticky_read",
+   "content": "pin a freshly-updated account to the leader for a short window so the dashboard reflects the change the moment they save it"
+  }
+ ]
+}

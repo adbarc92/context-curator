@@ -1,0 +1,70 @@
+{
+ "name": "grpc-deadline-propagation-p3",
+ "prompt": "how do I make sure a gRPC request timeout flows through to every downstream service so nothing keeps working after the caller gave up",
+ "chunks": [
+  {
+   "key": "k_audit_log",
+   "content": "record every admin action in an append-only audit log"
+  },
+  {
+   "key": "k_cache_ttl",
+   "content": "cache the product catalog for 10 minutes and bust it on any write"
+  },
+  {
+   "key": "k_cancel_on_expiry",
+   "content": "when the context deadline is exceeded the framework signals cancellation down the whole call chain, releasing the database connection and stopping work that would otherwise outlive the caller"
+  },
+  {
+   "key": "k_config_reload",
+   "content": "reload config on SIGHUP without dropping in-flight requests"
+  },
+  {
+   "key": "k_css_grid",
+   "content": "rebuilt the report layout with a responsive CSS grid"
+  },
+  {
+   "key": "k_db_index",
+   "content": "added a composite index on (tenant_id, created_at) to speed up the activity feed"
+  },
+  {
+   "key": "k_deadline_context",
+   "content": "decided to thread the incoming deadline through the request context so each downstream gRPC call inherits the remaining time budget and cancels itself once the original caller's clock runs out"
+  },
+  {
+   "key": "k_deadline_propagate",
+   "content": "every fan-out RPC passes the propagated deadline rather than starting a fresh timeout, so a slow leaf service does not keep computing after the client has already abandoned the call"
+  },
+  {
+   "key": "k_email_queue",
+   "content": "outbound email is pushed onto a background queue and sent by a worker"
+  },
+  {
+   "key": "k_feature_flag",
+   "content": "gate the new checkout flow behind a feature flag defaulting to off"
+  },
+  {
+   "key": "k_gzip",
+   "content": "enabled gzip compression on responses larger than 1 KB"
+  },
+  {
+   "key": "k_pagination",
+   "content": "switch the list endpoint to keyset pagination using the last seen id"
+  },
+  {
+   "key": "k_request_timeout_lock_decoy",
+   "content": "the login throttler locks an account for 30 minutes after the request timeout on too many failed attempts is exceeded"
+  },
+  {
+   "key": "k_session_timeout_decoy",
+   "content": "the idle session timeout signs a user out after 20 minutes of no activity and clears their auth token"
+  },
+  {
+   "key": "k_soft_delete",
+   "content": "records are soft-deleted with a deleted_at column and filtered from default queries"
+  },
+  {
+   "key": "k_tz",
+   "content": "store all timestamps in UTC and convert in the UI"
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+{"name": "cdn-cache-invalidation-p1", "judgments": {
+"k_a11y_audit": {"relevant": false, "why": "alt text accessibility, unrelated"},
+"k_content_hash_url": {"relevant": true, "why": "content-hash filenames make changed file new URL"},
+"k_cron_cleanup": {"relevant": false, "why": "soft-delete purge cron, unrelated"},
+"k_db_query_cache_decoy": {"relevant": false, "why": "DB query result caching, not edge assets"},
+"k_dns_ttl": {"relevant": false, "why": "DNS TTL for provider migration, not asset invalidation"},
+"k_gzip": {"relevant": false, "why": "brotli compression, unrelated"},
+"k_image_pipeline": {"relevant": false, "why": "image format variants, unrelated"},
+"k_immutable_header": {"relevant": true, "why": "immutable hashed assets, uncacheable HTML propagates updates"},
+"k_kickoff": {"relevant": false, "why": "sprint goal context, not a solution"},
+"k_oauth_scopes": {"relevant": false, "why": "OAuth scopes, unrelated"},
+"k_origin_shield": {"relevant": false, "why": "origin shield offloads origin, not instant invalidation"},
+"k_purge_api": {"relevant": true, "why": "edge purge API evicts changed un-hashed file instantly"},
+"k_robots": {"relevant": false, "why": "robots.txt, unrelated"},
+"k_session_cache_decoy": {"relevant": false, "why": "session caching, unrelated"},
+"k_typing_hints": {"relevant": false, "why": "type hints, unrelated"}
+}}

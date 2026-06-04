@@ -1,0 +1,16 @@
+{"name": "circuit-breaker-tuning-p4", "judgments": {
+"k_breaker_cooldown": {"relevant": true, "why": "open-state cool-down with exponential backoff tuning"},
+"k_breaker_fallback": {"relevant": false, "why": "fallback response, not threshold/cooldown tuning"},
+"k_breaker_halfopen": {"relevant": true, "why": "half-open probe and back-off reset behavior"},
+"k_breaker_threshold": {"relevant": true, "why": "failure threshold of 50% over last 20 calls"},
+"k_cron_cleanup": {"relevant": false, "why": "soft-delete purge, unrelated"},
+"k_css_spinner": {"relevant": false, "why": "skeleton UI, unrelated"},
+"k_db_pool_size": {"relevant": false, "why": "connection pool size, unrelated"},
+"k_email_template": {"relevant": false, "why": "email template, unrelated"},
+"k_feature_flag": {"relevant": false, "why": "feature flag, unrelated"},
+"k_healthz": {"relevant": false, "why": "health probe, unrelated"},
+"k_image_resize": {"relevant": false, "why": "thumbnails, unrelated"},
+"k_login_lockout": {"relevant": false, "why": "login lockout cool-down, not circuit breaker"},
+"k_metrics_export": {"relevant": true, "why": "exports breaker trips to graph degradation for tuning"},
+"k_threshold_alert": {"relevant": false, "why": "on-call alert threshold, not breaker tuning"}
+}}

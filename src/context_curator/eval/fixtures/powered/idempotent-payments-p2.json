@@ -1,0 +1,88 @@
+{
+ "name": "idempotent-payments-p2",
+ "prompt": "how do I stop a customer from being charged twice if they double-click pay or the request is retried",
+ "chunks": [
+  {
+   "key": "k_checkout_ui",
+   "content": "the checkout page disables the pay button visually after the first click",
+   "tags": []
+  },
+  {
+   "key": "k_card_validation_decoy",
+   "content": "the card form rejects an expired expiry date and flags a failed Luhn check before submit",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_refund_flow",
+   "content": "a refund reverses the captured charge and emails the customer a confirmation",
+   "tags": []
+  },
+  {
+   "key": "k_currency_round",
+   "content": "round currency amounts to the smallest unit to avoid fractional-cent drift",
+   "tags": []
+  },
+  {
+   "key": "k_fraud_decoy",
+   "content": "the fraud service blocks a charge when too many distinct cards are tried from one device",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_webhook_capture",
+   "content": "we capture the funds only after the gateway webhook confirms authorization",
+   "tags": []
+  },
+  {
+   "key": "k_invoice_pdf",
+   "content": "generate a PDF receipt and attach it to the order",
+   "tags": []
+  },
+  {
+   "key": "k_tax_calc",
+   "content": "compute tax per jurisdiction at the time of sale",
+   "tags": []
+  },
+  {
+   "key": "k_db_index_orders",
+   "content": "indexed orders on customer id for the history page",
+   "tags": []
+  },
+  {
+   "key": "k_idempotency_key",
+   "content": "decided that every charge request must carry a client-generated idempotency key, and a repeat with the same key returns the original result instead of charging again",
+   "tags": []
+  },
+  {
+   "key": "k_dedupe_table",
+   "content": "store each idempotency key with its outcome in a unique-constrained table, so a duplicate submission collides and we replay the saved response rather than re-billing",
+   "tags": []
+  },
+  {
+   "key": "k_atomic_insert",
+   "content": "insert the payment intent in the same transaction that records the key, so a retried double-click cannot create a second charge row for the same order",
+   "tags": []
+  },
+  {
+   "key": "k_key_ttl",
+   "content": "expire stored idempotency keys after 24 hours since a legitimate retry never arrives that late, while a fresh purchase of the same cart uses a new key",
+   "tags": []
+  },
+  {
+   "key": "k_locale_date",
+   "content": "render order dates in the customer's locale",
+   "tags": []
+  }
+ ],
+ "gold_keys": [
+  "k_idempotency_key",
+  "k_dedupe_table",
+  "k_atomic_insert",
+  "k_key_ttl"
+ ],
+ "split": "test",
+ "recent_tools": []
+}

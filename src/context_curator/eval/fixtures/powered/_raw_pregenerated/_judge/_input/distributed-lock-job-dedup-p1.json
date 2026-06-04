@@ -1,0 +1,58 @@
+{
+ "name": "distributed-lock-job-dedup-p1",
+ "prompt": "how do I stop two workers from running the same scheduled job at the same time",
+ "chunks": [
+  {
+   "key": "k_advisory_lock",
+   "content": "before doing any work each replica tries to acquire a single named lock; only the holder proceeds and the others exit immediately, guaranteeing one runner"
+  },
+  {
+   "key": "k_csv_import",
+   "content": "the bulk CSV import streams rows instead of loading the whole file into memory"
+  },
+  {
+   "key": "k_db_transaction_decoy",
+   "content": "the transfer runs inside a single database transaction so the debit and credit either both commit or both roll back"
+  },
+  {
+   "key": "k_leader_election",
+   "content": "alternatively we elect a single leader replica that owns all scheduled work, and followers stay idle until the leader's lease lapses"
+  },
+  {
+   "key": "k_lock_ttl_fencing",
+   "content": "the lock carries an expiry plus a monotonically increasing token, so if a holder stalls past the TTL a slow zombie cannot still write after another worker has taken over"
+  },
+  {
+   "key": "k_logging_jobid",
+   "content": "every job run logs its job id and replica name so we can tell which worker did what"
+  },
+  {
+   "key": "k_memory_limit",
+   "content": "set a container memory limit and the workers restart cleanly when they approach it"
+  },
+  {
+   "key": "k_queue_setup",
+   "content": "jobs are picked off a Redis list and acknowledged only after they finish successfully"
+  },
+  {
+   "key": "k_retry_backoff",
+   "content": "transient failures retry with jittered backoff up to five times before alerting"
+  },
+  {
+   "key": "k_scheduler_overview",
+   "content": "we run three worker replicas, each with its own cron, which is why a nightly job sometimes fires more than once"
+  },
+  {
+   "key": "k_swagger_docs",
+   "content": "regenerated the OpenAPI spec so the docs page reflects the new endpoints"
+  },
+  {
+   "key": "k_thread_pool_decoy",
+   "content": "the worker uses a pool of eight threads so it can process several queue messages in parallel"
+  },
+  {
+   "key": "k_timezone_cron",
+   "content": "the cron expressions were normalized to UTC after a daylight-saving shift caused a job to skip a day"
+  }
+ ]
+}

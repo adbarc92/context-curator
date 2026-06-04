@@ -1,0 +1,16 @@
+{"name": "graceful-shutdown-draining-p5", "judgments": {
+"k_audit_trail": {"relevant": false, "why": "audit trail, unrelated"},
+"k_cache_warm": {"relevant": false, "why": "boot cache preload, not shutdown"},
+"k_css_tokens": {"relevant": false, "why": "design tokens, unrelated"},
+"k_db_migrate": {"relevant": false, "why": "DB migration, unrelated"},
+"k_drain_inflight": {"relevant": true, "why": "SIGTERM stops new connections, finishes in-flight requests"},
+"k_drain_timeout": {"relevant": true, "why": "grace window for in-progress handlers during shutdown"},
+"k_email_retry": {"relevant": false, "why": "email retry, unrelated"},
+"k_feature_flag": {"relevant": false, "why": "feature flag, unrelated"},
+"k_lb_deregister": {"relevant": true, "why": "fail readiness so LB stops new traffic before drain"},
+"k_metrics_export": {"relevant": false, "why": "latency metrics, unrelated"},
+"k_session_kill": {"relevant": false, "why": "admin terminates user session, not shutdown draining"},
+"k_signal_handler_kill9": {"relevant": false, "why": "SIGKILL no cleanup, opposite of graceful"},
+"k_tz_store": {"relevant": false, "why": "UTC timestamps, unrelated"},
+"k_worker_inflight": {"relevant": true, "why": "worker checks stop flag, finishes job cleanly"}
+}}

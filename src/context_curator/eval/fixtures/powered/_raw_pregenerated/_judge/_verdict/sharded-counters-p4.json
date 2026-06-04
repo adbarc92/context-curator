@@ -1,0 +1,17 @@
+{"name": "sharded-counters-p4", "judgments": {
+  "k_counter_atomic": {"relevant": true, "why": "atomic shard increment avoids read-modify-write race"},
+  "k_counter_readsum": {"relevant": true, "why": "sum shards to read total, the read side of sharding"},
+  "k_counter_shardcount": {"relevant": true, "why": "sizing shard count to writers reduces contention"},
+  "k_counter_shards": {"relevant": true, "why": "split hot counter across shards so writers stop contending"},
+  "k_cron_archive": {"relevant": false, "why": "ticket archival, unrelated"},
+  "k_css_badge": {"relevant": false, "why": "badge animation, unrelated"},
+  "k_db_vacuum": {"relevant": false, "why": "autovacuum tuning, unrelated"},
+  "k_email_bounce": {"relevant": false, "why": "email bounce handling, unrelated"},
+  "k_feature_flag": {"relevant": false, "why": "feature flag, unrelated"},
+  "k_inventory_count_decoy": {"relevant": false, "why": "stock recount, not write contention"},
+  "k_locale_rtl": {"relevant": false, "why": "RTL layout, unrelated"},
+  "k_log_rotation": {"relevant": false, "why": "log rotation, unrelated"},
+  "k_pdf_export": {"relevant": false, "why": "PDF export, unrelated"},
+  "k_search_suggest": {"relevant": false, "why": "search suggestions, unrelated"},
+  "k_word_count_decoy": {"relevant": false, "why": "editor word count, not hot-row counters"}
+}}

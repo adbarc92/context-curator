@@ -1,0 +1,92 @@
+{
+ "name": "cdn-cache-invalidation-p1",
+ "prompt": "how do I serve assets from the edge but still push out an update instantly when a file changes",
+ "chunks": [
+  {
+   "key": "k_kickoff",
+   "content": "kickoff: the marketing site feels slow from Asia, goal this sprint is to cut time-to-first-byte for static content",
+   "tags": []
+  },
+  {
+   "key": "k_session_cache_decoy",
+   "content": "user sessions are cached in memory for the request lifetime so we do not refetch the profile on every handler",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_image_pipeline",
+   "content": "the image pipeline produces webp and avif variants and picks one based on the Accept header",
+   "tags": []
+  },
+  {
+   "key": "k_db_query_cache_decoy",
+   "content": "the expensive leaderboard query result is cached for sixty seconds so we do not recompute it on every page view",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_gzip",
+   "content": "enabled brotli compression on text responses, shaving roughly 70 percent off CSS and JS payloads",
+   "tags": []
+  },
+  {
+   "key": "k_dns_ttl",
+   "content": "lowered the DNS TTL to 300 seconds ahead of the provider migration so cutover is fast",
+   "tags": []
+  },
+  {
+   "key": "k_robots",
+   "content": "added a robots.txt disallowing the staging subdomain from being indexed",
+   "tags": []
+  },
+  {
+   "key": "k_content_hash_url",
+   "content": "each built asset gets a content-hash in its filename, so a changed file is a brand new URL and the edge never serves a stale copy",
+   "tags": []
+  },
+  {
+   "key": "k_immutable_header",
+   "content": "hashed asset URLs are served with a far-future max-age marked immutable, while the HTML that references them stays uncacheable so new hashes propagate immediately",
+   "tags": []
+  },
+  {
+   "key": "k_purge_api",
+   "content": "for the rare un-hashed file we call the edge provider's purge API on deploy to evict that exact path right away",
+   "tags": []
+  },
+  {
+   "key": "k_origin_shield",
+   "content": "turned on an origin shield layer so a cold edge node fetches from a regional cache instead of hammering the origin",
+   "tags": []
+  },
+  {
+   "key": "k_oauth_scopes",
+   "content": "narrowed the third-party OAuth scopes to read-only after a security review",
+   "tags": []
+  },
+  {
+   "key": "k_cron_cleanup",
+   "content": "a nightly cron purges soft-deleted rows older than 30 days",
+   "tags": []
+  },
+  {
+   "key": "k_typing_hints",
+   "content": "added type hints across the billing module and turned on mypy strict for that package",
+   "tags": []
+  },
+  {
+   "key": "k_a11y_audit",
+   "content": "accessibility audit flagged missing alt text on hero images, now fixed",
+   "tags": []
+  }
+ ],
+ "gold_keys": [
+  "k_content_hash_url",
+  "k_immutable_header",
+  "k_purge_api"
+ ],
+ "split": "train",
+ "recent_tools": []
+}

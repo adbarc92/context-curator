@@ -1,0 +1,62 @@
+{
+ "name": "webhook-delivery-retry-p2",
+ "prompt": "how do I make sure my outgoing webhooks eventually reach the customer even when their endpoint is briefly down",
+ "chunks": [
+  {
+   "key": "k_css_modal",
+   "content": "restyled the confirmation modal to use the new button tokens and a softer drop shadow"
+  },
+  {
+   "key": "k_db_vacuum",
+   "content": "scheduled a nightly VACUUM ANALYZE on the events table to keep the planner statistics fresh"
+  },
+  {
+   "key": "k_endpoint_down_alert",
+   "content": "the on-call alert fires when our own ingress endpoint returns 5xx for more than two minutes"
+  },
+  {
+   "key": "k_feature_toggle",
+   "content": "wrapped the new billing screen behind a toggle so we can dark-launch it to staff first"
+  },
+  {
+   "key": "k_idempotency_header",
+   "content": "include an idempotency key header on each delivery attempt so a retried webhook is not processed twice by the customer"
+  },
+  {
+   "key": "k_incoming_webhook_verify",
+   "content": "for webhooks we receive from Stripe we verify the signature header and reject anything where the customer payload hmac does not match"
+  },
+  {
+   "key": "k_jwt_login",
+   "content": "rotated the login signing key and shortened access token lifetime to 15 minutes"
+  },
+  {
+   "key": "k_locale_format",
+   "content": "format currency amounts according to the viewer's locale in the dashboard"
+  },
+  {
+   "key": "k_rate_limit_dash",
+   "content": "the admin dashboard now shows the top API consumers by request count over the last hour"
+  },
+  {
+   "key": "k_report_export",
+   "content": "added a CSV export button on the analytics page that streams rows to the browser"
+  },
+  {
+   "key": "k_signup_email",
+   "content": "the signup flow sends a welcome email through the marketing provider after the account is confirmed"
+  },
+  {
+   "key": "k_webhook_outbox",
+   "content": "decided to queue each outbound webhook in a durable outbox table and have a worker drain it, so a notification is not lost if the receiver is momentarily unreachable"
+  },
+  {
+   "key": "k_webhook_redelivery",
+   "content": "failed deliveries get re-attempted on a schedule of 1m, 5m, 30m, 2h before we give up and mark the event dead-lettered"
+  },
+  {
+   "key": "k_webhook_status",
+   "content": "expose a per-event delivery status (pending, delivered, failed) so support can see whether the customer endpoint ever acknowledged it"
+  }
+ ]
+}

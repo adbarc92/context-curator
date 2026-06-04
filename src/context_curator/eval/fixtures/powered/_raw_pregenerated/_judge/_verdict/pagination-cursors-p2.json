@@ -1,0 +1,16 @@
+{"name": "pagination-cursors-p2", "judgments": {
+  "k_cache_bust": {"relevant": false, "why": "cache busting, unrelated"},
+  "k_css_infinite": {"relevant": false, "why": "scroll sentinel UI, not pagination correctness"},
+  "k_cursor_encoding": {"relevant": true, "why": "opaque base64 cursor token for stable pagination"},
+  "k_dark_theme": {"relevant": false, "why": "dark theme, unrelated"},
+  "k_db_index2": {"relevant": true, "why": "covering index keeps keyset seek query efficient"},
+  "k_email_verify": {"relevant": false, "why": "email verification, unrelated"},
+  "k_feed_schema": {"relevant": false, "why": "feed join/order, not insertion-safe paging"},
+  "k_keyset_cursor": {"relevant": true, "why": "opaque cursor on sort key prevents shifting pages"},
+  "k_offset_limit_decoy": {"relevant": false, "why": "offset for static tiny dataset, not the fix"},
+  "k_page_count_decoy": {"relevant": false, "why": "page count display, unrelated"},
+  "k_rate_headers": {"relevant": false, "why": "rate limit header, unrelated"},
+  "k_seek_after": {"relevant": true, "why": "seek WHERE after cursor avoids offset skip bug"},
+  "k_stable_sort_key": {"relevant": true, "why": "stable sort key avoids duplicates across pages"},
+  "k_webhook_sign": {"relevant": false, "why": "webhook signing, unrelated"}
+}}

@@ -1,0 +1,17 @@
+{"name": "blue-green-db-cutover-p3", "judgments": {
+"k_audit_table": {"relevant": false, "why": "config audit table, unrelated"},
+"k_blue_green_lb_decoy": {"relevant": false, "why": "app stack blue-green LB, not DB cutover"},
+"k_cron_dst": {"relevant": false, "why": "billing cron DST, unrelated"},
+"k_cutover_checklist": {"relevant": true, "why": "DB cutover runbook with write pause and repoint"},
+"k_dns_ttl": {"relevant": true, "why": "low DNS TTL to repoint DB hostname quickly"},
+"k_email_template": {"relevant": false, "why": "email template, unrelated"},
+"k_gzip": {"relevant": false, "why": "gzip compression, unrelated"},
+"k_health_probe": {"relevant": false, "why": "readiness probe cache warm, unrelated"},
+"k_log_sampling": {"relevant": false, "why": "log sampling, unrelated"},
+"k_oauth_scopes": {"relevant": false, "why": "OAuth scopes, unrelated"},
+"k_old_primary_replica": {"relevant": true, "why": "demote old primary for rollback safety on cutover"},
+"k_rate_limit": {"relevant": false, "why": "rate limiting, unrelated"},
+"k_replica_promote": {"relevant": true, "why": "promote standby, flip connection string with zero lag"},
+"k_thumbnail_job": {"relevant": false, "why": "thumbnail job, unrelated"},
+"k_traffic_split_canary": {"relevant": false, "why": "app version canary, not DB cutover"}
+}}

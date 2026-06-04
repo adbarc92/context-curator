@@ -1,0 +1,70 @@
+{
+ "name": "locale-fallback-p5",
+ "prompt": "what should the UI show when a translation string is missing for the user's chosen language",
+ "chunks": [
+  {
+   "key": "k_audit",
+   "content": "record locale changes in the user activity log"
+  },
+  {
+   "key": "k_cache_warm",
+   "content": "preload the translation bundles into memory at boot"
+  },
+  {
+   "key": "k_css_rtl",
+   "content": "added right-to-left layout support so Arabic mirrors the navigation correctly"
+  },
+  {
+   "key": "k_currency_round",
+   "content": "round displayed prices to the currency's minor unit so yen shows no decimals"
+  },
+  {
+   "key": "k_db_collation",
+   "content": "set the column collation to be case-insensitive for username lookups"
+  },
+  {
+   "key": "k_dns_failover",
+   "content": "low TTL on the API record for fast regional failover"
+  },
+  {
+   "key": "k_flag_beta",
+   "content": "gate the new onboarding tour behind a feature flag"
+  },
+  {
+   "key": "k_locale_chain",
+   "content": "decided that when a key is absent in the requested language we walk a fallback chain: try the regional variant, then the base language, then finally the default English copy"
+  },
+  {
+   "key": "k_locale_log_gap",
+   "content": "untranslated keys hit at runtime are logged so the localization team gets a report of exactly which phrases still need a translation"
+  },
+  {
+   "key": "k_locale_no_blank",
+   "content": "a missing string should never render an empty box or the raw key id to the user; we always fall back to a sensible default phrasing instead"
+  },
+  {
+   "key": "k_locale_partial",
+   "content": "a partially translated language still loads fine because each untranslated label individually borrows the base-language wording rather than blocking the whole page"
+  },
+  {
+   "key": "k_metrics",
+   "content": "chart error rate per endpoint on the ops board"
+  },
+  {
+   "key": "k_pdf",
+   "content": "export the invoice as a PDF attached to the billing email"
+  },
+  {
+   "key": "k_queue",
+   "content": "emails go through a durable outbox queue"
+  },
+  {
+   "key": "k_sitemap_gen",
+   "content": "regenerate the sitemap nightly so new product pages get indexed"
+  },
+  {
+   "key": "k_tz_fallback_utc",
+   "content": "if a user hasn't set a timezone we default their displayed times to UTC rather than guessing"
+  }
+ ]
+}

@@ -1,0 +1,93 @@
+{
+ "name": "search-index-reindex-p2",
+ "prompt": "what is the safe way to rebuild my search index without users seeing missing or stale results",
+ "chunks": [
+  {
+   "key": "k_alias_swap",
+   "content": "decided to build the new index under a fresh name and flip a read alias over to it atomically once the rebuild finishes, so queries never hit a half-populated index",
+   "tags": []
+  },
+  {
+   "key": "k_backfill_job",
+   "content": "a background job walks every product row and feeds documents into the freshly created index before we promote it",
+   "tags": []
+  },
+  {
+   "key": "k_dual_write",
+   "content": "while the rebuild runs, live edits are written to both the old and the new index so the new one is not stale when we cut over",
+   "tags": []
+  },
+  {
+   "key": "k_search_analyzer",
+   "content": "the query parser lowercases terms and strips accents so a search for cafe also finds caf\u00e9",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_db_replica",
+   "content": "added a read replica for the reporting queries so they stop competing with checkout traffic",
+   "tags": []
+  },
+  {
+   "key": "k_autocomplete_ui",
+   "content": "the search box now shows an autocomplete dropdown after the user types two characters",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_image_thumbs",
+   "content": "generate three thumbnail sizes on upload and store them in object storage",
+   "tags": []
+  },
+  {
+   "key": "k_cron_cleanup",
+   "content": "a nightly cron deletes soft-deleted rows older than 90 days",
+   "tags": []
+  },
+  {
+   "key": "k_reindex_progress",
+   "content": "track how many documents have been indexed versus the total so we only flip the alias once coverage reaches 100 percent",
+   "tags": []
+  },
+  {
+   "key": "k_oauth_scopes",
+   "content": "narrowed the OAuth scopes requested at consent to just profile and email",
+   "tags": []
+  },
+  {
+   "key": "k_csv_import",
+   "content": "the bulk import tool validates each CSV row and reports the line numbers that failed",
+   "tags": []
+  },
+  {
+   "key": "k_dark_mode",
+   "content": "persist the user's dark-mode choice in local storage and apply it before first paint",
+   "tags": []
+  },
+  {
+   "key": "k_health_probe",
+   "content": "the readiness probe waits for the cache to warm before reporting healthy",
+   "tags": []
+  },
+  {
+   "key": "k_pdf_invoice",
+   "content": "render monthly invoices as PDFs in a worker and attach them to the billing email",
+   "tags": []
+  },
+  {
+   "key": "k_metrics_export",
+   "content": "publish request duration percentiles to the metrics endpoint every fifteen seconds",
+   "tags": []
+  }
+ ],
+ "gold_keys": [
+  "k_alias_swap",
+  "k_backfill_job",
+  "k_dual_write",
+  "k_reindex_progress"
+ ],
+ "split": "test",
+ "recent_tools": []
+}

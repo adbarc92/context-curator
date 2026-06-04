@@ -1,0 +1,66 @@
+{
+ "name": "event-sourcing-replay-p4",
+ "prompt": "what is the safe way to rebuild a read model by replaying the stored events from scratch",
+ "chunks": [
+  {
+   "key": "k_audit_replay_decoy",
+   "content": "the compliance team can replay a user's session recording to review what actions they took during an incident"
+  },
+  {
+   "key": "k_css_grid",
+   "content": "rebuilt the settings page layout with a two-column responsive grid"
+  },
+  {
+   "key": "k_csv_import",
+   "content": "bulk customer import accepts a CSV and validates each row before committing"
+  },
+  {
+   "key": "k_dark_mode",
+   "content": "added a dark theme toggle that persists in local storage"
+  },
+  {
+   "key": "k_db_migration",
+   "content": "added a non-null default to the orders table behind an online migration so writes never block"
+  },
+  {
+   "key": "k_locale_dates",
+   "content": "dates in exports now follow ISO 8601 regardless of the viewer's locale"
+  },
+  {
+   "key": "k_rate_limiter",
+   "content": "the public API caps each token at 100 requests per minute with a leaky bucket"
+  },
+  {
+   "key": "k_replay_checkpoint",
+   "content": "the rebuilder records its last processed event position every 10k events so a crash mid-replay resumes instead of starting the whole log over again"
+  },
+  {
+   "key": "k_replay_idempotent",
+   "content": "each projection handler is written to be idempotent and keyed on the event id so replaying the same event twice does not double-count anything"
+  },
+  {
+   "key": "k_replay_rebuild",
+   "content": "decided to rebuild the projection by streaming the whole event log from offset zero into a fresh table, then atomically swapping it in once it catches up to the live tip"
+  },
+  {
+   "key": "k_replay_version",
+   "content": "when an event schema changes we keep an upcaster that translates old event versions to the current shape during replay so historical events still project correctly"
+  },
+  {
+   "key": "k_search_facets",
+   "content": "the product search now supports faceted filtering by brand and price range"
+  },
+  {
+   "key": "k_smtp_retry",
+   "content": "outbound mail retries through a backup SMTP relay if the primary refuses the connection"
+  },
+  {
+   "key": "k_snapshot_optimize",
+   "content": "for very long aggregates we periodically snapshot state so a replay can start from the latest snapshot instead of the very first event"
+  },
+  {
+   "key": "k_video_replay_decoy",
+   "content": "the sports app lets fans scrub back and replay the last goal from multiple camera angles"
+  }
+ ]
+}

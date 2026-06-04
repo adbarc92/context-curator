@@ -1,0 +1,98 @@
+{
+ "name": "soft-delete-cascade-p5",
+ "prompt": "when I mark a parent record as deleted how do I make sure its child rows disappear from queries too without actually erasing them",
+ "chunks": [
+  {
+   "key": "k_css_skeleton",
+   "content": "added skeleton loaders so the list doesn't flash empty while data fetches",
+   "tags": []
+  },
+  {
+   "key": "k_search_synonyms",
+   "content": "expanded the search index with a synonym map so 'sneakers' also matches 'trainers'",
+   "tags": []
+  },
+  {
+   "key": "k_hard_delete_gdpr",
+   "content": "for a GDPR erasure request we permanently wipe the user's rows and overwrite backups, leaving nothing recoverable",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_cdn_purge",
+   "content": "purge the CDN edge cache for an asset path the moment a new version is uploaded",
+   "tags": []
+  },
+  {
+   "key": "k_jwt_exp",
+   "content": "shortened access token lifetime to 10 minutes and lean on refresh rotation",
+   "tags": []
+  },
+  {
+   "key": "k_soft_flag",
+   "content": "decided to mark removal with a deleted_at timestamp instead of dropping the row, and every default query filters out anything where that column is set",
+   "tags": []
+  },
+  {
+   "key": "k_soft_cascade",
+   "content": "when a project is tombstoned we stamp the same deleted_at onto its tasks and comments in one transaction so the children vanish from listings alongside the parent",
+   "tags": []
+  },
+  {
+   "key": "k_soft_scope",
+   "content": "the ORM applies a global scope that hides tombstoned records everywhere, with an explicit withTrashed() escape hatch for admin recovery views",
+   "tags": []
+  },
+  {
+   "key": "k_cascade_fk_delete",
+   "content": "the foreign key uses ON DELETE CASCADE so removing an order physically deletes its line items from the database",
+   "tags": [
+    "hard_neg"
+   ]
+  },
+  {
+   "key": "k_soft_restore",
+   "content": "an undelete clears the deleted_at on the parent and its descendants together so restoring a folder brings its files back into normal queries",
+   "tags": []
+  },
+  {
+   "key": "k_queue_dlq",
+   "content": "messages that fail processing five times land in a dead-letter queue for inspection",
+   "tags": []
+  },
+  {
+   "key": "k_locale_date",
+   "content": "render dates in the viewer's locale format across the dashboard",
+   "tags": []
+  },
+  {
+   "key": "k_pdf_export",
+   "content": "let users export a filtered table to PDF with the current sort applied",
+   "tags": []
+  },
+  {
+   "key": "k_healthcheck",
+   "content": "the readiness probe waits for the cache to warm before reporting healthy",
+   "tags": []
+  },
+  {
+   "key": "k_rate_window",
+   "content": "limit password reset emails to three per hour per account",
+   "tags": []
+  },
+  {
+   "key": "k_flag_beta",
+   "content": "gate the beta analytics tab behind an org-level feature flag",
+   "tags": []
+  }
+ ],
+ "gold_keys": [
+  "k_soft_flag",
+  "k_soft_cascade",
+  "k_soft_scope",
+  "k_soft_restore"
+ ],
+ "split": "test",
+ "recent_tools": []
+}

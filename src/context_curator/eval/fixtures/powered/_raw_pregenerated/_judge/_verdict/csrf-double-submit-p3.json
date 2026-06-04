@@ -1,0 +1,17 @@
+{"name": "csrf-double-submit-p3", "judgments": {
+"k_audit_log": {"relevant": false, "why": "audit log, unrelated"},
+"k_cache_ttl": {"relevant": false, "why": "catalog caching, unrelated"},
+"k_cors_origin_decoy": {"relevant": false, "why": "CORS config, not CSRF token protection"},
+"k_css_grid": {"relevant": false, "why": "CSS layout, unrelated"},
+"k_db_index": {"relevant": false, "why": "DB index, unrelated"},
+"k_double_submit_token": {"relevant": true, "why": "double-submit cookie pattern, no server session"},
+"k_email_queue": {"relevant": false, "why": "email queue, unrelated"},
+"k_forgery_fraud_decoy": {"relevant": false, "why": "fraud forged signature, not CSRF tokens"},
+"k_gzip": {"relevant": false, "why": "gzip, unrelated"},
+"k_healthz": {"relevant": false, "why": "health endpoint, unrelated"},
+"k_metrics": {"relevant": false, "why": "metrics, unrelated"},
+"k_pagination": {"relevant": false, "why": "pagination, unrelated"},
+"k_samesite_cookie": {"relevant": true, "why": "SameSite cookie blocks cross-site forged POST"},
+"k_token_verify": {"relevant": true, "why": "anti-forgery token validated against cookie"},
+"k_tz": {"relevant": false, "why": "UTC timestamps, unrelated"}
+}}

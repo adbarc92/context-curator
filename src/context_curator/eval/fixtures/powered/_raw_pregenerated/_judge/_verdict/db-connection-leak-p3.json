@@ -1,0 +1,18 @@
+{"name": "db-connection-leak-p3", "judgments": {
+"k_audit_log": {"relevant": false, "why": "audit log, unrelated"},
+"k_cache": {"relevant": false, "why": "catalog caching, unrelated"},
+"k_context_manager": {"relevant": true, "why": "context manager always releases connection, stops leak"},
+"k_css_grid": {"relevant": false, "why": "CSS layout, unrelated"},
+"k_dark_mode": {"relevant": false, "why": "dark theme, unrelated"},
+"k_email_queue": {"relevant": false, "why": "email queue, unrelated"},
+"k_feature_flag": {"relevant": false, "why": "feature flag, unrelated"},
+"k_gzip": {"relevant": false, "why": "gzip, unrelated"},
+"k_healthz": {"relevant": false, "why": "health endpoint, unrelated"},
+"k_i18n": {"relevant": false, "why": "i18n strings, unrelated"},
+"k_memory_leak_decoy": {"relevant": false, "why": "heap memory leak, not connection pool"},
+"k_pagination": {"relevant": false, "why": "pagination, unrelated"},
+"k_pool_exhaust_pipe_decoy": {"relevant": false, "why": "swimming pool pun, unrelated"},
+"k_pool_metrics": {"relevant": true, "why": "gauge of checked-out connections finds the leak"},
+"k_tz": {"relevant": false, "why": "UTC timestamps, unrelated"},
+"k_unclosed_cursor": {"relevant": true, "why": "traces leak to unreturned connection in loop"}
+}}

@@ -1,0 +1,80 @@
+{
+ "total": 40,
+ "kept": [
+  "api-versioning-without-breaking-clients-p1",
+  "backpressure-streaming-p4",
+  "blue-green-db-cutover-p3",
+  "cdn-cache-invalidation-p1",
+  "cold-start-warmup-p5",
+  "csrf-double-submit-p3",
+  "db-connection-leak-p3",
+  "dead-letter-queue-p3",
+  "distributed-lock-job-dedup-p1",
+  "event-sourcing-replay-p4",
+  "file-upload-streaming-p2",
+  "flaky-async-test-stabilize-p1",
+  "graceful-shutdown-draining-p5",
+  "graphql-n-plus-one-p2",
+  "grpc-deadline-propagation-p3",
+  "idempotent-payments-p2",
+  "jwt-refresh-rotation-p1",
+  "message-queue-ordering-p2",
+  "multipart-form-parsing-p4",
+  "oauth-device-flow-p3",
+  "optimistic-locking-version-p3",
+  "pagination-cursors-p2",
+  "read-replica-lag-p5",
+  "safe-deploy-rollback-p1",
+  "search-index-reindex-p2",
+  "secrets-rotation-p3",
+  "sharded-counters-p4",
+  "signed-url-expiry-p5",
+  "soft-delete-cascade-p5",
+  "structured-request-logging-p1",
+  "timezone-correct-scheduling-p4",
+  "tls-cert-renewal-p4",
+  "webhook-delivery-retry-p2",
+  "websocket-reconnect-p2",
+  "zero-downtime-schema-migration-p1"
+ ],
+ "dropped": [
+  {
+   "name": "api-key-scoping-p5",
+   "rejected_gold": [
+    "k_key_rotate_revoke"
+   ]
+  },
+  {
+   "name": "circuit-breaker-tuning-p4",
+   "rejected_gold": [
+    "k_breaker_fallback"
+   ]
+  },
+  {
+   "name": "feature-flag-percentage-rollout-p4",
+   "rejected_gold": [
+    "k_flag_kill_switch",
+    "k_flag_override_list"
+   ]
+  },
+  {
+   "name": "json-schema-validation-p5",
+   "rejected_gold": [
+    "k_schema_shared"
+   ]
+  },
+  {
+   "name": "locale-fallback-p5",
+   "rejected_gold": [
+    "k_locale_log_gap"
+   ]
+  }
+ ],
+ "hard_neg_total": 80,
+ "hard_neg_false_pos": 0,
+ "circularity_guard": {
+  "high_tercile_drop_rate": 0.13636363636363635,
+  "low_tercile_drop_rate": 0.07142857142857142
+ },
+ "bm25_recall_k": 3
+}
