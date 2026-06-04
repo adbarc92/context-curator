@@ -25,7 +25,8 @@ def _line_for(stdin_text: str) -> str:
         payload = json.loads(stdin_text)
     except Exception:
         return _IDLE
-    sid = (payload.get("session_id") or "").strip() if isinstance(payload, dict) else ""
+    raw = payload.get("session_id") if isinstance(payload, dict) else None
+    sid = raw.strip() if isinstance(raw, str) else ""    # tolerate non-string/absent session_id
     if sid:                                          # present -> its file or idle (NOT newest)
         recent = read_recent(sid, 1)
         return _render(recent[0]) if recent else _IDLE

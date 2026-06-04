@@ -35,3 +35,8 @@ def test_blank_session_falls_back_to_newest(tmp_path, monkeypatch):
 def test_malformed_stdin_is_idle(tmp_path, monkeypatch):
     _patch(tmp_path, monkeypatch)
     assert sl._line_for("not json at all") == "CC ·"
+
+
+def test_non_string_session_id_is_idle(tmp_path, monkeypatch):
+    _patch(tmp_path, monkeypatch)
+    assert sl._line_for(json.dumps({"session_id": 123})) == "CC ·"   # non-string -> graceful idle
