@@ -6,6 +6,7 @@ from context_curator.eval.real_corpus import (
     extract_entities,
     harvest_corpus,
     harvest_trace,
+    lexical_bias,
 )
 from context_curator.replay.schema import ToolCall, ToolResult, Trace, UserPrompt
 
@@ -107,3 +108,14 @@ def test_harvest_corpus_splits_distinct_sessions_across_splits():
         assert len({f.split for f in fxs if f.session_id == s}) == 1
     # with test_frac=0.5 over 2 sessions, the split is genuinely exercised: both splits present
     assert {f.split for f in fxs} == {"train", "test"}
+
+
+def test_lexical_bias_flags_when_gold_is_lexically_trivial():
+    from context_curator.eval.fixtures import Fixture, FixtureChunk
+    chunks = [FixtureChunk(key="gold", content="authentication token rotation")] + \
+             [FixtureChunk(key=f"n{i}", content="the system the system") for i in range(6)]
+    fx = Fixture(name="f", chunks=chunks, prompt="authentication token",
+                 gold_keys=["gold"], split="test")
+    rep = lexical_bias([fx], k=3, margin=0.15, seed=0)
+    assert rep.degenerate is True
+    assert rep.gold_recall > rep.control_recall

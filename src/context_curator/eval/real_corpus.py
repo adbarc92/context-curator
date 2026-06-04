@@ -7,8 +7,11 @@ from __future__ import annotations
 
 import os
 import random
+from dataclasses import dataclass
 
+from context_curator.eval.bm25 import bm25_scores
 from context_curator.eval.fixtures import Fixture, FixtureChunk
+from context_curator.eval.metrics import recall_at_k
 from context_curator.replay.capture.transcript import parse_transcript
 from context_curator.replay.schema import ToolCall, ToolResult, Trace, UserPrompt
 
@@ -136,3 +139,31 @@ def harvest_corpus(paths: list[str], *, w: int = 5, min_candidates: int = 5,
         for fx in by_session[s]:
             out.append(fx.model_copy(update={"split": split}))
     return out
+
+
+@dataclass
+class LexicalBiasReport:
+    gold_recall: float
+    control_recall: float
+    margin: float
+    degenerate: bool
+
+
+def lexical_bias(fixtures: list[Fixture], *, k: int = 3, margin: float = 0.15,
+                 seed: int = 0) -> LexicalBiasReport:
+    """Design §5.2: BM25 R@k on the gold set vs a per-fixture random non-gold control of the same
+    count. `degenerate` iff gold_recall >= control_recall + margin (gold is lexically trivial)."""
+    rng = random.Random(seed)
+    g_recs, c_recs = [], []
+    for fx in fixtures:
+        docs = {c.key: c.content for c in fx.chunks}
+        ranked = [key for key, _s in sorted(bm25_scores(fx.prompt, docs).items(),
+                                            key=lambda kv: (-kv[1], kv[0]))]
+        gold = set(fx.gold_keys)
+        g_recs.append(recall_at_k(ranked, gold, k))
+        non_gold = [c.key for c in fx.chunks if c.key not in gold]
+        control = set(rng.sample(non_gold, min(len(gold), len(non_gold)))) if non_gold else set()
+        c_recs.append(recall_at_k(ranked, control, k) if control else 0.0)
+    gr = sum(g_recs) / len(g_recs) if g_recs else 0.0
+    cr = sum(c_recs) / len(c_recs) if c_recs else 0.0
+    return LexicalBiasReport(gr, cr, margin, gr >= cr + margin)
