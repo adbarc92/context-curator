@@ -36,7 +36,9 @@ power-sized run is the trustworthy number. This is exactly why M4c grew the corp
 flipping on the directional first-look.
 
 ## Corpus fairness (the result is only meaningful because the corpus is fair)
-- **35 fixtures** (9 train / 26 test), assembled from 40 LLM-generated raw fixtures minus 5 the
+- **35 fixtures** (9 train / 26 test — deliberately test-heavy: the train split only feeds the 1-D
+  `w_similarity` grid-sweep, so weighting fixtures toward the test split tightens the headline CI),
+  assembled from 40 LLM-generated raw fixtures minus 5 the
   blind gold-judge dropped. Each: 12–20 chronological chunks, ≥3 paraphrased gold, ≥2 lexically-
   tempting hard negatives (tagged `hard_neg`). Generation protocol:
   `docs/superpowers/specs/2026-06-03-corpus-generation-protocol.md`.

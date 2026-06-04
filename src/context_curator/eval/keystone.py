@@ -16,7 +16,7 @@ from context_curator.eval.stats import bootstrap_ci
 from context_curator.eval.sweep import grid_sweep
 from context_curator.policy.relevance import RelevancePolicy
 from context_curator.policy.weights import PolicyWeights
-from context_curator.replay.schema import TaskSignal
+from context_curator.replay.schema import TaskSignal, ToolRef
 from context_curator.replay.target import PolicyTarget, RecencyOnlyTarget
 from context_curator.store.memory import InMemoryStore
 
@@ -51,7 +51,9 @@ def _ndcg_per_fixture(fixtures, target, embedder, k):
             store.store(c.key, c.content, tags=c.tags, ttl_s=None)
         d = target.decide(
             TaskSignal(
-                turn_index=0, prompt=fx.prompt, subtask_id=None, recent_tool_calls=[]
+                turn_index=0, prompt=fx.prompt, subtask_id=None,
+                recent_tool_calls=[ToolRef(name=t, call_id=f"fixture:{i}")
+                                   for i, t in enumerate(fx.recent_tools)],
             ),
             store,
         )
