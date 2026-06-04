@@ -174,3 +174,28 @@ def test_ups_curator_returns_empty_falls_back_to_recency(tmp_path, monkeypatch):
     monkeypatch.setattr(ups.client, "request_onload", lambda prompt, *, k, token_budget: [])
     r = ups.handle({"prompt": "anything", "hook_event_name": "UserPromptSubmit"}, s)
     assert "session:x:tool:a" in (r.additional_context or "")    # recency floor injected
+
+
+def test_hook_records_decision(tmp_path, monkeypatch):
+    from context_curator.hooks import user_prompt_submit as ups
+    from context_curator.observe import decision_log as dl
+
+    monkeypatch.setattr(dl, "decisions_dir", lambda: tmp_path / "decisions")
+    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])   # dark/empty -> recency
+    s = _sqlite(tmp_path)
+    s.store("session:x:tool:a", "alpha")                        # >=1 live chunk -> recency injects
+    ups.handle({"prompt": "hello world", "session_id": "sess-A"}, s)
+    recs = dl.read_recent("sess-A", 1)
+    assert recs and recs[0].source == "recency"
+    assert recs[0].working_set_size >= 1
+
+
+def test_hook_record_failure_is_fail_open(tmp_path, monkeypatch):
+    from context_curator.hooks import user_prompt_submit as ups
+    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])
+    monkeypatch.setattr(ups, "record_decision",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
+    s = _sqlite(tmp_path)
+    s.store("session:x:tool:a", "alpha")                        # >=1 live chunk
+    res = ups.handle({"prompt": "hi", "session_id": "s"}, s)
+    assert res.exit_code == 0       # injection still succeeds despite logging failure
