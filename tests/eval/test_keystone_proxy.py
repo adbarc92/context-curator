@@ -66,3 +66,11 @@ def test_keystone_scores_three_arms_and_no_legacy_n30():
     assert "n>=~30" not in src and "n≥~30" not in src
     names = {f.name for f in fields(keystone.KeystoneReport)}
     assert "arm_bm25" in names
+
+
+def test_keystone_report_exposes_session_ids_aligned_with_deltas():
+    from dataclasses import fields
+
+    from context_curator.eval import keystone
+    names = {f.name for f in fields(keystone.KeystoneReport)}
+    assert "test_session_ids" in names

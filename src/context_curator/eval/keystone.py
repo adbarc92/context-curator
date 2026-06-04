@@ -31,6 +31,7 @@ class KeystoneReport:
     arm_bm25: ArmMetrics
     n_test: int
     per_fixture_ndcg_delta: list[float]
+    test_session_ids: list[str | None]
     delta_ci90: tuple[float, float]
     verdict: str
 
@@ -99,7 +100,8 @@ def run_keystone(
     else:
         verdict = f"baseline wins (CI excludes 0): {mean_delta:+.3f}"
     return KeystoneReport(
-        best, arm3, arm2, arm_bm25, len(test), deltas, (lo, hi), verdict
+        best, arm3, arm2, arm_bm25, len(test), deltas,
+        [f.session_id for f in test], (lo, hi), verdict,
     )
 
 
