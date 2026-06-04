@@ -61,3 +61,25 @@ def test_newest_session_file(decisions):
     os.utime(dl.decision_log_path("new"), (2000, 2000))
     newest = dl._newest_session_file()
     assert newest is not None and "new" in newest.name
+
+
+def test_inspect_lines_formats_recent(decisions):
+    dl.record_decision("s1", "first task", "recency", ["a"])
+    dl.record_decision("s1", "second task", "curator", ["a", "b"])
+    lines = dl.inspect_lines("s1", 10)
+    assert len(lines) == 2
+    assert "[curator] ws:2 +1/-0" in lines[1] and "second task" in lines[1]
+
+
+def test_inspect_lines_empty_dir_message(decisions):
+    assert dl.inspect_lines(None, 10) == ["no decisions recorded yet"]
+
+
+def test_inspect_lines_default_uses_newest(decisions):
+    import os
+    dl.record_decision("a", "pa", "recency", ["x"])
+    dl.record_decision("b", "pb", "recency", ["y"])     # newest
+    os.utime(dl.decision_log_path("a"), (1000, 1000))   # deterministic mtimes (avoid tie-flake)
+    os.utime(dl.decision_log_path("b"), (2000, 2000))
+    lines = dl.inspect_lines(None, 10)
+    assert any("pb" in ln for ln in lines)

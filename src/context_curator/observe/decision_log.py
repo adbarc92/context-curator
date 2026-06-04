@@ -5,6 +5,7 @@ the injected key set. The writer ALWAYS appends a trailing newline, so the reade
 unterminated final fragment as torn and drop it."""
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from dataclasses import asdict, dataclass
@@ -117,3 +118,28 @@ def record_decision(session_id: str, prompt_preview: str, source: str,
             f.write(prefix + json.dumps(asdict(rec)) + "\n")
     except Exception:
         pass
+
+
+def inspect_lines(session_id: str | None, tail: int) -> list[str]:
+    """Human-readable recent decisions. Default (session_id None) -> the newest session file."""
+    path = decision_log_path(session_id) if session_id else _newest_session_file()
+    if path is None or not path.exists():
+        return ["no decisions recorded yet"]
+    return [
+        f'{r.ts} [{r.source}] ws:{r.working_set_size} '
+        f'+{len(r.paged_in)}/-{len(r.paged_out)}  "{r.prompt_preview}"'
+        for r in _records_from(path, tail)
+    ]
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(prog="python -m context_curator.observe.decision_log")
+    ap.add_argument("--session", default=None, help="session id (default: newest log)")
+    ap.add_argument("--tail", type=int, default=10, help="how many recent decisions (max ~300)")
+    args = ap.parse_args()
+    for line in inspect_lines(args.session, args.tail):
+        print(line)
+
+
+if __name__ == "__main__":
+    main()
