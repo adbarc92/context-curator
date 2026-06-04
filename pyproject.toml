@@ -11,6 +11,9 @@ dependencies = [
 [project.optional-dependencies]
 embed = ["fastembed>=0.3", "onnxruntime>=1.17"]
 
+[project.scripts]
+cc-statusline = "context_curator.observe.statusline:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",
