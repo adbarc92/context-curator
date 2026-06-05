@@ -57,7 +57,7 @@ In a fresh scratch repo (with the plugin enabled + Claude restarted):
 - SessionStart fires.
 - A prompt injects context (or shows `CC ·`).
 - A decision record lands under `<scratch>/.context-curator/decisions/`.
-- `cc_query` via the MCP returns.
+- The MCP tool `cc_query` (called through Claude via the connected `cc-mcp` server, not a shell command) returns.
 - `cc-statusline` renders (manual statusLine config — see `docs/statusline.md`).
 
 ## 5. Recorded exit criteria (the milestone is "done" only when BOTH are observed)
