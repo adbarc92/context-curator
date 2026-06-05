@@ -59,7 +59,9 @@ into [`docs/plugin-install.md`](plugin-install.md) §5** — they are currently 
   merge conflict.
 
 ## What to pick up next
-**Tasks 7–8 (out-of-session).** Restart Claude + a fresh shell, then:
+**Tasks 7–8 (out-of-session)** — the full step-by-step is in
+[`docs/M7-runbook.md`](M7-runbook.md) (tailored YOU/CLAUDE checklist). In brief: restart Claude + a
+fresh shell, then:
 1. `uv tool install --editable <ABS_CHECKOUT>` → `uv tool update-shell` → restart →
    `scripts/verify-plugin.ps1` must print `VERIFY PASS` (the fresh-shell PATH gate).
 2. `/plugin marketplace add <ABS_CHECKOUT>` → `/plugin install context-curator@context-curator` →
