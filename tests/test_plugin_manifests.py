@@ -28,14 +28,16 @@ def _hook_commands(hooks_json: dict) -> list[str]:
     return cmds
 
 
-def test_plugin_manifest_has_required_name():
+def test_plugin_manifest_has_required_keys():
     manifest = _load(".claude-plugin/plugin.json")
     assert manifest["name"] == "context-curator"
+    for key in ("version", "description", "author"):
+        assert key in manifest, f"plugin.json missing required key {key!r}"
 
 
-def test_hooks_json_registers_all_five_events():
+def test_hooks_json_registers_exactly_the_five_events():
     hooks = _load("hooks/hooks.json")["hooks"]
-    assert HOOK_EVENTS.issubset(hooks.keys())
+    assert set(hooks.keys()) == HOOK_EVENTS
 
 
 def test_mcp_json_registers_cc_mcp():
