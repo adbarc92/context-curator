@@ -1,0 +1,11 @@
+{
+  "name": "context-curator",
+  "owner": { "name": "Alex Barclay" },
+  "plugins": [
+    {
+      "name": "context-curator",
+      "source": "./",
+      "description": "Relevance-driven working-set policy and curated context store for Claude Code."
+    }
+  ]
+}

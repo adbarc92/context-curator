@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "context-curator": {
+      "command": "cc-mcp"
+    }
+  }
+}

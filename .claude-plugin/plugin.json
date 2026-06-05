@@ -1,0 +1,6 @@
+{
+  "name": "context-curator",
+  "version": "0.0.1",
+  "description": "Relevance-driven working-set policy and curated context store for Claude Code.",
+  "author": { "name": "Alex Barclay" }
+}
