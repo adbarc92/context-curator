@@ -6,7 +6,7 @@
 # update-shell ; restart. Exits nonzero on any failure.
 $ErrorActionPreference = 'Stop'
 
-function Fail($msg) { Write-Error "VERIFY FAIL: $msg"; exit 1 }
+function Fail($msg) { [Console]::Error.WriteLine("VERIFY FAIL: $msg"); exit 1 }
 
 # --- Gate 1: PATH resolution (round-3 C1: resolution only, do NOT execute the server) ---
 foreach ($cmd in @('cc-mcp', 'cc-hook-user-prompt')) {
