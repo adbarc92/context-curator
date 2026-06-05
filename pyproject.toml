@@ -12,7 +12,14 @@ dependencies = [
 embed = ["fastembed>=0.3", "onnxruntime>=1.17"]
 
 [project.scripts]
-cc-statusline = "context_curator.observe.statusline:main"
+cc-statusline         = "context_curator.observe.statusline:main"
+cc-mcp                = "context_curator.mcp_server:main"
+cc-inspect            = "context_curator.observe.decision_log:main"
+cc-hook-session-start = "context_curator.hooks.session_start:main"
+cc-hook-user-prompt   = "context_curator.hooks.user_prompt_submit:main"
+cc-hook-pre-tool-use  = "context_curator.hooks.pre_tool_use:main"
+cc-hook-post-tool-use = "context_curator.hooks.post_tool_use:main"
+cc-hook-subagent-stop = "context_curator.hooks.subagent_stop:main"
 
 [dependency-groups]
 dev = [
