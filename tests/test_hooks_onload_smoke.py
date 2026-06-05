@@ -15,16 +15,16 @@ def _run(module, event, env):
                           capture_output=True, text=True, env=env)
 
 
-def test_settings_registers_both_onload_hooks():
-    # The red->green anchor for this task: empty arrays -> IndexError before registration.
-    # Anchor the path to the repo root (parents[1]) so CWD doesn't matter.
-    settings_path = pathlib.Path(__file__).resolve().parents[1] / ".claude" / "settings.json"
-    settings = json.loads(settings_path.read_text())
-    hooks = settings["hooks"]
+def test_plugin_registers_both_onload_hooks():
+    # M7: the plugin (hooks/hooks.json) is the single source of hook wiring; .claude/settings.json
+    # no longer carries hooks (it would double-fire alongside the plugin). Assert the plugin wires
+    # the two onload events to their cc-* console scripts.
+    hooks_path = pathlib.Path(__file__).resolve().parents[1] / "hooks" / "hooks.json"
+    hooks = json.loads(hooks_path.read_text())["hooks"]
     ups_cmd = hooks["UserPromptSubmit"][0]["hooks"][0]["command"]
     ss_cmd = hooks["SessionStart"][0]["hooks"][0]["command"]
-    assert "user_prompt_submit" in ups_cmd
-    assert "session_start" in ss_cmd
+    assert ups_cmd == "cc-hook-user-prompt"
+    assert ss_cmd == "cc-hook-session-start"
 
 
 def test_user_prompt_submit_stdout_is_exactly_inject_json(tmp_path):
