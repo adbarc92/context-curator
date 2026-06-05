@@ -63,6 +63,7 @@ def pid_alive(pid: int) -> bool:
                 capture_output=True,
                 text=True,
                 timeout=3,
+                creationflags=subprocess.CREATE_NO_WINDOW,   # no flashing console window
             )
         except subprocess.TimeoutExpired:
             return True             # can't check in time -> assume alive (avoid spurious respawn)

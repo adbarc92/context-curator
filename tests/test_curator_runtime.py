@@ -1,4 +1,25 @@
+import os
+import subprocess
+
+import pytest
+
 from context_curator.curator import runtime
+
+
+@pytest.mark.skipif(os.name != "nt", reason="console-window suppression is Windows-only")
+def test_pid_alive_suppresses_console_window(monkeypatch):
+    # Regression: on Windows the tasklist liveness probe must run with CREATE_NO_WINDOW, else a
+    # console window flashes on every onload while the curator is warming (it spawns tasklist via
+    # discover -> pid_alive). The flag is invisible to the result; assert it's passed.
+    captured = {}
+
+    def fake_run(cmd, **kwargs):
+        captured.update(kwargs)
+        return subprocess.CompletedProcess(cmd, 0, stdout=f"img 1234 Console\n{1234}", stderr="")
+
+    monkeypatch.setattr(runtime.subprocess, "run", fake_run)
+    assert runtime.pid_alive(1234) is True
+    assert captured.get("creationflags", 0) & subprocess.CREATE_NO_WINDOW
 
 
 def test_proof_roundtrip():
