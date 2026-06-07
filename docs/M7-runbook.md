@@ -77,17 +77,26 @@ Then **restart Claude Code** once more.
 
 ## Phase 4 — Smoke test in a throwaway scratch repo  **[YOU]**
 
-Create a disposable repo and open it in Claude Code (plugin enabled):
+Scratch repo used: **`D:\MajorProjects\SCRATCH`** (a disposable git repo). Open it in Claude Code with
+the plugin enabled, then do a small **real** task across several turns — do NOT mention the plugin
+(the hooks must fire organically). E.g. "create `inventory.py` with a `Warehouse` class" → "add a
+`restock` method" → "write a test" → "what field names did I use on Warehouse?".
+
+Then verify from **outside** Claude (a separate PowerShell), pointing the inspector at the scratch
+store:
 
 ```powershell
-mkdir $env:TEMP\cc-scratch; cd $env:TEMP\cc-scratch; git init
+$env:CLAUDE_PROJECT_DIR = "D:\MajorProjects\SCRATCH"
+cc-inspect
+ls "D:\MajorProjects\SCRATCH\.context-curator\store.db"
+ls "D:\MajorProjects\SCRATCH\.context-curator\decisions\"
 ```
 
-In a Claude session inside that scratch repo, confirm each surface and **note what you observe**:
-- [ ] **SessionStart** fires (pinned-context injection may appear at session start).
-- [ ] Submit a prompt → relevant context is injected (or the statusline shows `CC ·`).
-- [ ] A decision-record file appears under `%TEMP%\cc-scratch\.context-curator\decisions\`.
-- [ ] Ask Claude to call the **`cc_query`** MCP tool → it returns a result.
+What passing looks like:
+- [ ] `cc-inspect` prints **one line per prompt** (proves `UserPromptSubmit` fired through the real install).
+- [ ] At least one later turn shows source `[recency]` or `[curator]` with **`ws:` > 0** (context was injected automatically; early empty-store turns showing `[none] ws:0` are expected).
+- [ ] `store.db` and `decisions-*.jsonl` exist under `D:\MajorProjects\SCRATCH\.context-curator\` (capture hooks + per-project store path both work).
+- [ ] (Direct, allowed) ask Claude to "call the `cc_query` tool with query: warehouse restock" → it returns chunks (MCP wiring).
 - [ ] (Optional) `cc-statusline` renders if wired manually (see [`docs/statusline.md`](statusline.md)).
 
 ---
