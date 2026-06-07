@@ -155,6 +155,12 @@ def spawn_detached(db_path: str) -> None:
         kwargs["creationflags"] = (
             subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
         )
+        # DETACHED_PROCESS alone can still briefly flash a console window on some Windows setups;
+        # a hidden STARTUPINFO guarantees the background curator never shows a window.
+        si = subprocess.STARTUPINFO()
+        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        si.wShowWindow = subprocess.SW_HIDE
+        kwargs["startupinfo"] = si
     else:
         kwargs["start_new_session"] = True
     subprocess.Popen([sys.executable, "-m", "context_curator.curator"], **kwargs)

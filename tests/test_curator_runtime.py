@@ -22,6 +22,24 @@ def test_pid_alive_suppresses_console_window(monkeypatch):
     assert captured.get("creationflags", 0) & subprocess.CREATE_NO_WINDOW
 
 
+@pytest.mark.skipif(os.name != "nt", reason="console-window suppression is Windows-only")
+def test_spawn_detached_hides_window(monkeypatch):
+    # Regression: the detached curator must spawn with no visible console window. DETACHED_PROCESS
+    # alone can flash on some Windows setups, so a hidden STARTUPINFO is also required.
+    captured = {}
+
+    def fake_popen(cmd, **kwargs):
+        captured.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(runtime.subprocess, "Popen", fake_popen)
+    runtime.spawn_detached("X:/tmp/store.db")
+    assert captured.get("creationflags", 0) & subprocess.DETACHED_PROCESS
+    si = captured.get("startupinfo")
+    assert si is not None and (si.dwFlags & subprocess.STARTF_USESHOWWINDOW)
+    assert si.wShowWindow == subprocess.SW_HIDE
+
+
 def test_proof_roundtrip():
     token = runtime.new_token()
     nonce = runtime.new_nonce()
