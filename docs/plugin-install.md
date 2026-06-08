@@ -70,7 +70,10 @@ In a fresh scratch repo (with the plugin enabled + Claude restarted):
 
 ## 5. Recorded exit criteria (the milestone is "done" only when BOTH are observed)
 
-These are Claude-runtime behaviors the spec cannot prove on its own. Fill in the outcomes:
+These are Claude-runtime behaviors the spec cannot prove on its own. Fill in the outcomes.
+**Tracked in [#14](https://github.com/adbarc92/context-curator/issues/14)** (the remaining
+out-of-session verification: criterion (a) below, plus confirming the gui-script hooks stop the
+Windows console-window flashing — see [#12](https://github.com/adbarc92/context-curator/issues/12)).
 
 ### (a) Does `CLAUDE_PROJECT_DIR` reach the `cc-mcp` server's `os.environ`?
 - **How checked:** _<observed under a real session — cc-mcp logs its env on startup to stderr>_
