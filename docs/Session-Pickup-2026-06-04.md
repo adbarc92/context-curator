@@ -1,83 +1,53 @@
-# Session Pickup — 2026-06-04
+# Session Pickup — 2026-06-04 (updated 2026-06-07)
 
-**Branch:** `feat/m7-plugin-package` (off `main`)
-**Active plan:** [`docs/superpowers/plans/2026-06-04-m7-plugin-package.md`](superpowers/plans/2026-06-04-m7-plugin-package.md) — committed `da8e631`.
-**Active spec:** [`docs/superpowers/specs/2026-06-04-m7-plugin-package-design.md`](superpowers/specs/2026-06-04-m7-plugin-package-design.md) — committed `ef523f0`.
+**Branch:** `feat/m7-plugin-package` (off `main`) — **pushed; [PR #13](https://github.com/adbarc92/context-curator/pull/13) open to `main` (release `v0.0.2`).**
+**Plan:** [`docs/superpowers/plans/2026-06-04-m7-plugin-package.md`](superpowers/plans/2026-06-04-m7-plugin-package.md) · **Spec:** [`…/specs/2026-06-04-m7-plugin-package-design.md`](superpowers/specs/2026-06-04-m7-plugin-package-design.md)
+**Out-of-session runbook:** [`docs/M7-runbook.md`](M7-runbook.md)
 
 ## Where we are
-The plan was written (`writing-plans`) and executed **subagent-driven** (fresh implementer + spec
-review + code-quality review per task). **All six in-session tasks are done, committed, and passed a
-final whole-branch review.** Full suite **342 passed, 6 skipped**. What remains is **Tasks 7–8 — the
-two out-of-session verification gates** that need a `uv tool install`, a fresh shell, and a Claude
-Code restart. The milestone is "done" only when both recorded exit criteria are **observed and written
-into [`docs/plugin-install.md`](plugin-install.md) §5** — they are currently `PENDING`.
+M7 (repo-as-plugin) is **implemented, validated end-to-end, and shipped as `v0.0.2`** (tag pushed,
+PR #13 open). The plugin was confirmed working in a real scratch repo (per-project store, hooks
+firing, capture, automatic injection with working-set paging) and by an automated smoke. The only
+remaining work is **out-of-session and user-driven** — it cannot be done inside a Claude session.
 
-## Plan progress
+## What's left (all tracked — nothing else actionable in-session)
+1. **Merge [PR #13](https://github.com/adbarc92/context-curator/pull/13).** (Review/merge.)
+2. **[#14](https://github.com/adbarc92/context-curator/issues/14) — out-of-session verification** (needs Claude quit/reinstall/restart; steps in the runbook):
+   - Confirm the gui-script hooks stop the Windows console-window flashing (reinstall regenerates the
+     `cc-hook-*` launchers as pythonw → no window).
+   - **Exit criterion (a):** does `CLAUDE_PROJECT_DIR` reach the `cc-mcp` server's `os.environ`?
+     (temp stderr diagnostic → observe → record in [`docs/plugin-install.md`](plugin-install.md) §5(a)
+     → revert). If NO, pinning `CC_DB_PATH` becomes the documented default.
+   - Both `PENDING`s in `plugin-install.md` §5 stay open until recorded; criterion (b) is effectively
+     confirmed (verify-plugin.ps1 passes + scratch repo worked).
+3. After #14 is recorded, M7 is fully done → it merges via PR #13.
 
-| Task | Status | Commit |
-|---|---|---|
-| 1 — `cc-*` console-script entry points | done | `7d37943` |
-| 2 — `$CLAUDE_PROJECT_DIR` branch in `resolve_db_path` | done | `672ee7e` |
-| 3 — 4 repo-as-plugin manifests | done | `13cf2c2` (+ test hardening `70c36dc`) |
-| 4 — remove dev hook block (→ `{}`), repoint onload test | done | `289a797` |
-| 5 — `scripts/verify-plugin.ps1` | done | `1de8658` (+ Fail-helper fix `3566910`) |
-| 6 — `docs/plugin-install.md` + README pointer | done | `8600b21` (+ `cc_query` clarify `3a0c052`) |
-| 7 — real marketplace/cache install → record exit criterion (b) | **pending (out-of-session)** | — |
-| 8 — confirm `CLAUDE_PROJECT_DIR` reaches `cc-mcp` → record criterion (a) | **pending (out-of-session)** | — |
+## Key context the diff doesn't carry
+- **The flicker root cause is upstream Claude Code** ([#12](https://github.com/adbarc92/context-curator/issues/12)):
+  it spawns hook/MCP **console-subsystem** `.exe`s on Windows with no `windowsHide`, so each per-event
+  hook flashes a console window. **Fix shipped:** the 5 `cc-hook-*` entry points are now
+  `[project.gui-scripts]` (pythonw / GUI subsystem → no auto-console). Verified empirically that a
+  pythonw process still reads piped stdin / writes stdout (Claude pipes those handles), so the hook
+  contract holds. `cc-mcp`/`cc-inspect`/`cc-statusline` stay console scripts; move `cc-mcp` too if a
+  persistent MCP window shows up (same proven-safe mechanism).
+- **"Never run both wirings" is a hard hazard, not just double-firing:** with the dev
+  `.claude/settings.json` hooks active *and* the plugin installed + `cc-mcp` running, the dev hooks'
+  `uv run` can't replace the locked `cc-mcp.exe` (`os error 32`) and on `PreToolUse` that **blocks
+  every Write/Edit/Bash**. Recover by restoring `settings.json` to `{}` from a shell *outside* Claude.
+  (This is why M7's settings.json is `{}`, and why an "off main" branch is toxic in a live plugin
+  session — branch any curator-runtime fixes off an M7-based tree, not main.)
+- Injections show `[recency]`, not `[curator]` — that's the **expected dark default** (the semantic
+  bge path needs the curator warmed-to-ready + flag/`[embed]`).
+- For any `uv run` while the plugin's `cc-mcp` is alive, use `uv run --no-sync` to avoid the
+  rebuild-vs-locked-`cc-mcp.exe` collision.
 
-## Adaptations made vs. the plan
-- **`resolve_db_path` test count:** the plan said "5 tests" in `tests/test_resolve_db_path.py`; the
-  real count is **6** (the plan miscounted the pre-existing `test_mcp_and_hook_resolve_identically`).
-  Implementer correctly kept all 3 originals + appended 3. No action needed — noted so the next
-  session isn't surprised.
-- **`marketplace.json` schema (the one field the plan flagged as unverified):** confirmed against the
-  official Claude Code plugin-marketplace docs — `owner` is an object `{ "name": ... }` and
-  `source: "./"` is a valid relative path (resolves to the repo/marketplace root). **No change** from
-  the planned content; the flag is resolved.
-- **Three review-driven fixes landed on top of their tasks** (not in the original plan, all small):
-  manifest tests hardened to exact-event-set + all-required-keys (`70c36dc`); `verify-plugin.ps1`
-  `Fail` helper made to exit deterministically via stderr (`3566910`); `plugin-install.md` reworded so
-  `cc_query` reads as an MCP tool, not a shell command (`3a0c052`).
+## Key commits this session
+`7d37943..da8e631` M7 tasks 1–6 · `a17f87b` verify-plugin end-to-end smoke · `5b9bfab` curator
+STARTUPINFO SW_HIDE · `0a39351` hooks → gui-scripts · `3dfba92` release v0.0.2 (tag) ·
+`43aca4e` tasklist CREATE_NO_WINDOW (PR #11, already merged to `main`).
 
-## Real bugs caught
-- **None in the M7 implementation itself** (it was design-only drift; the final review found no
-  Critical/Important integration issues).
-- **Separate, pre-existing Windows bug found + fixed this session (NOT on this branch):** the curator
-  flashed console windows during use. Root cause — `runtime.pid_alive`'s `tasklist` liveness probe ran
-  with no `creationflags`, so Windows allocated a fresh console window on every onload while the
-  curator warmed (`discover` → `pid_alive` → `tasklist`). Fixed with `CREATE_NO_WINDOW` on branch
-  **`fix/windows-console-flicker`** (commit `43aca4e`) → **PR #11** to `main`.
-
-## Known limitations
-- **Two exit criteria are unobserved** (Tasks 7–8): (a) does `CLAUDE_PROJECT_DIR` reach the `cc-mcp`
-  subprocess env? (if not, the MCP store diverges from the hooks' and pinning `CC_DB_PATH` becomes
-  mandatory); (b) does the marketplace/**cache** install resolve bare `cc-*` on PATH? Both are
-  Claude-runtime behaviors no static test or CI can settle — they require the out-of-session install.
-- **The console-flicker fix is on its own branch, NOT on M7.** Running the Task 7 install verification
-  on this branch will still flash windows until PR #11 merges to `main` (or you `git cherry-pick
-  43aca4e` onto this branch). They touch disjoint files (`runtime.py` vs `paths.py`/manifests) — no
-  merge conflict.
-
-## What to pick up next
-**Tasks 7–8 (out-of-session)** — the full step-by-step is in
-[`docs/M7-runbook.md`](M7-runbook.md) (tailored YOU/CLAUDE checklist). In brief: restart Claude + a
-fresh shell, then:
-1. `uv tool install --editable <ABS_CHECKOUT>` → `uv tool update-shell` → restart →
-   `scripts/verify-plugin.ps1` must print `VERIFY PASS` (the fresh-shell PATH gate).
-2. `/plugin marketplace add <ABS_CHECKOUT>` → `/plugin install context-curator@context-curator` →
-   restart; smoke the scratch repo (SessionStart, prompt-inject, a decision record under
-   `<scratch>/.context-curator/decisions/`, `cc_query` via MCP). Record criterion (b) in
-   `docs/plugin-install.md` §5(b).
-3. Add the temporary stderr diagnostic to `cc-mcp` `main()` (plan Task 8 Step 1), reinstall, observe
-   whether `CLAUDE_PROJECT_DIR` reaches the MCP env + whether its `db=` matches the hooks'; record
-   criterion (a) in §5(a); **revert the diagnostic** + reinstall.
-4. Both recorded → `superpowers:finishing-a-development-branch` (PR), and **delete this doc + the
-   CLAUDE.md pickup block** (M7 lands).
-
-## Servers / commands used
-- Everything via `uv run` (e.g. `uv run pytest -p no:cacheprovider`, `uv run ruff check .`). Ignore the
-  `VIRTUAL_ENV` mismatch warning on stderr.
-- Known flake: `test_curator_lifecycle_and_handshake` occasionally fails under full-suite load
-  (subprocess timing); passes in isolation — re-run it alone before treating it as a regression.
-- Local real-transcript corpus: `src/context_curator/eval/fixtures/_real_local/` (gitignored, 1
-  session) — why M4d's real verdict was harness-only.
+## Servers / commands
+- `uv run --no-sync pytest -p no:cacheprovider` (346 passed, 6 skipped). Known flake:
+  `test_curator_lifecycle_and_handshake` fails under full-suite load, passes in isolation.
+- `pwsh -NoProfile -File scripts/verify-plugin.ps1` — repeatable installed-plugin smoke (PS 5.1 & 7).
+- Scratch test repo: `D:\MajorProjects\SCRATCH`.
