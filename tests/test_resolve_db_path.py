@@ -13,7 +13,7 @@ def test_env_var_wins_and_is_absolute(monkeypatch, tmp_path):
 
 def test_default_is_absolute_and_cwd_independent(monkeypatch):
     monkeypatch.delenv("CC_DB_PATH", raising=False)
-    monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)   # else the new branch fires (round-3 I2)
+    monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)  # else the new branch fires (r3 I2)
     p = resolve_db_path()
     assert Path(p).is_absolute()
     assert p.endswith(os.path.join(".context-curator", "store.db"))
