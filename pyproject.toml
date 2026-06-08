@@ -12,9 +12,18 @@ dependencies = [
 embed = ["fastembed>=0.3", "onnxruntime>=1.17"]
 
 [project.scripts]
-cc-statusline         = "context_curator.observe.statusline:main"
-cc-mcp                = "context_curator.mcp_server:main"
-cc-inspect            = "context_curator.observe.decision_log:main"
+# Console scripts: cc-inspect/cc-statusline write to a user terminal, and cc-mcp is a long-lived
+# stdio server (one process, not a per-event flash).
+cc-statusline = "context_curator.observe.statusline:main"
+cc-inspect    = "context_curator.observe.decision_log:main"
+cc-mcp        = "context_curator.mcp_server:main"
+
+# GUI scripts use the pythonw launcher (GUI subsystem), so Windows never auto-creates a console
+# window when Claude Code spawns these hooks per event (the source of the flashing-window pop-ups).
+# Their stdio still works because Claude pipes stdin (event JSON) and stdout (inject JSON) to the
+# child -- a piped handle keeps sys.stdin/sys.stdout valid even under pythonw (verified). Hooks must
+# stay GUI scripts; test_entry_points.py guards against a regression back to console scripts.
+[project.gui-scripts]
 cc-hook-session-start = "context_curator.hooks.session_start:main"
 cc-hook-user-prompt   = "context_curator.hooks.user_prompt_submit:main"
 cc-hook-pre-tool-use  = "context_curator.hooks.pre_tool_use:main"

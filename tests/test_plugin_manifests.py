@@ -15,8 +15,9 @@ def _load(rel: str) -> dict:
 
 
 def _declared_scripts() -> set[str]:
-    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    return set(pyproject["project"]["scripts"].keys())
+    proj = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    # hooks live under gui-scripts (pythonw, no console window); the MCP under scripts.
+    return set(proj.get("scripts", {})) | set(proj.get("gui-scripts", {}))
 
 
 def _hook_commands(hooks_json: dict) -> list[str]:
