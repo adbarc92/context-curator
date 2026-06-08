@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Write|Edit|MultiEdit|Bash",
+        "hooks": [ { "type": "command", "command": "cc-hook-pre-tool-use" } ] }
+    ],
+    "PostToolUse": [
+      { "hooks": [ { "type": "command", "command": "cc-hook-post-tool-use" } ] }
+    ],
+    "SubagentStop": [
+      { "hooks": [ { "type": "command", "command": "cc-hook-subagent-stop" } ] }
+    ],
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "cc-hook-session-start" } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "cc-hook-user-prompt" } ] }
+    ]
+  }
+}
