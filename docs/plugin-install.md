@@ -51,6 +51,14 @@ This repo's `.claude/settings.json` no longer wires hooks (it would double-fire 
 plugin). In-repo devs enable the plugin like everyone else (after `uv tool install --editable .`,
 so edits stay live). `uv run pytest` is unaffected — tests import modules directly.
 
+**Concrete hazard (not just double-firing):** if the dev `settings.json` hooks are active *while*
+the plugin is installed and its `cc-mcp` MCP server is running, the dev hooks' `uv run` tries to
+rebuild the editable install and fails to replace the now-locked `cc-mcp.exe`
+(`os error 32: The process cannot access the file because it is being used by another process`).
+On `PreToolUse` that error is **blocking** — it can wedge every Write/Edit/Bash in the session.
+Keep `.claude/settings.json` hooks empty (`{}`) whenever the plugin is enabled; if you get wedged,
+restore `{}` from a shell *outside* Claude, then reload or restart.
+
 ## 4. Smoke test in a throwaway scratch repo
 
 In a fresh scratch repo (with the plugin enabled + Claude restarted):

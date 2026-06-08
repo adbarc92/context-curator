@@ -48,12 +48,22 @@ Get-Command cc-mcp, cc-hook-user-prompt
 powershell -NoProfile -ExecutionPolicy Bypass -File D:\MajorProjects\INFRASTRUCTURE\context-curator\scripts\verify-plugin.ps1
 ```
 
-- **Success:** both commands resolve; the script prints three `OK:` lines then **`VERIFY PASS`**.
+- **Success:** the script prints four `OK:` lines (PATH, capture, inject, MCP) then **`VERIFY PASS`**.
 - **If `Get-Command` finds nothing / `VERIFY FAIL` at Gate 1:** PATH didn't update. Re-run
   `uv tool update-shell`, fully restart the shell, retry. Still failing → escape hatch: override with
   absolute shim paths in your own `.claude/settings.json` (see [`docs/statusline.md`](statusline.md)).
 - ⚠️ Do **not** probe with `cc-mcp --help` — it has no argparse and will hang/error even on a correct
   install (false failure).
+
+`verify-plugin.ps1` is the **repeatable health check**: it drives the real `cc-*` shims with stdin
+JSON events through the full capture → store → inject → working-set loop plus MCP liveness, against a
+throwaway temp store (no Claude binary, nothing persisted). Re-run it anytime after an install/upgrade,
+or wire it into a scheduled task — works on PowerShell 5.1 and 7, exits non-zero on any failure:
+```powershell
+pwsh -NoProfile -File D:\MajorProjects\INFRASTRUCTURE\context-curator\scripts\verify-plugin.ps1
+# schedule daily, e.g.:
+# schtasks /create /tn "cc-plugin-smoke" /tr "pwsh -NoProfile -File D:\MajorProjects\INFRASTRUCTURE\context-curator\scripts\verify-plugin.ps1" /sc daily /st 09:00
+```
 
 **→ Records exit criterion (b), part 1. Note whether you got `VERIFY PASS`.**
 
