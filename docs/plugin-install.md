@@ -76,7 +76,10 @@ out-of-session verification: criterion (a) below, plus confirming the gui-script
 Windows console-window flashing — see [#12](https://github.com/adbarc92/context-curator/issues/12)).
 
 ### (a) Does `CLAUDE_PROJECT_DIR` reach the `cc-mcp` server's `os.environ`?
-- **How checked:** _<observed under a real session — cc-mcp logs its env on startup to stderr>_
+- **How checked:** reinstall (`uv tool install --editable .`), restart Claude in the scratch repo,
+  trigger an MCP call, and read the temporary stderr line `cc-mcp` emits at startup:
+  `[cc-mcp diag #14] CLAUDE_PROJECT_DIR=… db=…` (in `mcp_server.main()`; revert after recording).
+  YES = `CLAUDE_PROJECT_DIR` is non-`None` **and** `db=` points at `<scratch>\.context-curator\store.db`.
 - **Outcome:** _<PENDING — fill in Task 8>_
 - **If NO:** the MCP store diverges from the hooks'. Mandatory fallback — pin `CC_DB_PATH` in your
   project `.mcp.json`/env, or accept a global MCP store.

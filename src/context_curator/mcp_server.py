@@ -102,6 +102,20 @@ def build_mcp() -> FastMCP:
 
 
 def main() -> None:
+    # >>> TEMP DIAGNOSTIC (issue #14, M7-runbook Phase 5) — REVERT after recording exit-criterion (a).
+    # Logs to stderr (safe: stdout is the JSON-RPC channel) whether $CLAUDE_PROJECT_DIR reached this
+    # process and which DB it resolves, to confirm the MCP server shares the hooks' per-project store.
+    import sys
+
+    from context_curator.store.paths import resolve_db_path
+
+    print(
+        f"[cc-mcp diag #14] CLAUDE_PROJECT_DIR={os.environ.get('CLAUDE_PROJECT_DIR')!r} "
+        f"db={resolve_db_path()!r}",
+        file=sys.stderr,
+        flush=True,
+    )
+    # <<< END TEMP DIAGNOSTIC
     build_mcp().run()
 
 
