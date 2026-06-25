@@ -1,7 +1,7 @@
 # ContextCurator — Codebase Digest (for agents)
 
 > Audience: an agent extending / owning this code.
-> Source: branch `feat/m7-plugin-package` @ `17c62c4`; `origin/main` @ `63afb5d` (PR #13 merged) · 2026-06-20 · digested by reading ~12 files + manifests + eval results (rest inferred from DESIGN.md §1–13).
+> Source: branch `chore/post-m7-followups` @ `1ff3ea2` (4 ahead / 1 behind `origin/main` @ `63afb5d`, PR #13 merged) · 2026-06-23 · digested by reading ~14 files + manifests + eval results (rest inferred from DESIGN.md §1–13). Re-verified: `uv run --no-sync pytest` green (exit 0).
 > Purpose: ownership / extension + next-steps planning.
 
 ## TL;DR
@@ -77,18 +77,20 @@ Five components (DESIGN §4); first two are the build, the rest is wiring/adopti
 | optional extra `[embed]` | fastembed + onnxruntime for the bge semantic path |
 
 ## Build · run · test
-Package manager: **UV** (`uv.lock` present).
+Package manager: **UV** (`uv.lock` present). **`cc-mcp` is installed via `uv tool` (currently `v0.0.1`) → the exe is locked; always test with `uv run --no-sync`** to avoid the rebuild-vs-locked-exe collision (`os error 32`).
 - Install: `uv sync --all-groups`
-- Test: `uv run pytest` — **346 passed, 6 skipped** as of last session. Known flake: `test_curator_lifecycle_and_handshake` fails under full-suite load, passes in isolation.
-- Lint: `uv run ruff check .` (line-length 100, py311, rules E/F/I/UP/B)
+- Test: `uv run --no-sync pytest -p no:cacheprovider` — green at HEAD (exit 0; ~346 passed / 6 skipped). Former flake `test_curator_lifecycle_and_handshake` (idle-timeout under full-suite load) was fixed in `11c01c6`.
+- Lint: `uv run ruff check .` (line-length 100, py311, rules E/F/I/UP/B) — **clean (0 errors)** since the temp #14 diagnostic was reverted.
 - Install as plugin: `uv tool install --editable . ; uv tool update-shell` + restart Claude.
 - Verify installed plugin (Windows): `pwsh -NoProfile -File scripts/verify-plugin.ps1` → expect 4 `OK:` lines + `VERIFY PASS`.
 - While the plugin's `cc-mcp` is alive, use `uv run --no-sync` to avoid rebuild-vs-locked-exe collision.
 
 ## Status (milestones)
-M0–M7 **all implemented**. v0.0.2 released (tag `v0.0.2`), **PR #13 merged to main** (`63afb5d`). Local branch `feat/m7-plugin-package` @ `17c62c4` is an ancestor of `origin/main` (0 ahead / 1 behind) — i.e. **fully merged; the branch and the Session-Pickup doc are now stale per CLAUDE.md.**
+M0–M7 **all implemented**. v0.0.2 released (tag `v0.0.2`), **PR #13 merged to main** (`63afb5d`). Work branch **`chore/post-m7-followups`** (off the merged tree) is landing the post-M7 close-out: **#14's two exit criteria are now verified YES** (2026-06-25) — `CLAUDE_PROJECT_DIR` reaches `cc-mcp` (official Claude Code MCP docs, v2.1.139+ parity; this machine v2.1.190; corroborated by per-project `store.db` placement) and the plugin resolves bare `cc-*` on PATH (18 successful stdio connections across ~8 projects). The temp #14 stderr diagnostic (`990c9fb`) has been **reverted**, and the now-spent `M7-runbook.md` + `Session-Pickup-2026-06-04.md` **deleted**. (Earlier `feat/m7-plugin-package` branch is stale.)
 
-Open issues: **#14** (out-of-session M7 verification — confirm gui-script hooks stop Windows flashing + record exit-criterion (a) `CLAUDE_PROJECT_DIR`→`cc-mcp`); **#12** (upstream Claude Code spawns hook/MCP exes without `windowsHide`).
+Open issues: **#14** (out-of-session M7 verification — both exit criteria (a)+(b) recorded YES; **stays open** because the gui-script mitigation only *partially* stopped the Windows console flash — user reports it still flashes sometimes); **#12** (upstream Claude Code spawns hook/MCP exes without `windowsHide` — our gui-script/pythonw mitigation reduced but did **not** eliminate the flash; live investigation surface for the residual flicker).
+
+The one remaining product lever (real-data M4d keystone verdict) and the close-out steps are decomposed into parallel lanes in **[`docs/handoff/handoff-2026-06-25-swarm.md`](handoff/handoff-2026-06-25-swarm.md)**.
 
 ## Gotchas & invariants
 - **NEGATIVE keystone result — and the synthetic question is SETTLED, not weak-gold.** Synthetic (M4c, [keystone-powered.md](superpowers/keystone-powered.md)): semantic nDCG@10=0.880 vs BM25 0.811, effect **+0.056, 90% CI [0.009, 0.102]**, n=26 — CI *excludes 0* (effect is real) but below pre-registered MEI +0.10 ⇒ powered NEGATIVE. The corpus is rigorously fair (blind gold-judge dropped 5/40, 0/80 hard-neg FP, recency-mixed 12/12/11, circularity-guarded) and built *favorable* to semantic (paraphrased gold + lexically-tempting negatives). The pilot (n=8) showed +0.129 (looked GREEN) but the powered run **regressed it to +0.056** — so growing the synthetic corpus will only tighten the CI around a sub-MEI effect, not flip it. Recency arm 0.428 is badly beaten, so store+hooks clearly help — only *semantic vs BM25* is the null. bge floats are machine-sensitive: **regenerate, don't diff.**
