@@ -14,6 +14,8 @@ class FixtureChunk(BaseModel):
     key: str
     content: str
     tags: list[str] = []
+    producing_tool: str | None = None    # eval-side: the tool whose result produced this chunk
+    entities: list[str] = []             # eval-side: canonical file entities (for the circularity audit)
 
 
 class Fixture(BaseModel):
