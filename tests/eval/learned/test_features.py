@@ -1,7 +1,10 @@
-import math
 from context_curator.eval.fixtures import Fixture, FixtureChunk
 from context_curator.eval.learned.features import (
-    canon_tool, feature_names, candidate_matrix, fit_norm, apply_norm,
+    apply_norm,
+    candidate_matrix,
+    canon_tool,
+    feature_names,
+    fit_norm,
 )
 from context_curator.eval.real_corpus import harvest_trace
 from context_curator.replay.schema import ToolCall, ToolResult, Trace, UserPrompt
