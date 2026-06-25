@@ -5,8 +5,10 @@
 > bare `cc-*` on PATH — [`docs/plugin-install.md`](docs/plugin-install.md) §5), but **#14 stays open**:
 > the gui-script mitigation only *partially* stopped the Windows console flash (still flashing
 > sometimes → tracked in [#12](https://github.com/adbarc92/context-curator/issues/12)).
-> The one remaining product lever is the **real-data keystone (M4d) verdict** (semantic vs BM25), blocked
-> on capturing ≥2 more sessions — decomposed in [`docs/handoff/handoff-2026-06-25-swarm.md`](docs/handoff/handoff-2026-06-25-swarm.md).
+> The real-data keystone (M4d) verdict is now **in and powered**: on 5 real sessions the semantic/bge
+> onload **loses to BM25** (−0.053 nDCG, clustered 90% CI [−0.085, −0.041]) — so the decision is made:
+> **ship BM25 as the ranker, demote semantic to dark** ([`docs/decisions/semantic-ranker.md`](docs/decisions/semantic-ranker.md)).
+> The store + hooks + guardrails + plugin keep; the semantic *differentiator* did not clear its bar.
 > The current eval status and next-steps map live in [`docs/CODEBASE-DIGEST.md`](docs/CODEBASE-DIGEST.md).
 
 ## Library documentation

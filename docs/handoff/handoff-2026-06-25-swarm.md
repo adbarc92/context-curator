@@ -128,6 +128,15 @@ Lane B (real-data M4d verdict) ────┘  human gate: drop ≥2 more .json
 
 ## Lane B — Real-data keystone (M4d) verdict + product decision   ·   blocked on USER capturing data
 
+> **Update 2026-06-25 — Lane B executed; verdict reached.** Gate cleared from existing on-disk Claude
+> Code transcripts (5 sessions across 5 projects, gitignored). Powered result: semantic/bge onload
+> **loses to BM25** (−0.053 nDCG, session-clustered 90% CI [−0.085, −0.041], n=4 test sessions; gate =
+> verdict). Diagnostics clean (lexical-bias non-degenerate, recency healthy). **Decision made:** ship
+> BM25 ranker, demote semantic to dark → [`docs/decisions/semantic-ranker.md`](../decisions/semantic-ranker.md);
+> verdict-of-record in [`docs/superpowers/keystone-real.md`](../superpowers/keystone-real.md). Landed on
+> the same branch/PR as Lane A (one linear session, so the "separate PR + contract request" dance was
+> unnecessary). Remaining is *implementation* (wire BM25 into live onload), tracked as a follow-up.
+
 - **Scope:** Produce a *powered, real-data* verdict for the semantic-vs-BM25 question — the **only**
   lever that can still change the product decision — and record the resulting ranker call. The
   synthetic keystone is settled NEGATIVE-powered (+0.056 < +0.10 MEI on a fair, blind-judged corpus);
