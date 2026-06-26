@@ -138,13 +138,13 @@ def needed_n_range(deltas, session_ids, *, mei, seed, iters=200):
         return (None, None)
     rng = random.Random(seed)
     ests: list[int] = []
-    for _ in range(iters):
+    for i in range(iters):
         chosen = [clusters[rng.randrange(n)] for _ in range(n)]
         d2, s2 = [], []
         for idx, c in enumerate(chosen):
             d2.extend(by[c])
             s2.extend([f"{c}#{idx}"] * len(by[c]))
-        lo, hi = cluster_bootstrap_ci(d2, s2, seed=seed)
+        lo, hi = cluster_bootstrap_ci(d2, s2, seed=seed + i)
         width = hi - lo
         if math.isfinite(width) and width > 0:
             ests.append(math.ceil(n * (width / mei) ** 2))
@@ -168,7 +168,9 @@ def run_feasibility(paths, *, mei=0.10, seed=0, C=1.0, w_loc=5, k=10) -> dict:
     lb = lexical_bias(flat, k=3, margin=0.15, seed=seed)
     return {
         "mean_delta": mean_delta, "ci": [lo, hi], "n_sessions": len(by),
-        "n_fixtures": len(deltas), "gate_status": gate.status, "needed_n": gate.needed_n,
+        "n_fixtures": len(deltas),
+        "gate_status": (gate.status if deltas else "harness-only"),
+        "needed_n": gate.needed_n,
         "needed_n_range": [nmin, nmax], "learned_mean_ndcg": learned_mean,
         "bm25_mean_ndcg": bm_mean, "circularity": circ,
         "lexical_gold_r3": lb.gold_recall, "lexical_control_r3": lb.control_recall,
