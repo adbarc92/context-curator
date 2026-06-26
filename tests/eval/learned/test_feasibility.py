@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+import context_curator.eval as e
 from context_curator.eval.fixtures import Fixture, FixtureChunk
 from context_curator.eval.learned.feasibility import (
     bm25_ndcg,
     fit_logistic,
+    format_report,
     learned_ndcg,
     loso_deltas,
     prior_refetch_scores,
+    run_feasibility,
     same_dir_scores,
     solo_ndcg,
 )
@@ -106,3 +111,14 @@ def test_solo_ndcg_is_unit_interval():
     )
     val = solo_ndcg({"s": [fx]}, prior_refetch_scores)
     assert 0.0 <= val <= 1.0
+
+
+def test_run_feasibility_on_sample_traces_returns_wellformed_report():
+    base = Path(e.__file__).parent.parent.parent.parent / "tests" / "eval" / "_traces"
+    paths = [str(base / "sample_a.jsonl"), str(base / "sample_b.jsonl")]
+    rep = run_feasibility(paths, mei=0.10, seed=0)
+    for key in ("mean_delta", "ci", "n_sessions", "gate_status",
+                "learned_mean_ndcg", "bm25_mean_ndcg", "circularity", "lexical_degenerate"):
+        assert key in rep
+    assert rep["n_sessions"] == 2
+    assert isinstance(format_report(rep), str) and "verdict" in format_report(rep).lower()
