@@ -67,7 +67,7 @@ def loso_deltas(by_session, *, C: float, seed: int, k: int = 10):
         train = [fx for s in sessions if s != held for fx in by_session[s]]
         train_labels = {yy for fx in train for yy in candidate_matrix(fx)[1]}
         if len(train_labels) < 2:
-            continue  # degenerate fold (all-gold/all-nongold training data) — skip
+            continue  # degenerate fold (all-gold/all-nongold training data) -- skip
         model, means, stds = fit_logistic(train, C=C, seed=seed)
         for fx in by_session[held]:
             ln = learned_ndcg(model, means, stds, fx, k)
@@ -189,17 +189,17 @@ def format_report(rep: dict) -> str:
         verdict = f"NO-GO: learned does not beat BM25 (mean {md:+.3f} <= 0)"
     elif lo > 0 and md >= mei:
         verdict = (
-            f"STRONG SIGNAL: learned − BM25 {md:+.3f} >= MEI, CI>0 → GO to cycle 2"
+            f"STRONG SIGNAL: learned - BM25 {md:+.3f} >= MEI, CI>0 -> GO to cycle 2"
         )
     elif md > 0:
         verdict = (
-            f"WEAK POSITIVE: learned − BM25 {md:+.3f} (< MEI or CI includes 0) "
-            "→ judgement call"
+            f"WEAK POSITIVE: learned - BM25 {md:+.3f} (< MEI or CI includes 0) "
+            "-> judgement call"
         )
     else:
         verdict = f"UNCLEAR: {md:+.3f}"
     lines = [
-        "# Learned ranker — Cycle 1 feasibility (eval-only)",
+        "# Learned ranker -- Cycle 1 feasibility (eval-only)",
         "",
         (
             "> Deterministic on a fixed corpus + seed; gold labels are CWD-dependent"
@@ -208,7 +208,7 @@ def format_report(rep: dict) -> str:
         "",
         f"verdict: {verdict}",
         (
-            f"mean(learned − BM25) nDCG@10: {md:+.4f}; clustered 90% CI "
+            f"mean(learned - BM25) nDCG@10: {md:+.4f}; clustered 90% CI "
             f"[{lo:+.4f}, {hi:+.4f}]"
         ),
         (
@@ -225,7 +225,7 @@ def format_report(rep: dict) -> str:
         ),
         (
             f"circularity audit (solo nDCG@10): {rep['circularity']} "
-            f"— flag any within MEI of learned ({rep['learned_mean_ndcg']:.3f})"
+            f"-- flag any within MEI of learned ({rep['learned_mean_ndcg']:.3f})"
         ),
         (
             f"lexical-bias: gold_R@3={rep['lexical_gold_r3']:.3f} "
