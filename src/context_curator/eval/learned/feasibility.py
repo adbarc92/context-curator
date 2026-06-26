@@ -19,13 +19,8 @@ def fit_logistic(fixtures: list[Fixture], *, C: float = 1.0, seed: int = 0):
     means, stds = fit_norm(X_all)
     Z = apply_norm(X_all, means, stds)
 
-    # Handle degenerate case: if all samples have the same label, add a dummy negative example
-    unique_labels = set(y_all)
-    if len(unique_labels) == 1:
-        # Add a synthetic negative sample to allow model fitting
-        dummy_row = [0.0] * len(Z[0]) if Z else [0.0]
-        Z.append(dummy_row)
-        y_all.append(1 - y_all[0])  # opposite of the only class present
+    if len(set(y_all)) < 2:
+        raise ValueError("fit_logistic requires both gold and non-gold training candidates")
 
     model = LogisticRegression(
         class_weight="balanced", C=C, random_state=seed, max_iter=1000
@@ -56,13 +51,13 @@ def bm25_ndcg(fx: Fixture, k: int = 10) -> float:
 
 
 def loso_deltas(by_session, *, C: float, seed: int, k: int = 10):
-    deltas: list[float] = []
-    session_ids: list[str] = []
-    learned_ndcgs: list[float] = []
-    bm25_ndcgs: list[float] = []
+    deltas, session_ids, learned_ndcgs, bm25_ndcgs = [], [], [], []
     sessions = sorted(by_session)
     for held in sessions:
         train = [fx for s in sessions if s != held for fx in by_session[s]]
+        train_labels = {yy for fx in train for yy in candidate_matrix(fx)[1]}
+        if len(train_labels) < 2:
+            continue  # degenerate fold (all-gold/all-nongold training data) — skip
         model, means, stds = fit_logistic(train, C=C, seed=seed)
         for fx in by_session[held]:
             ln = learned_ndcg(model, means, stds, fx, k)
