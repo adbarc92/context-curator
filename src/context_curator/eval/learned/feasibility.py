@@ -2,9 +2,12 @@
 Ships nothing to production. Deterministic given a fixed corpus + seed."""
 from __future__ import annotations
 
+import os
+
 from context_curator.eval.fixtures import Fixture
 from context_curator.eval.learned.features import apply_norm, candidate_matrix, fit_norm
 from context_curator.eval.metrics import ndcg_at_k
+from context_curator.eval.real_corpus import entities_match
 
 
 def fit_logistic(fixtures: list[Fixture], *, C: float = 1.0, seed: int = 0):
@@ -67,3 +70,44 @@ def loso_deltas(by_session, *, C: float, seed: int, k: int = 10):
             deltas.append(ln - bn)
             session_ids.append(held)
     return deltas, session_ids, learned_ndcgs, bm25_ndcgs
+
+
+def prior_refetch_scores(fx: Fixture) -> dict[str, float]:
+    out: dict[str, float] = {}
+    for i, c in enumerate(fx.chunks):
+        ents = set(c.entities)
+        count = 0
+        if ents:
+            for j in range(i):
+                if entities_match(ents, set(fx.chunks[j].entities)):
+                    count += 1
+        out[c.key] = float(count)
+    return out
+
+
+def _dirs(entities: list[str]) -> set[str]:
+    return {os.path.dirname(e) for e in entities if e}
+
+
+def same_dir_scores(fx: Fixture, *, w_loc: int = 5) -> dict[str, float]:
+    out: dict[str, float] = {}
+    for i, c in enumerate(fx.chunks):
+        dirs = _dirs(c.entities)
+        flag = 0.0
+        if dirs:
+            for j in range(max(0, i - w_loc), i):
+                if dirs & _dirs(fx.chunks[j].entities):
+                    flag = 1.0
+                    break
+        out[c.key] = flag
+    return out
+
+
+def solo_ndcg(by_session, score_fn, *, k: int = 10) -> float:
+    vals: list[float] = []
+    for fxs in by_session.values():
+        for fx in fxs:
+            sc = score_fn(fx)
+            ranked = [key for key, _s in sorted(sc.items(), key=lambda t: (-t[1], t[0]))]
+            vals.append(ndcg_at_k(ranked, set(fx.gold_keys), k))
+    return sum(vals) / len(vals) if vals else 0.0

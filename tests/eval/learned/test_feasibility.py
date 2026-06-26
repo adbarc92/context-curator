@@ -6,6 +6,9 @@ from context_curator.eval.learned.feasibility import (
     fit_logistic,
     learned_ndcg,
     loso_deltas,
+    prior_refetch_scores,
+    same_dir_scores,
+    solo_ndcg,
 )
 
 
@@ -68,3 +71,38 @@ def test_loso_holds_out_each_session_once():
     assert len(deltas) == sum(len(v) for v in by.values())
     assert set(sids) == set(by)
     assert len(learned) == len(bm) == len(deltas)
+
+
+def test_prior_refetch_counts_matching_entities():
+    fx = Fixture(
+        name="s:t", prompt="p", gold_keys=["k2"], session_id="s",
+        chunks=[
+            FixtureChunk(key="k0", content="a", entities=["/a/b.py"]),
+            FixtureChunk(key="k1", content="b", entities=["/c/d.py"]),
+            FixtureChunk(key="k2", content="c", entities=["/a/b.py"]),
+        ],
+    )
+    sc = prior_refetch_scores(fx)
+    assert sc["k0"] == 0.0 and sc["k1"] == 0.0 and sc["k2"] == 1.0  # k2 repeats k0's entity
+
+
+def test_same_dir_recent_flags_shared_directory():
+    fx = Fixture(
+        name="s:t", prompt="p", gold_keys=["k1"], session_id="s",
+        chunks=[
+            FixtureChunk(key="k0", content="a", entities=["/a/b.py"]),
+            FixtureChunk(key="k1", content="b", entities=["/a/c.py"]),
+        ],
+    )
+    sc = same_dir_scores(fx, w_loc=5)
+    assert sc["k0"] == 0.0 and sc["k1"] == 1.0  # k1 shares /a with preceding k0
+
+
+def test_solo_ndcg_is_unit_interval():
+    fx = Fixture(
+        name="s:t", prompt="p", gold_keys=["k1"], session_id="s",
+        chunks=[FixtureChunk(key="k0", content="a", entities=["/x/y.py"]),
+                FixtureChunk(key="k1", content="b", entities=["/x/y.py"])],
+    )
+    val = solo_ndcg({"s": [fx]}, prior_refetch_scores)
+    assert 0.0 <= val <= 1.0
