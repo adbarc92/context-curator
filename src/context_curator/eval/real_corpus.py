@@ -81,14 +81,14 @@ def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5) -> list[
     turns = _segment(trace)
     call_by_id = {c.call_id: c for t in turns for c in t.calls}
 
-    chunks_before: list[list[tuple[str, str, set[str]]]] = []
-    running: list[tuple[str, str, set[str]]] = []
+    chunks_before: list[list[tuple[str, str, set[str], str | None]]] = []
+    running: list[tuple[str, str, set[str], str | None]] = []
     for t in turns:
         chunks_before.append(list(running))
         for res in t.results:
             producing = call_by_id.get(res.call_id)
             ents = extract_entities(producing) if producing else set()
-            running.append((res.call_id, res.content, ents))
+            running.append((res.call_id, res.content, ents, producing.name if producing else None))
 
     fixtures: list[Fixture] = []
     for i, t in enumerate(turns):
@@ -109,13 +109,14 @@ def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5) -> list[
                     for e in ents:
                         if e not in edited_here:
                             refetched.add(e)
-        gold = [key for key, _c, ents in candidates
+        gold = [key for key, _c, ents, _tool in candidates
                 if ents and any(entities_match({e}, ents) for e in refetched)]
         if not gold:
             continue
         fixtures.append(Fixture(
             name=f"{trace.session_id}:t{t.index}",
-            chunks=[FixtureChunk(key=k, content=c) for k, c, _e in candidates],
+            chunks=[FixtureChunk(key=k, content=c, producing_tool=tool, entities=sorted(ents))
+                    for k, c, ents, tool in candidates],
             prompt=t.prompt, recent_tools=[], gold_keys=gold,
             split="train", session_id=trace.session_id,
         ))
