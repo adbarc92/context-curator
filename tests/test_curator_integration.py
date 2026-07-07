@@ -12,8 +12,12 @@ from context_curator.store.sqlite_store import SqliteStore
 
 
 def _env(db):
+    # IDLE_TIMEOUT_S is generous on purpose: the accept loop's idle timer starts the moment the
+    # server reaches "ready" (server.run), so a too-short value lets the curator idle-exit during
+    # the window between this test observing "ready" and opening its socket — a window that can
+    # exceed a couple seconds under full-suite CPU load (the source of this test's historic flake).
     return {**os.environ, "CC_DB_PATH": db, "CC_CURATOR_EMBEDDER": "hashing",
-            "CC_CURATOR_IDLE_TIMEOUT_S": "2"}
+            "CC_CURATOR_IDLE_TIMEOUT_S": "8"}
 
 
 def _poll(predicate, deadline_s=20.0, interval=0.05):
@@ -59,8 +63,8 @@ def test_curator_lifecycle_and_handshake(tmp_path):
         finally:
             if loser.poll() is None:
                 loser.kill()
-        # idle-exit (IDLE_TIMEOUT_S=2) removes the runtime file
-        assert _poll(lambda: runtime.read_runtime(rt) is None, deadline_s=15.0), "file not removed"
+        # idle-exit (IDLE_TIMEOUT_S=8) removes the runtime file; deadline comfortably exceeds it
+        assert _poll(lambda: runtime.read_runtime(rt) is None, deadline_s=25.0), "file not removed"
     finally:
         proc.terminate()
         try:
