@@ -5,7 +5,7 @@
 **Implementation model:** subagent-driven development (Superpowers methodology)
 **Stack:** Python + UV (MCP server, hook scripts, eval harness — one language)
 **Store backend (v1):** embedded SQLite (no daemon); networked backend is a v2 swap behind the frozen store interface
-**Owner:** Alex / OpenBarclay
+**Owner:** Alex Barclay
 **License/distribution:** public (open source)
 
 > **Naming convention.** Proper name **ContextCurator** (README, plugin manifest, this
