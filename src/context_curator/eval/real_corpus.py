@@ -50,10 +50,13 @@ def _segment(trace: Trace) -> list[_Turn]:
     return turns
 
 
-def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5) -> list[Fixture]:
+def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5,
+                  gap: int = 0) -> list[Fixture]:
     """Per-turn fixtures with downstream-use gold (design §3.3). Gold = a prior candidate chunk
-    whose entity is re-fetched by a RETRIEVAL call within [T, T+w], excluding a re-fetch of an
-    entity that was EDITED earlier in that same turn (verify-after-edit)."""
+    whose entity is re-fetched by a RETRIEVAL call within [T+gap, T+gap+w], excluding a re-fetch
+    of an entity that was EDITED earlier in that same turn (verify-after-edit). `gap` > 0 pushes
+    the gold window into the future while candidates stay turns < T (the stickiness robustness
+    sweep); gap 0 is the original harvest."""
     turns = _segment(trace)
     call_by_id = {c.call_id: c for t in turns for c in t.calls}
 
@@ -72,7 +75,7 @@ def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5) -> list[
         if len(candidates) < min_candidates:
             continue
         refetched: set[str] = set()
-        for tw in turns[i: i + w + 1]:
+        for tw in turns[i + gap: i + gap + w + 1]:
             # per-turn reset: excludes a SAME-TURN verify-Read-after-Edit only (pinned rule §3.3);
             # a cross-turn re-read of an edited entity still counts as a genuine re-fetch.
             edited_here: set[str] = set()
