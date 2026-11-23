@@ -106,6 +106,9 @@ turns into the future (`[i+g, i+g+w]`) while the feature stays past-only. A taut
   the task, not the ranker.
 
 Run: `stickiness_gap.py` (scratchpad), `uv run --no-sync --group learn`. Deterministic, seed 0.
+*(2026-11-22: the scratchpad scripts were never committed. The gap sweep and the refetch-solo arm
+are now reproducible from the repo via `python -m context_curator.eval.stickiness`, which scores
+the shipped ranker. See [`stickiness-powered-prereg.md`](stickiness-powered-prereg.md).)*
 
 ---
 

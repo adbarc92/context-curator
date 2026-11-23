@@ -7,8 +7,13 @@
 > sometimes → tracked in [#12](https://github.com/adbarc92/context-curator/issues/12)).
 > The real-data keystone (M4d) verdict is now **in and powered**: on 5 real sessions the semantic/bge
 > onload **loses to BM25** (−0.053 nDCG, clustered 90% CI [−0.085, −0.041]) — so the decision is made:
-> **ship BM25 as the ranker, demote semantic to dark** ([`docs/decisions/semantic-ranker.md`](docs/decisions/semantic-ranker.md)).
+> **demote semantic to dark** ([`docs/decisions/semantic-ranker.md`](docs/decisions/semantic-ranker.md)).
 > The store + hooks + guardrails + plugin keep; the semantic *differentiator* did not clear its bar.
+> **Track A (2026-11-22):** the live onload floor ranks by refetch **stickiness** with a BM25
+> tie-break ([design](docs/superpowers/specs/2026-11-22-track-a-stickiness-onload-design.md)). Its
+> final verdict waits on the frozen powered run
+> ([`docs/superpowers/stickiness-powered-prereg.md`](docs/superpowers/stickiness-powered-prereg.md)),
+> which needs ≥ 45 harvestable sessions.
 > The current eval status and next-steps map live in [`docs/CODEBASE-DIGEST.md`](docs/CODEBASE-DIGEST.md).
 
 ## Library documentation
