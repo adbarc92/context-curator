@@ -83,9 +83,11 @@ def test_decision_rule_matches_the_preregistration():
 
 
 def test_decaying_flag():
-    assert st.is_decaying(gap0=0.30, gap5=0.10)
-    assert not st.is_decaying(gap0=0.30, gap5=0.20)
-    assert not st.is_decaying(gap0=-0.1, gap5=-0.3)       # no lift to decay
+    assert st.is_decaying(gap0=0.30, gap5=0.10, gap5_fixtures=4) is True
+    assert st.is_decaying(gap0=0.30, gap5=0.20, gap5_fixtures=4) is False
+    assert st.is_decaying(gap0=-0.1, gap5=-0.3, gap5_fixtures=4) is False   # no lift to decay
+    # no gap-5 fixtures -> undefined, not a spurious "decaying" from an empty mean of 0
+    assert st.is_decaying(gap0=0.30, gap5=0.0, gap5_fixtures=0) is None
 
 
 def test_main_prints_a_report(capsys):

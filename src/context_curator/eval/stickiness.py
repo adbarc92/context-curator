@@ -115,7 +115,10 @@ def decide(*, status: str, lo: float, hi: float) -> str | None:
     return None
 
 
-def is_decaying(*, gap0: float, gap5: float) -> bool:
+def is_decaying(*, gap0: float, gap5: float, gap5_fixtures: int) -> bool | None:
+    """Pre-registered robustness flag; None when the gap-5 sweep has no fixtures to judge."""
+    if gap5_fixtures == 0:
+        return None
     return gap0 > 0 and gap5 < gap0 / 2
 
 
@@ -145,7 +148,8 @@ def run(paths: Iterable[str], *, exclude_shas=DISCOVERY_SHAS, min_sessions: int 
         "mean_delta": primary["mean"], "ci": [lo, hi], "n_sessions": len(by),
         "n_fixtures": primary["n_fixtures"], "min_sessions": min_sessions, "mei": mei,
         "arms": primary["arms"], "gaps": gaps,
-        "decaying": is_decaying(gap0=primary["mean"], gap5=gaps[5]["mean"]),
+        "decaying": is_decaying(gap0=primary["mean"], gap5=gaps[5]["mean"],
+                                gap5_fixtures=gaps[5]["n_fixtures"]),
         "with_discovery": (None if with_discovery is None else
                            {"mean": with_discovery["mean"], "ci": with_discovery["ci"],
                             "n_sessions": with_discovery["n_sessions"]}),
@@ -173,7 +177,8 @@ def format_report(rep: dict) -> str:
         "gap sweep (lift, CI): " + "; ".join(
             f"g={g}: {v['mean']:+.3f} [{v['ci'][0]:+.3f}, {v['ci'][1]:+.3f}] n_fx={v['n_fixtures']}"
             for g, v in rep["gaps"].items()),
-        f"decaying (gap-5 lift < half gap-0): {rep['decaying']}",
+        "decaying (gap-5 lift < half gap-0): "
+        + ("n/a (no gap-5 fixtures)" if rep["decaying"] is None else str(rep["decaying"])),
     ]
     wd = rep["with_discovery"]
     if wd is not None:
