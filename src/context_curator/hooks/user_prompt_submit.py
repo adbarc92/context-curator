@@ -1,13 +1,13 @@
 """UserPromptSubmit onload hook (design §6.2): ask the curator for a bge selection; on any
-failure, fall back to in-process recency-only and (unless 'warming') spawn the curator.
-Constructs NO embedder/policy — embedding is the curator's job (round-1 I4)."""
+failure, fall back to the in-process stickiness floor (Track A) and (unless 'warming') spawn the
+curator. Constructs NO embedder/policy — embedding is the curator's job (round-1 I4)."""
 from __future__ import annotations
 
 from context_curator.curator import client, runtime
 from context_curator.hooks._io import HookResult, log, run_hook
 from context_curator.observe.decision_log import record_decision
 from context_curator.onload.format import format_block
-from context_curator.onload.select import ONLOAD_K, ONLOAD_TOKEN_BUDGET, recency_select
+from context_curator.onload.select import ONLOAD_K, ONLOAD_TOKEN_BUDGET, stickiness_select
 from context_curator.store.interface import Store
 from context_curator.store.paths import resolve_db_path
 
@@ -25,21 +25,23 @@ def handle(event: dict, store: Store) -> HookResult:
     except client.CuratorUnavailable as e:
         if e.respawn:
             runtime.spawn_detached(resolve_db_path())            # fire-and-forget; skip if warming
-        keys = []                                                # -> recency floor below
+        keys = []                                                # -> stickiness floor below
     if keys:
         by_key = {c.key: c for c in chunks_all}
         chunks = [by_key[k] for k in keys if k in by_key]        # preserve curator RANK order
         log(f"context-curator: onloaded {len(chunks)} chunk(s) [curator]")
     else:
         # No keys: curator down/warming, OR the dark default (flag off) returns [], OR a genuinely
-        # empty selection. In ALL these the always-fast recency floor applies (spec §8: dark default
-        # = recency). NOTE for M3b: once CC_CURATOR_ONLOAD is on, a genuinely-empty SEMANTIC result
-        # also lands here -> recency; revisit then if flag-on-empty should instead inject nothing.
-        chunks = recency_select(chunks_all, k=ONLOAD_K, token_budget=ONLOAD_TOKEN_BUDGET)
-        log(f"context-curator: onloaded {len(chunks)} chunk(s) [recency]")
+        # empty selection. In ALL these the in-process floor applies. Track A: the floor ranks by
+        # refetch stickiness (BM25 tie-break) instead of recency — the evidence in
+        # docs/superpowers/stickiness-probe-prereg.md. A flag-on empty SEMANTIC result also lands
+        # here; revisit if flag-on-empty should instead inject nothing.
+        chunks = stickiness_select(prompt, chunks_all, k=ONLOAD_K,
+                                   token_budget=ONLOAD_TOKEN_BUDGET)
+        log(f"context-curator: onloaded {len(chunks)} chunk(s) [stickiness]")
     # M6 decision log: source reflects what was ACTUALLY injected (curator keys can be filtered to
     # empty by by_key). Fail-open: observability must never break injection.
-    source = "curator" if (keys and chunks) else ("recency" if chunks else "none")
+    source = "curator" if (keys and chunks) else ("stickiness" if chunks else "none")
     try:
         record_decision(event.get("session_id", "") or "unknown",
                         prompt[:80], source, [c.key for c in chunks])

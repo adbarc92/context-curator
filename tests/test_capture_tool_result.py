@@ -50,3 +50,16 @@ def test_truncation_only_when_max_content_set():
     k2 = capture_tool_result(s, session_id="s1", tool_name="Read", content=big,
                              call_id="c1", max_content=None)
     assert s.retrieve(k2).content == big  # replay path: no truncation
+
+
+def test_entities_become_sorted_entity_tags_after_the_tool_tag():
+    s = _store()
+    k = capture_tool_result(s, session_id="s1", tool_name="Read", content="x", call_id="c9",
+                            entities={"/r/b.py", "/r/a.py"})
+    assert s.retrieve(k).tags == ["read", "entity:/r/a.py", "entity:/r/b.py"]
+
+
+def test_no_entities_keeps_the_replay_tag_shape():
+    s = _store()
+    k = capture_tool_result(s, session_id="s1", tool_name="Read", content="x", call_id="c8")
+    assert s.retrieve(k).tags == ["read"]

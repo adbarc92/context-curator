@@ -45,9 +45,23 @@ pre-registered bar. ContextCurator's shippable value is a **cheap, durable, per-
 store with guardrails and a BM25-ranked re-onload** — not a semantic policy engine. Marketing/DESIGN
 framing should follow the evidence.
 
+## Amendment — 2026-11-22: the live ranker is stickiness-dominant, BM25 as tie-breaker
+The 2026-07-05 probe ([`stickiness-probe-prereg.md`](../superpowers/stickiness-probe-prereg.md))
+found a parameter-free ranker that beats BM25 by ~4x on the same real sessions (refetch count
+0.445 vs 0.102 nDCG@10, robust under a temporal-gap sweep; n=5, feasibility strength). Track A
+therefore shipped **refetch stickiness first, BM25 to break ties, newer first** as the live floor,
+not plain BM25 ([design](../superpowers/specs/2026-11-22-track-a-stickiness-onload-design.md)).
+The final word is the frozen confirmatory run
+([`stickiness-powered-prereg.md`](../superpowers/stickiness-powered-prereg.md), at least 45 sessions
+disjoint from the 5). Its decision rule reverts the floor to plain BM25 unless stickiness is
+reliably better.
+
 ## Follow-ups (not done here — new work)
-- [ ] Wire `eval.bm25` / a `Bm25Target`-equivalent into the live onload path
-      (`onload/select.py` + `hooks/user_prompt_submit.py`); make BM25 the default ranker over recency.
+- [x] Wire a cheap ranker into the live onload path (`onload/select.py` +
+      `hooks/user_prompt_submit.py`) as the default over recency — done 2026-11-22 as the
+      stickiness ranker with a BM25 tie-break (amendment above).
+- [ ] Run the powered stickiness confirmatory test once >= 45 harvestable sessions exist, and
+      keep or revert per its pre-registered rule.
 - [ ] Decide demote-vs-delete for the `curator/` semantic process + `[embed]` extra once BM25 onload ships.
 - [ ] Update `DESIGN.md` §1 thesis / §10 to record the settled NEGATIVE and the BM25 decision.
 - [ ] Re-confirm the decision if a much larger/different real corpus ever materially changes the picture

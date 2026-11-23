@@ -56,3 +56,41 @@ def test_extract_summary_from_transcript(tmp_path):
     tp.write_text(_msg("first") + "\n" + _msg("final summary") + "\n", encoding="utf-8")
     assert extract_summary({"transcript_path": str(tp)}) == "final summary"
     assert extract_summary({}) == ""                       # no path -> empty -> no-op
+
+
+def test_read_result_is_tagged_with_its_file_entity(tmp_path):
+    from context_curator.entities import canon_path
+    s = _store()
+    f = str(tmp_path / "a.py")
+    post_handle({"tool_name": "Read", "session_id": "s1", "tool_input": {"file_path": f},
+                 "tool_response": "data", "tool_use_id": "toolu_1"}, s)
+    assert s.retrieve("session:s1:tool:toolu_1").tags == ["read", f"entity:{canon_path(f)}"]
+
+
+def test_grep_path_is_an_entity_and_bash_has_none(tmp_path):
+    from context_curator.entities import canon_path
+    s = _store()
+    post_handle({"tool_name": "Grep", "session_id": "s1",
+                 "tool_input": {"pattern": "x", "path": str(tmp_path)},
+                 "tool_response": "m", "tool_use_id": "g"}, s)
+    post_handle({"tool_name": "Bash", "session_id": "s1", "tool_input": {"command": "ls"},
+                 "tool_response": "o", "tool_use_id": "b"}, s)
+    assert s.retrieve("session:s1:tool:g").tags == ["grep", f"entity:{canon_path(str(tmp_path))}"]
+    assert s.retrieve("session:s1:tool:b").tags == ["bash"]
+
+
+def test_identical_rereads_are_distinct_chunks_when_tool_use_id_is_present():
+    # Claude Code sends tool_use_id (not call_id). Without it the key is a content hash, so
+    # re-reading an unchanged file overwrote one row and the refetch signal never accumulated.
+    s = _store()
+    for tid in ("toolu_a", "toolu_b"):
+        post_handle({"tool_name": "Read", "session_id": "s1", "tool_input": {"file_path": "/r/a"},
+                     "tool_response": "same content", "tool_use_id": tid}, s)
+    assert len(s.list("session:s1")) == 2
+
+
+def test_non_dict_tool_input_still_captures_the_result():
+    s = _store()
+    post_handle({"tool_name": "Read", "session_id": "s1", "tool_input": ["x"],
+                 "tool_response": "r", "tool_use_id": "t"}, s)
+    assert s.retrieve("session:s1:tool:t").tags == ["read"]

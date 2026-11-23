@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import re
 
+from context_curator.entities import entities_from_tags
 from context_curator.models import Chunk
+from context_curator.onload.format import rendered_body
+from context_curator.onload.stickiness import stickiness_rank
 from context_curator.policy.relevance import RelevancePolicy
 from context_curator.store.interface import Store
 from context_curator.tokens import estimate_tokens
@@ -14,6 +17,10 @@ from context_curator.tokens import estimate_tokens
 ONLOAD_K = 10
 ONLOAD_TOKEN_BUDGET = 1500
 SEED_TOKEN_BUDGET = 1500
+# Stickiness ranks the newest live chunks up to this much content. Hook cost is linear in it
+# (~22 ms per M chars on the dev machine); a real store (~3-4 M chars) fits whole, so the cap
+# only binds on unusually busy days and never on the eval's per-fixture candidate windows.
+ONLOAD_POOL_CHARS = 4_000_000
 
 # proj:{project}:conventions are SessionStart's job -> excluded from per-prompt onload so a
 # post-compaction turn doesn't double-inject the durable set (round-3 I1). Always applied with
@@ -47,6 +54,55 @@ def recency_select(candidates: list[Chunk], *, k: int, token_budget: int | None)
     arrive seq DESC), pins/conventions excluded, first-fit under k+budget. Recency-only in
     practice — tags are tool-provenance not topic (w_tag=0)."""
     return _first_fit([c for c in candidates if not _is_durable(c)], k, token_budget)
+
+
+def _newest_pool(candidates: list[Chunk], pool_chars: int) -> list[Chunk]:
+    """Non-durable chunks from newest-first `candidates`, newest first, stopping once their content
+    reaches `pool_chars` (the chunk that reaches it is kept, so the pool is never empty)."""
+    pool: list[Chunk] = []
+    used = 0
+    for c in candidates:
+        if _is_durable(c):
+            continue
+        pool.append(c)
+        used += len(c.content)
+        if used >= pool_chars:
+            break
+    return pool
+
+
+def stickiness_select(prompt: str, candidates: list[Chunk], *, k: int,
+                      token_budget: int | None,
+                      pool_chars: int = ONLOAD_POOL_CHARS) -> list[Chunk]:
+    """Track-A default onload: rank by refetch stickiness (BM25 tie-break, newer first) via the
+    same `stickiness_rank` the eval measures. `candidates` arrive newest-first (seq DESC) as from
+    `Store.all_live_chunks`; pins/conventions are excluded. Byte-identical duplicates are dropped
+    (injecting the same text twice adds nothing). Budgeted on the RENDERED body (design D6): sticky
+    chunks are the big Reads/Edits, and full-size budgeting would reject the rank-1 chunk and,
+    with first-fit break, inject nothing. Only the newest `pool_chars` of content compete, which
+    bounds hook latency however large the store grows."""
+    pool = list(reversed(_newest_pool(candidates, pool_chars)))          # oldest -> newest
+    by_key = {c.key: c for c in pool}
+    order = stickiness_rank(prompt, [(c.key, c.content, entities_from_tags(c.tags)) for c in pool])
+    ranked: list[Chunk] = []
+    seen: set[str] = set()
+    for key in order:
+        c = by_key[key]
+        if c.content not in seen:
+            seen.add(c.content)
+            ranked.append(c)
+    out: list[Chunk] = []
+    used = 0
+    for c in ranked:
+        if token_budget is not None:
+            t = estimate_tokens(rendered_body(c))
+            if used + t > token_budget:
+                break
+            used += t
+        out.append(c)
+        if len(out) >= k:
+            break
+    return out
 
 
 def onload_select(policy: RelevancePolicy, task_text: str, candidates: list[Chunk], *,

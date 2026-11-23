@@ -5,48 +5,24 @@ extracted from each chunk's producing `ToolCall.args` (recovered via the call_id
 chunk key)."""
 from __future__ import annotations
 
-import os
 import random
 from dataclasses import dataclass
 
+from context_curator.entities import entities_from_args, entities_match
 from context_curator.eval.bm25 import bm25_scores
 from context_curator.eval.fixtures import Fixture, FixtureChunk
 from context_curator.eval.metrics import recall_at_k
 from context_curator.replay.capture.transcript import parse_transcript
 from context_curator.replay.schema import ToolCall, ToolResult, Trace, UserPrompt
 
-_PATH_ARGS = ("file_path", "notebook_path", "path")        # structured path args (Bash deferred)
 _RETRIEVAL = {"read", "grep", "glob", "notebookread"}      # lowercased; re-fetch = needed/absent
 _EDIT = {"edit", "write", "multiedit", "notebookedit"}     # edits never generate gold (churn)
 
 
-def _canon(p: str) -> str:
-    return os.path.normcase(os.path.normpath(os.path.abspath(p)))
-
-
 def extract_entities(call: ToolCall) -> set[str]:
-    """Canonical absolute file-path entities from a tool call's args. Pattern-only / path-less
-    calls yield the empty set."""
-    out: set[str] = set()
-    for key in _PATH_ARGS:
-        v = call.args.get(key)
-        if isinstance(v, str) and v:
-            out.add(_canon(v))
-    return out
-
-
-def _contains(dir_: str, file_: str) -> bool:
-    return file_.startswith(dir_.rstrip(os.sep) + os.sep)
-
-
-def entities_match(a: set[str], b: set[str]) -> bool:
-    """True iff some entity in `a` equals, contains, or is contained by some entity in `b`.
-    Empty sets never match (pattern-only Glob / path-less calls)."""
-    for x in a:
-        for y in b:
-            if x == y or _contains(x, y) or _contains(y, x):
-                return True
-    return False
+    """Canonical absolute file-path entities from a tool call's args (shared definition in
+    `context_curator.entities`, so live capture tags exactly what the eval measures)."""
+    return entities_from_args(call.args)
 
 
 class _Turn:
@@ -74,10 +50,13 @@ def _segment(trace: Trace) -> list[_Turn]:
     return turns
 
 
-def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5) -> list[Fixture]:
+def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5,
+                  gap: int = 0) -> list[Fixture]:
     """Per-turn fixtures with downstream-use gold (design §3.3). Gold = a prior candidate chunk
-    whose entity is re-fetched by a RETRIEVAL call within [T, T+w], excluding a re-fetch of an
-    entity that was EDITED earlier in that same turn (verify-after-edit)."""
+    whose entity is re-fetched by a RETRIEVAL call within [T+gap, T+gap+w], excluding a re-fetch
+    of an entity that was EDITED earlier in that same turn (verify-after-edit). `gap` > 0 pushes
+    the gold window into the future while candidates stay turns < T (the stickiness robustness
+    sweep); gap 0 is the original harvest."""
     turns = _segment(trace)
     call_by_id = {c.call_id: c for t in turns for c in t.calls}
 
@@ -96,7 +75,7 @@ def harvest_trace(trace: Trace, *, w: int = 5, min_candidates: int = 5) -> list[
         if len(candidates) < min_candidates:
             continue
         refetched: set[str] = set()
-        for tw in turns[i: i + w + 1]:
+        for tw in turns[i + gap: i + gap + w + 1]:
             # per-turn reset: excludes a SAME-TURN verify-Read-after-Edit only (pinned rule §3.3);
             # a cross-turn re-read of an edited entity still counts as a genuine re-fetch.
             edited_here: set[str] = set()

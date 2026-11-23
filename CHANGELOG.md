@@ -3,6 +3,28 @@
 All notable changes to this project are documented here, following
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Changed
+- **Onload ranks by refetch stickiness (Track A).** With the semantic curator dark, the
+  `UserPromptSubmit` floor now ranks live chunks by how often their file was already fetched,
+  BM25 breaking ties, newer first, instead of pure recency. It budgets on the rendered (≤ 1 200
+  char) body, so large sticky files are injected rather than rejected, and drops byte-identical
+  duplicates. Only the newest 4 M chars of the store compete (`ONLOAD_POOL_CHARS`), so hook
+  latency stays bounded on busy days. The decision log records source `stickiness`.
+- BM25 scoring moved to `context_curator.bm25`, bit-identical to the previous implementation.
+  On a ~3 M-char store a short prompt scores in ~15-30 ms and a 3 000-word pasted prompt in
+  ~150 ms; cost no longer scales with prompt vocabulary x store size.
+
+### Added
+- `PostToolUse` tags each captured tool result with `entity:<canonical path>`.
+- `python -m context_curator.eval.stickiness`: the pre-registered confirmatory run for the
+  shipped ranker (clustered CI, precision gate, 45-session floor, gap sweep).
+
+### Fixed
+- Live chunks are keyed on Claude Code's `tool_use_id`. The hook read `call_id`, which Claude
+  Code never sends, so every key was a content hash and identical re-reads collapsed into one row.
+
 ## [0.0.2] - 2026-06-07
 
 ### Added

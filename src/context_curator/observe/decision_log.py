@@ -23,7 +23,7 @@ class DecisionRecord:
     ts: str
     session_id: str
     prompt_preview: str
-    source: str                     # "curator" | "recency" | "none"
+    source: str                     # "curator" | "stickiness" | "none" ("recency" pre-Track-A)
     injected_keys: list[str]
     working_set_size: int
     paged_in: list[str]

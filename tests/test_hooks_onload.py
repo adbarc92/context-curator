@@ -84,7 +84,7 @@ def test_ups_curator_up_uses_keys_in_rank_order(tmp_path, monkeypatch):
     assert ctx.index("session:x:tool:a") < ctx.index("session:x:tool:b")
 
 
-def test_ups_curator_down_falls_back_to_recency_and_spawns(tmp_path, monkeypatch, capsys):
+def test_ups_curator_down_falls_back_to_stickiness_and_spawns(tmp_path, monkeypatch, capsys):
     from context_curator.curator.client import CuratorUnavailable
     from context_curator.hooks import user_prompt_submit as ups
     s = _sqlite(tmp_path)
@@ -97,9 +97,9 @@ def test_ups_curator_down_falls_back_to_recency_and_spawns(tmp_path, monkeypatch
     monkeypatch.setattr(ups.client, "request_onload", boom)
     monkeypatch.setattr(ups.runtime, "spawn_detached", lambda db: spawned.setdefault("yes", True))
     r = ups.handle({"prompt": "anything"}, s)
-    assert "session:x:tool:a" in (r.additional_context or "")    # recency fallback injected
+    assert "session:x:tool:a" in (r.additional_context or "")    # stickiness floor injected
     assert spawned.get("yes") is True
-    assert "[recency]" in capsys.readouterr().err
+    assert "[stickiness]" in capsys.readouterr().err
 
 
 def test_ups_warming_falls_back_without_spawn(tmp_path, monkeypatch):
@@ -181,12 +181,12 @@ def test_hook_records_decision(tmp_path, monkeypatch):
     from context_curator.observe import decision_log as dl
 
     monkeypatch.setattr(dl, "decisions_dir", lambda: tmp_path / "decisions")
-    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])   # dark/empty -> recency
+    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])   # dark -> stickiness
     s = _sqlite(tmp_path)
-    s.store("session:x:tool:a", "alpha")                        # >=1 live chunk -> recency injects
+    s.store("session:x:tool:a", "alpha")                        # >=1 live chunk -> floor injects
     ups.handle({"prompt": "hello world", "session_id": "sess-A"}, s)
     recs = dl.read_recent("sess-A", 1)
-    assert recs and recs[0].source == "recency"
+    assert recs and recs[0].source == "stickiness"
     assert recs[0].working_set_size >= 1
 
 
@@ -199,3 +199,20 @@ def test_hook_record_failure_is_fail_open(tmp_path, monkeypatch):
     s.store("session:x:tool:a", "alpha")                        # >=1 live chunk
     res = ups.handle({"prompt": "hi", "session_id": "s"}, s)
     assert res.exit_code == 0       # injection still succeeds despite logging failure
+
+
+def test_ups_floor_ranks_the_sticky_file_above_newer_chunks(tmp_path, monkeypatch):
+    # Track A: with the curator dark, the floor is stickiness, not recency. The file read three
+    # times outranks two NEWER one-off chunks; a recency floor would put the newest first.
+    from context_curator.entities import entity_tags
+    from context_curator.hooks import user_prompt_submit as ups
+    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])
+    s = _sqlite(tmp_path)
+    tags = ["read", *entity_tags({"/r/sticky.py"})]
+    for i in range(3):
+        s.store(f"session:x:tool:s{i}", f"sticky v{i}", tags=tags)
+    s.store("session:x:tool:n1", "newer one-off", tags=["bash"])
+    s.store("session:x:tool:n2", "newest one-off", tags=["bash"])
+    ctx = ups.handle({"prompt": "unrelated words", "hook_event_name": "UserPromptSubmit"},
+                     s).additional_context
+    assert ctx.index("session:x:tool:s2") < ctx.index("session:x:tool:n2")
