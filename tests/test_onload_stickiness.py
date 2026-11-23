@@ -129,3 +129,14 @@ def test_rank_returns_each_key_once_even_if_candidates_repeat_a_key():
     cands = [("g", "a", {F}), ("x", "b", set()), ("g", "c", {F})]
     out = stickiness_rank("q", cands)
     assert sorted(out) == ["g", "x"] and len(out) == 2
+
+
+def test_select_ranks_only_the_newest_chunks_up_to_the_pool_size():
+    # The hook's cost grows with the store, so only the newest `pool_chars` of content compete:
+    # f1/f2 are older than the cap, so f3 has no earlier copy to count as a refetch.
+    newest_first = [_ch("new", "n" * 10), _ch("f3", "c" * 10, {F}), _ch("f2", "b" * 10, {F}),
+                    _ch("f1", "a" * 10, {F})]
+    assert [c.key for c in stickiness_select("q", newest_first, k=10, token_budget=None)][:1] == \
+        ["f3"]
+    capped = stickiness_select("q", newest_first, k=10, token_budget=None, pool_chars=20)
+    assert {c.key for c in capped} == {"new", "f3"}

@@ -14,7 +14,7 @@ from context_curator.store.interface import Store
 def handle_onload(read_store: Store, embedder: Embedder, req: dict) -> dict:
     """Read-only onload. req keys: prompt (str), k (int, default 10), token_budget (int|None).
     Returns {"ok": True, "keys": [...]}. Dark by default (CC_CURATOR_ONLOAD off) -> {"keys": []}."""
-    if not config.CURATOR_ONLOAD_ENABLED:               # dark default -> hook uses recency
+    if not config.CURATOR_ONLOAD_ENABLED:               # dark default -> hook uses stickiness
         return {"ok": True, "keys": []}
     prompt = req.get("prompt") or ""
     k = req.get("k", 10)

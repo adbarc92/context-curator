@@ -10,9 +10,11 @@ All notable changes to this project are documented here, following
   `UserPromptSubmit` floor now ranks live chunks by how often their file was already fetched,
   BM25 breaking ties, newer first, instead of pure recency. It budgets on the rendered (≤ 1 200
   char) body, so large sticky files are injected rather than rejected, and drops byte-identical
-  duplicates. The decision log records source `stickiness`.
-- BM25 scoring moved to `context_curator.bm25` and is about 2x faster on real-store text,
-  bit-identical to the previous implementation.
+  duplicates. Only the newest 4 M chars of the store compete (`ONLOAD_POOL_CHARS`), so hook
+  latency stays bounded on busy days. The decision log records source `stickiness`.
+- BM25 scoring moved to `context_curator.bm25`, bit-identical to the previous implementation.
+  On a ~3 M-char store a short prompt scores in ~15-30 ms and a 3 000-word pasted prompt in
+  ~150 ms; cost no longer scales with prompt vocabulary x store size.
 
 ### Added
 - `PostToolUse` tags each captured tool result with `entity:<canonical path>`.

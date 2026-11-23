@@ -92,33 +92,67 @@ def test_onload_latency_ceiling_1000_chunks(tmp_path):
     assert p50 < 0.3, f"p50={p50*1000:.0f}ms exceeds 300ms at 1000 chunks"
 
 
-def test_onload_latency_ceiling_realistic_store(tmp_path, monkeypatch):
-    # Track A: the stickiness floor runs BM25 over the whole store each prompt. Real stores hold
-    # ~900 chunks / ~3-4 M chars (most of them entity-tagged Reads/Edits), not 1 000 one-liners,
-    # so hold the same declared ceiling (p50 < 300 ms) at that size.
+def _realistic_store(tmp_path, n_chunks=900, seed=0):
+    # Real stores hold ~900 chunks / ~3-4 M chars (most of them entity-tagged Reads/Edits).
     import random
 
     from context_curator.embeddings import NullEmbedder
     from context_curator.entities import entity_tags
-    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])
-    rng = random.Random(0)
-    words = [f"w{i}" for i in range(5000)] + ["def", "return", "import", "class", "self", "the"]
-    paths = [f"/repo/src/mod{i}/file{j}.py" for i in range(30) for j in range(6)]
+    rng = random.Random(seed)
     s = SqliteStore(db_path=str(tmp_path / "real.db"), embedder=NullEmbedder())
     total = 0
-    for i in range(900):
-        body = " ".join(rng.choice(words) for _ in range(min(int(rng.lognormvariate(7.6, 1.1)),
-                                                             32_768) // 6))
+    for i in range(n_chunks):
+        body = " ".join(rng.choice(_WORDS) for _ in range(min(int(rng.lognormvariate(7.6, 1.1)),
+                                                              32_768) // 6))
         total += len(body)
-        tags = ["read", *entity_tags({rng.choice(paths)})] if rng.random() < 0.6 else ["bash"]
+        tags = ["read", *entity_tags({rng.choice(_PATHS)})] if rng.random() < 0.6 else ["bash"]
         s.store(f"session:x:tool:t{i}", body, tags=tags)
-    assert total > 3_000_000
-    event = {"prompt": "fix the w12 w400 import in mod3", "hook_event_name": "UserPromptSubmit"}
+    return s, total
+
+
+_WORDS = [f"w{i}" for i in range(5000)] + ["def", "return", "import", "class", "self", "the"]
+_PATHS = [f"/repo/src/mod{i}/file{j}.py" for i in range(30) for j in range(6)]
+
+
+def _p50(event, store, runs=5):
     times = []
-    for _ in range(5):
+    for _ in range(runs):
         t0 = time.perf_counter()
-        ups.handle(event, s)
+        ups.handle(event, store)
         times.append(time.perf_counter() - t0)
     times.sort()
-    p50 = times[len(times) // 2]
+    return times[len(times) // 2]
+
+
+def test_onload_latency_ceiling_realistic_store(tmp_path, monkeypatch):
+    # Track A: the stickiness floor runs BM25 over the store each prompt. Hold the same declared
+    # ceiling (p50 < 300 ms) at real-store size.
+    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])
+    s, total = _realistic_store(tmp_path)
+    assert total > 3_000_000
+    event = {"prompt": "fix the w12 w400 import in mod3", "hook_event_name": "UserPromptSubmit"}
+    p50 = _p50(event, s)
     assert p50 < 0.3, f"p50={p50*1000:.0f}ms exceeds 300ms on a realistic-size store"
+
+
+def test_onload_latency_ceiling_long_prompt(tmp_path, monkeypatch):
+    # A pasted log or stack trace is a prompt with thousands of distinct words; BM25 cost must
+    # not scale with prompt vocabulary x store size.
+    import random
+    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])
+    s, _ = _realistic_store(tmp_path)
+    prompt = " ".join(random.Random(1).choices(_WORDS, k=3000))
+    p50 = _p50({"prompt": prompt, "hook_event_name": "UserPromptSubmit"}, s, runs=3)
+    assert p50 < 0.3, f"p50={p50*1000:.0f}ms exceeds 300ms on a 3000-word prompt"
+
+
+def test_onload_latency_ceiling_oversized_store(tmp_path, monkeypatch):
+    # Every tool call is its own row (keyed on tool_use_id), so a busy day can outgrow the
+    # realistic store several times over; the hook must stay in budget anyway (uncapped, ~6x the
+    # realistic store measured 438 ms on the dev machine).
+    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])
+    s, total = _realistic_store(tmp_path, n_chunks=6000)
+    assert total > 18_000_000
+    event = {"prompt": "fix the w12 w400 import in mod3", "hook_event_name": "UserPromptSubmit"}
+    p50 = _p50(event, s)
+    assert p50 < 0.3, f"p50={p50*1000:.0f}ms exceeds 300ms on a {total/1e6:.0f} M-char store"

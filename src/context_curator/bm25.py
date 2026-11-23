@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import math
 import re
+from collections import Counter
 
 _K1 = 1.5
 _B = 0.75
@@ -25,9 +26,22 @@ def _tok(text: str) -> list[str]:
     return _TOKEN.findall(text.lower())
 
 
-def _doc_stats(text: str, qterms: list[tuple[str, bytes]]) -> tuple[int, dict[str, int]]:
-    """(token count, term frequency of each query term present) for one doc."""
+# Above this many distinct query terms, one substring scan per term per doc costs more than
+# counting every token of the doc once, so long prompts (pasted logs) switch to a Counter.
+_MAX_SCAN_TERMS = 10
+
+
+def _doc_stats(text: str, qterms: list[tuple[str, bytes]],
+               qmap: dict[bytes, str]) -> tuple[int, dict[str, int]]:
+    """(token count, term frequency of each query term present) for one doc. `qmap` is `qterms`
+    keyed by bytes."""
     low = text.lower().encode("utf-8", "surrogatepass")
+    if len(qterms) > _MAX_SCAN_TERMS:
+        toks = low.translate(_KEEP).split()
+        counts = Counter(toks)
+        if len(counts) < len(qterms):                   # walk whichever side is smaller
+            return len(toks), {qmap[tb]: n for tb, n in counts.items() if tb in qmap}
+        return len(toks), {term: counts[tb] for term, tb in qterms if tb in counts}
     present = [(term, tb) for term, tb in qterms if tb in low]      # substring: cheap prefilter
     if not present:
         marks = low.translate(_MARK)
@@ -51,26 +65,34 @@ def bm25_scores(
     m = len(docs)
     q = _tok(prompt)
     qterms = [(t, t.encode("ascii")) for t in sorted(set(q))]
+    qmap = {tb: t for t, tb in qterms}
     lens: dict[str, int] = {}
     tfs: dict[str, dict[str, int]] = {}
     for key, text in docs.items():
-        lens[key], tfs[key] = _doc_stats(text, qterms)
+        lens[key], tfs[key] = _doc_stats(text, qterms, qmap)
     df: dict[str, int] = {}
     for tf in tfs.values():
         for term in tf:
             df[term] = df.get(term, 0) + 1
     idf = {t: math.log((m - n + 0.5) / (n + 0.5) + 1.0) for t, n in df.items()}
     avgdl = (sum(lens.values()) / m) if m else 0.0
+    qpos: dict[str, list[int]] = {}
+    for i, term in enumerate(q):
+        qpos.setdefault(term, []).append(i)
     out: dict[str, float] = {}
     for key in docs:
         tf = tfs[key]
         dl = lens[key]
         s = 0.0
-        for term in q:
-            f = tf.get(term)
-            if not f:
-                continue
-            denom = f + k1 * (1 - b + b * (dl / avgdl if avgdl else 0.0))
-            s += idf.get(term, 0.0) * (f * (k1 + 1) / denom if denom else 0.0)
+        if tf:
+            norm = k1 * (1 - b + b * (dl / avgdl if avgdl else 0.0))
+            contrib = {}
+            for term, f in tf.items():
+                denom = f + norm
+                contrib[term] = idf.get(term, 0.0) * (f * (k1 + 1) / denom if denom else 0.0)
+            # Add one contribution per prompt position whose term is in this doc, in prompt
+            # order: the float sum then runs in exactly the reference order (bit-identical).
+            for i in sorted(i for term in tf for i in qpos[term]):
+                s += contrib[q[i]]
         out[key] = s
     return out

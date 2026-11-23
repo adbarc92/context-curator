@@ -60,3 +60,14 @@ def test_edge_cases_identical():
     for prompt, docs in [("", {}), ("a", {}), ("", {"k": "a b"}), ("a a a", {"k": ""}),
                          ("alpha", {"k1": "", "k2": ""}), ("alpha alpha", {"k": "alpha"})]:
         assert bm25_scores(prompt, docs) == _reference_bm25(prompt, docs)
+
+
+def test_bit_identical_for_prompts_with_many_distinct_terms():
+    # Long prompts (pasted logs) take a different counting path; it must score identically.
+    rng = random.Random(1)
+    vocab = _VOCAB + [f"t{i}" for i in range(400)] + [f"T{i}x" for i in range(100)]
+    for _ in range(200):
+        docs = {f"k{i}": " ".join(rng.choice(vocab) for _ in range(rng.randint(0, 80)))
+                for i in range(rng.randint(0, 12))}
+        prompt = " ".join(rng.choice(vocab) for _ in range(rng.randint(30, 600)))
+        assert bm25_scores(prompt, docs) == _reference_bm25(prompt, docs)
