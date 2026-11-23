@@ -5,6 +5,7 @@ import json
 
 from context_curator.capture.file_ledger import capture_file_write
 from context_curator.capture.tool_result import CAPTURE_MAX_CONTENT, capture_tool_result
+from context_curator.entities import entities_from_args
 from context_curator.guard.config import CAPTURE_TTL_S
 from context_curator.hooks._io import HookResult, run_hook
 from context_curator.store.interface import Store
@@ -16,7 +17,9 @@ def handle(event: dict, store: Store) -> HookResult:
     tool_name = event.get("tool_name", "")
     tool_input = event.get("tool_input") or {}
     session_id = event.get("session_id", "")
-    call_id = event.get("call_id")
+    # Claude Code sends `tool_use_id`; `call_id` is the legacy/test name. Without either the key
+    # falls back to a content hash, which collapses identical re-reads into one row.
+    call_id = event.get("tool_use_id") or event.get("call_id")
 
     if tool_name in _WRITE_TOOLS and tool_input.get("file_path"):
         capture_file_write(store, session_id=session_id, tool_name=tool_name,
@@ -27,7 +30,8 @@ def handle(event: dict, store: Store) -> HookResult:
         content = resp if isinstance(resp, str) else json.dumps(resp, sort_keys=True)
         capture_tool_result(store, session_id=session_id, tool_name=tool_name or "tool",
                             content=content, call_id=call_id, ordinal=None,
-                            ttl_s=CAPTURE_TTL_S, max_content=CAPTURE_MAX_CONTENT)
+                            ttl_s=CAPTURE_TTL_S, max_content=CAPTURE_MAX_CONTENT,
+                            entities=entities_from_args(tool_input))
     return HookResult(0)
 
 
