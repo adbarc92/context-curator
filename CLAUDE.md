@@ -2,8 +2,8 @@
 
 > M7 shipped (`v0.0.2`, [PR #13](https://github.com/adbarc92/context-curator/pull/13) merged to `main`).
 > Both #14 exit criteria are verified **YES** (`CLAUDE_PROJECT_DIR` reaches `cc-mcp`; plugin resolves
-> bare `cc-*` on PATH — [`docs/plugin-install.md`](docs/plugin-install.md) §5), but **#14 stays open**:
-> the gui-script mitigation only *partially* stopped the Windows console flash (still flashing
+> bare `cc-*` on PATH — [`docs/plugin-install.md`](docs/plugin-install.md) §5); #14 is closed. The
+> gui-script mitigation only *partially* stopped the Windows console flash (still flashing
 > sometimes → tracked in [#12](https://github.com/adbarc92/context-curator/issues/12)).
 > The real-data keystone (M4d) verdict is now **in and powered**: on 5 real sessions the semantic/bge
 > onload **loses to BM25** (−0.053 nDCG, clustered 90% CI [−0.085, −0.041]) — so the decision is made:

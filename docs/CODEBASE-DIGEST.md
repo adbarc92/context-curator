@@ -1,11 +1,11 @@
 # ContextCurator — Codebase Digest (for agents)
 
 > Audience: an agent extending / owning this code.
-> Source: branch `chore/post-m7-followups` @ `1ff3ea2` (4 ahead / 1 behind `origin/main` @ `63afb5d`, PR #13 merged) · 2026-06-23 · digested by reading ~14 files + manifests + eval results (rest inferred from DESIGN.md §1–13). Re-verified: `uv run --no-sync pytest` green (exit 0).
+> Source: branch `feat/track-a-stickiness-ranker` (PR #17, 15 ahead / 0 behind `origin/main` @ `410c417`) · first digested 2026-06-23, refreshed 2026-11-23 · re-verified: `uv run --no-sync pytest` 397 passed / 8 skipped, `ruff check` clean.
 > Purpose: ownership / extension + next-steps planning.
 
 ## TL;DR
-ContextCurator is a **relevance-driven working-set policy + durable context store for Claude Code**, shipped as an installable plugin. Stack: **Python 3.11+ / UV**, embedded **SQLite** store (no daemon), **MCP** stdio server (`cc-mcp`) exposing `cc_*` tools, and five Claude Code **hooks** (`cc-hook-*`) that capture state and inject a re-onload slice each turn. It does **not** evict from the live window (the CLI has no such lever, DESIGN §11) — it *persists* state so compaction can safely drop it, then *re-injects* the relevant slice. The single most important thing to know: **the keystone eval came back NEGATIVE** — the semantic policy beats the strongest baseline by only +0.056 nDCG vs. a pre-registered +0.1 bar ([results/keystone-10.md](../results/keystone-10.md)). The differentiated centerpiece is, as of now, *not* differentiated by its own success criterion. M0–M7 are built and v0.0.2 is released/merged.
+ContextCurator is a **relevance-driven working-set policy + durable context store for Claude Code**, shipped as an installable plugin. Stack: **Python 3.11+ / UV**, embedded **SQLite** store (no daemon), **MCP** stdio server (`cc-mcp`) exposing `cc_*` tools, and five Claude Code **hooks** (`cc-hook-*`) that capture state and inject a re-onload slice each turn. It does **not** evict from the live window (the CLI has no such lever, DESIGN §11) — it *persists* state so compaction can safely drop it, then *re-injects* the relevant slice. The single most important thing to know: **the semantic centerpiece failed its keystone** — +0.056 nDCG on the synthetic corpus vs. a pre-registered +0.1 bar ([keystone-powered.md](superpowers/keystone-powered.md)), and it *loses* to BM25 on real sessions ([keystone-real.md](superpowers/keystone-real.md)), so semantic is dark. The live onload ranker is now **refetch stickiness with a BM25 tie-break (Track A, PR #17)**, whose own powered verdict is still pending on data. M0–M7 are built and v0.0.2 is released/merged.
 
 ## Where to look (navigation index)
 | I need to… | Go to |
@@ -21,10 +21,11 @@ ContextCurator is a **relevance-driven working-set policy + durable context stor
 | Work on the semantic/bge curator process | [src/context_curator/curator/](../src/context_curator/curator/) (server/client/runtime/reconcile) |
 | Run / tune the eval | [src/context_curator/eval/](../src/context_curator/eval/) (keystone.py, runner.py, sweep.py, precision_gate.py) |
 | Replay real sessions offline | [src/context_curator/replay/](../src/context_curator/replay/) (engine.py, ingest.py) |
-| Install the plugin | [docs/plugin-install.md](plugin-install.md); out-of-session runbook [docs/M7-runbook.md](M7-runbook.md) |
+| Install the plugin | [docs/plugin-install.md](plugin-install.md) |
+| Run the stickiness confirmatory eval | [src/context_curator/eval/stickiness.py](../src/context_curator/eval/stickiness.py), prereg [stickiness-powered-prereg.md](superpowers/stickiness-powered-prereg.md) |
 
 ## Architecture
-Five components (DESIGN §4); first two are the build, the rest is wiring/adoption. Single Python package `src/context_curator/`, ~55 modules, 70 test files.
+Five components (DESIGN §4); first two are the build, the rest is wiring/adoption. Single Python package `src/context_curator/`, 73 modules, 68 test files.
 
 | Unit | Path | Purpose |
 |------|------|---------|
@@ -70,31 +71,36 @@ Five components (DESIGN §4); first two are the build, the rest is wiring/adopti
 ### Config & environment
 | Var | Notes |
 |-----|-------|
-| `CLAUDE_PROJECT_DIR` | `resolve_db_path` uses it for per-project store location (exit-criterion (a), unverified — #14) |
-| `CC_DB_PATH` | explicit DB path override (documented fallback if `CLAUDE_PROJECT_DIR` doesn't reach `cc-mcp`) |
+| `CLAUDE_PROJECT_DIR` | `resolve_db_path` uses it for per-project store location (verified to reach `cc-mcp`, #14 closed) |
+| `CC_DB_PATH` | explicit DB path override (not needed for the plugin; kept for manual runs) |
 | `CC_ALLOWED_PREFIX` | server-side keyspace/tenant isolation prefix |
 | `CLAUDE_CODE_SUBAGENT_MODEL` | `sonnet` for workers, Opus orchestrator (DESIGN §4.4) |
 | optional extra `[embed]` | fastembed + onnxruntime for the bge semantic path |
 
 ## Build · run · test
-Package manager: **UV** (`uv.lock` present). **`cc-mcp` is installed via `uv tool` (currently `v0.0.1`) → the exe is locked; always test with `uv run --no-sync`** to avoid the rebuild-vs-locked-exe collision (`os error 32`).
+Package manager: **UV** (`uv.lock` present). **Where the plugin is installed, `cc-mcp` comes from `uv tool` and its exe is locked while running; always test with `uv run --no-sync`** to avoid the rebuild-vs-locked-exe collision (`os error 32`, Windows).
 - Install: `uv sync --all-groups`
-- Test: `uv run --no-sync pytest -p no:cacheprovider` — green at HEAD (exit 0; ~346 passed / 6 skipped). Former flake `test_curator_lifecycle_and_handshake` (idle-timeout under full-suite load) was fixed in `11c01c6`.
+- Test: `uv run --no-sync pytest -p no:cacheprovider` — green at HEAD (397 passed / 8 skipped, 2026-11-23). Former flake `test_curator_lifecycle_and_handshake` (idle-timeout under full-suite load) was fixed in `11c01c6`.
 - Lint: `uv run ruff check .` (line-length 100, py311, rules E/F/I/UP/B) — **clean (0 errors)** since the temp #14 diagnostic was reverted.
 - Install as plugin: `uv tool install --editable . ; uv tool update-shell` + restart Claude.
 - Verify installed plugin (Windows): `pwsh -NoProfile -File scripts/verify-plugin.ps1` → expect 4 `OK:` lines + `VERIFY PASS`.
 - While the plugin's `cc-mcp` is alive, use `uv run --no-sync` to avoid rebuild-vs-locked-exe collision.
 
 ## Status (milestones)
-M0–M7 **all implemented**. v0.0.2 released (tag `v0.0.2`), **PR #13 merged to main** (`63afb5d`). Work branch **`chore/post-m7-followups`** (off the merged tree) is landing the post-M7 close-out: **#14's two exit criteria are now verified YES** (2026-06-25) — `CLAUDE_PROJECT_DIR` reaches `cc-mcp` (official Claude Code MCP docs, v2.1.139+ parity; this machine v2.1.190; corroborated by per-project `store.db` placement) and the plugin resolves bare `cc-*` on PATH (18 successful stdio connections across ~8 projects). The temp #14 stderr diagnostic (`990c9fb`) has been **reverted**, and the now-spent `M7-runbook.md` + `Session-Pickup-2026-06-04.md` **deleted**. (Earlier `feat/m7-plugin-package` branch is stale.)
+M0–M7 **all implemented**. v0.0.2 released (tag `v0.0.2`). `main` @ `410c417` contains:
+- **#13** — M7 plugin packaging (v0.0.2).
+- **#15** — post-M7 close-out: #14's exit criteria verified YES (`CLAUDE_PROJECT_DIR` reaches `cc-mcp`; plugin resolves bare `cc-*` on PATH) and the M4d real-data verdict (semantic loses to BM25 → semantic dark).
+- **#16** — Track B, learned-ranker Cycle 1 feasibility ([keystone-learned.md](superpowers/keystone-learned.md)): learned 0.306 vs BM25 0.102 nDCG@10, +0.203, clustered 90% CI [+0.073, +0.372] → **GO to Cycle 2**. Its circularity audit found prior-refetch *alone* scores 0.445 — above the learned model — which is what Track A ships.
 
-Open issues: **#14** (out-of-session M7 verification — both exit criteria (a)+(b) recorded YES; **stays open** because the gui-script mitigation only *partially* stopped the Windows console flash — user reports it still flashes sometimes); **#12** (upstream Claude Code spawns hook/MCP exes without `windowsHide` — our gui-script/pythonw mitigation reduced but did **not** eliminate the flash; live investigation surface for the residual flicker).
+**In flight — Track A (PR #17, `feat/track-a-stickiness-ranker`):** onload ranks by refetch stickiness with a BM25 tie-break ([design](superpowers/specs/2026-11-22-track-a-stickiness-onload-design.md), [plan](superpowers/plans/2026-11-22-track-a-stickiness-onload.md)), plus the `tool_use_id` keying fix and `entity:` tags at capture. Independent review addressed (`1980ae7`). The final verdict is gated on the frozen powered run — see *Open questions*.
 
-The one remaining product lever (real-data M4d keystone verdict) and the close-out steps are decomposed into parallel lanes in **[`docs/handoff/handoff-2026-06-25-swarm.md`](handoff/handoff-2026-06-25-swarm.md)**.
+**Not started — Track B Cycle 2** (full learned-ranker build + wiring, gated sketch in the [learned-ranker spec](superpowers/specs/2026-06-25-learned-onload-ranker-design.md) §4; pickup in [handoff-2026-06-26-learned-ranker.md](handoff/handoff-2026-06-26-learned-ranker.md)). Its sequencing against the Track A verdict is undecided.
+
+Open issues: **#12** only (upstream Claude Code spawns hook/MCP exes without `windowsHide` — the gui-script/pythonw mitigation reduced but did **not** eliminate the flash). #14 was closed 2026-07-07 with its residual-flash sub-item moved to #12.
 
 ## Gotchas & invariants
 - **NEGATIVE keystone result — and the synthetic question is SETTLED, not weak-gold.** Synthetic (M4c, [keystone-powered.md](superpowers/keystone-powered.md)): semantic nDCG@10=0.880 vs BM25 0.811, effect **+0.056, 90% CI [0.009, 0.102]**, n=26 — CI *excludes 0* (effect is real) but below pre-registered MEI +0.10 ⇒ powered NEGATIVE. The corpus is rigorously fair (blind gold-judge dropped 5/40, 0/80 hard-neg FP, recency-mixed 12/12/11, circularity-guarded) and built *favorable* to semantic (paraphrased gold + lexically-tempting negatives). The pilot (n=8) showed +0.129 (looked GREEN) but the powered run **regressed it to +0.056** — so growing the synthetic corpus will only tighten the CI around a sub-MEI effect, not flip it. Recency arm 0.428 is badly beaten, so store+hooks clearly help — only *semantic vs BM25* is the null. bge floats are machine-sensitive: **regenerate, don't diff.**
-- **Real-data keystone (M4d) is now SETTLED — powered, and semantic LOSES to BM25.** [keystone-real.md](superpowers/keystone-real.md) (2026-06-25): re-run on **5 real sessions / 5 projects** (154 test fixtures, 4 test sessions ≥ floor 3). Headline semantic − strongest cheap baseline = **−0.053 nDCG@10**, session-clustered 90% CI **[−0.085, −0.041]** (width 0.044 ≤ MEI ⇒ precision gate = *verdict*). Arms: BM25 **0.100** > recency 0.090 ≈ semantic 0.091. Both fairness diagnostics clean (lexical-bias non-degenerate; recency thirds ≈ even), so it's not an artifact. ⇒ **Decision made:** ship BM25 as the onload ranker, demote semantic to dark ([decisions/semantic-ranker.md](decisions/semantic-ranker.md)). Store + hooks + guardrails keep (recency crushes the empty condition); only the *semantic differentiator* is dead. bge floats machine-sensitive: **regenerate, don't diff.**
+- **Real-data keystone (M4d) is now SETTLED — powered, and semantic LOSES to BM25.** [keystone-real.md](superpowers/keystone-real.md) (2026-06-25): re-run on **5 real sessions / 5 projects** (154 test fixtures, 4 test sessions ≥ floor 3). Headline semantic − strongest cheap baseline = **−0.053 nDCG@10**, session-clustered 90% CI **[−0.085, −0.041]** (width 0.044 ≤ MEI ⇒ precision gate = *verdict*). Arms: BM25 **0.100** > recency 0.090 ≈ semantic 0.091. Both fairness diagnostics clean (lexical-bias non-degenerate; recency thirds ≈ even), so it's not an artifact. ⇒ **Decision made:** ship BM25 as the onload ranker (since superseded by Track A stickiness, BM25 as tie-break), demote semantic to dark ([decisions/semantic-ranker.md](decisions/semantic-ranker.md)). Store + hooks + guardrails keep (recency crushes the empty condition); only the *semantic differentiator* is dead. bge floats machine-sensitive: **regenerate, don't diff.**
 - **Never run both wirings.** Dev `.claude/settings.json` hooks + installed plugin + running `cc-mcp` → dev `uv run` can't replace the locked `cc-mcp.exe` (`os error 32`), and on `PreToolUse` that **blocks every Write/Edit/Bash**. M7's `settings.json` is `{}` for this reason. Recover from a shell *outside* Claude. Branch curator-runtime fixes off an M7 tree, not `main`.
 - **Hooks must stay `[project.gui-scripts]`** (pythonw) — console scripts reintroduce Windows console-window flashing (#12). Piped stdin/stdout still works under pythonw because Claude pipes the handles.
 - **No per-chunk eviction exists in the CLI** (DESIGN §11). `cc_evict` removes from the *store*, never the live window. Don't design features that assume window eviction.
@@ -105,6 +111,6 @@ The one remaining product lever (real-data M4d keystone verdict) and the close-o
 
 ## Open questions / unverified
 - Exit-criterion (a) **RESOLVED YES** (2026-06-25): `CLAUDE_PROJECT_DIR` reaches `cc-mcp` (Claude Code MCP docs v2.1.139+ parity; corroborated by per-project `store.db` placement). No `CC_DB_PATH` fallback needed.
-- gui-script flash mitigation **CONFIRMED PARTIAL** (#12): still flashes sometimes — residual flicker stays open under #12; #14 holds on this sub-item.
+- gui-script flash mitigation **CONFIRMED PARTIAL** (#12): still flashes sometimes — residual flicker stays open under #12 (#14 closed 2026-07-07).
 - The keystone decision is **MADE** (no longer open): both synthetic (powered NEGATIVE, +0.056 < MEI) and real-data (powered, semantic −0.053 *loses* to BM25) agree ⇒ demote semantic to dark ([decisions/semantic-ranker.md](decisions/semantic-ranker.md)). The live ranker is now stickiness with a BM25 tie-break (amendment in that doc).
 - **Open (evidence gate):** the stickiness ranker's powered confirmatory run needs **≥ 45 harvestable main-session transcripts disjoint from the 5 discovery sessions** ([stickiness-powered-prereg.md](superpowers/stickiness-powered-prereg.md)). On 2026-11-22 the Linux machine had 2 harvestable sessions (13 main transcripts; subagent transcripts yield no fixtures). Collect transcripts from every machine into `src/context_curator/eval/fixtures/_real_local/` and run `uv run python -m context_curator.eval.stickiness`.
