@@ -22,6 +22,10 @@ All notable changes to this project are documented here, following
   shipped ranker (clustered CI, precision gate, 45-session floor, gap sweep).
 
 ### Fixed
+- `cc_query` and the semantic curator onload no longer return the same content more than once
+  (keying on `tool_use_id` made every unchanged re-read its own row); the newest copy is kept
+  and the freed slot goes to the next chunk. `Store.query` keeps duplicates unless called with
+  `distinct_content=True`, so the replay recency arm is unchanged.
 - Live chunks are keyed on Claude Code's `tool_use_id`. The hook read `call_id`, which Claude
   Code never sends, so every key was a content hash and identical re-reads collapsed into one row.
 

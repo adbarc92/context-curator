@@ -155,3 +155,20 @@ def test_all_live_chunks_scope_enforced(scoped_store):
     scoped_store.store("proj:a:1", "x")
     scoped_store.store("proj:b:1", "x")      # out of scope
     assert {c.key for c in scoped_store.all_live_chunks()} == {"proj:a:1"}
+
+
+def test_query_distinct_content_keeps_the_newest_copy_and_still_fills_k(store):
+    # Live chunks are keyed per tool call, so an unchanged file read 3 times is 3 rows.
+    store.store("k1", "same text", tags=["t"])
+    store.store("k2", "other text", tags=["t"])
+    store.store("k3", "same text", tags=["t"])
+    store.store("k4", "same text", tags=["t"])
+    assert [c.key for c in store.query("q", tags=["t"], k=2, distinct_content=True)] == \
+        ["k4", "k2"]
+
+
+def test_query_keeps_duplicates_by_default(store):
+    # The replay recency arm reads Store.query; its published numbers must not move.
+    store.store("k1", "same text")
+    store.store("k2", "same text")
+    assert [c.key for c in store.query("q", k=2)] == ["k2", "k1"]

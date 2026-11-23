@@ -1,7 +1,7 @@
 # ContextCurator — Codebase Digest (for agents)
 
 > Audience: an agent extending / owning this code.
-> Source: branch `feat/track-a-stickiness-ranker` (PR #17, 15 ahead / 0 behind `origin/main` @ `410c417`) · first digested 2026-06-23, refreshed 2026-11-23 · re-verified: `uv run --no-sync pytest` 402 passed / 8 skipped, `ruff check` clean.
+> Source: branch `feat/track-a-stickiness-ranker` (PR #17, 15 ahead / 0 behind `origin/main` @ `410c417`) · first digested 2026-06-23, refreshed 2026-11-23 · re-verified: `uv run --no-sync pytest` 408 passed / 8 skipped, `ruff check` clean.
 > Purpose: ownership / extension + next-steps planning.
 
 ## TL;DR
@@ -80,7 +80,7 @@ Five components (DESIGN §4); first two are the build, the rest is wiring/adopti
 ## Build · run · test
 Package manager: **UV** (`uv.lock` present). **Where the plugin is installed, `cc-mcp` comes from `uv tool` and its exe is locked while running; always test with `uv run --no-sync`** to avoid the rebuild-vs-locked-exe collision (`os error 32`, Windows).
 - Install: `uv sync --all-groups`
-- Test: `uv run --no-sync pytest -p no:cacheprovider` — green at HEAD (402 passed / 8 skipped, 2026-11-23). Former flake `test_curator_lifecycle_and_handshake` (idle-timeout under full-suite load) was fixed in `11c01c6`.
+- Test: `uv run --no-sync pytest -p no:cacheprovider` — green at HEAD (408 passed / 8 skipped, 2026-11-23). Former flake `test_curator_lifecycle_and_handshake` (idle-timeout under full-suite load) was fixed in `11c01c6`.
 - Lint: `uv run ruff check .` (line-length 100, py311, rules E/F/I/UP/B) — **clean (0 errors)** since the temp #14 diagnostic was reverted.
 - Install as plugin: `uv tool install --editable . ; uv tool update-shell` + restart Claude.
 - Verify installed plugin (Windows): `pwsh -NoProfile -File scripts/verify-plugin.ps1` → expect 4 `OK:` lines + `VERIFY PASS`.

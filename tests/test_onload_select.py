@@ -64,7 +64,8 @@ def test_conventions_excluded_even_when_relevant():
 
 
 def test_k_respected():
-    cands = [_chunk(f"k{i}", "auth") for i in range(5)]
+    same = _EMB.embed("auth")                    # distinct content: identical copies are deduped
+    cands = [Chunk(key=f"k{i}", content=f"auth content {i}", embedding=same) for i in range(5)]
     out = _onload(_policy(), "auth query", cands, k=2)
     assert len(out) == 2
 
@@ -129,3 +130,14 @@ def test_seed_convention_key_boundary_not_matched():
     s = _mem()
     s.store("shared:decisions:naming-conventions", "x", pin=False)
     assert seed_select(s, token_budget=1500) == []
+
+
+def test_identical_content_is_injected_once_and_the_slot_goes_to_the_next_chunk():
+    same = _EMB.embed("auth")
+    cands = [Chunk(key="read3", content="auth content", embedding=same),
+             Chunk(key="read2", content="auth content", embedding=same),
+             Chunk(key="other", content="auth different", embedding=same)]
+    out = _onload(_policy(), "auth query", cands, k=2)
+    assert len(out) == 2
+    assert len({c.content for c in out}) == 2
+    assert out[0].key == "read3"

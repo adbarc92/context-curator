@@ -111,10 +111,15 @@ def onload_select(policy: RelevancePolicy, task_text: str, candidates: list[Chun
     full score, first-fit under k+budget. EXCLUDES pins AND proj:*:conventions (both seeded at
     SessionStart). `policy` carries ONLOAD_WEIGHTS (sim_floor == cos_threshold, round-2 C1) so
     the admitted band ranks by a real recency+similarity blend, not recency alone. No cross-turn
-    dedup — the relevant slice is (re)injected every turn (round-2 M1)."""
-    eligible = [(c, score)
-                for c, score, cos in policy.scored_with_similarity(task_text, candidates)
-                if not _is_durable(c) and cos >= cos_threshold]
+    dedup — the relevant slice is (re)injected every turn (round-2 M1) — but within a turn a
+    byte-identical copy of a higher-ranked chunk is dropped so it cannot take a slot."""
+    eligible: list[tuple[Chunk, float]] = []
+    seen: set[str] = set()
+    for c, score, cos in policy.scored_with_similarity(task_text, candidates):
+        if _is_durable(c) or cos < cos_threshold or c.content in seen:
+            continue
+        seen.add(c.content)
+        eligible.append((c, score))
     return policy.pick(eligible, k, token_budget)
 
 

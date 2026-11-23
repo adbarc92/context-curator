@@ -56,3 +56,13 @@ def test_build_mcp_registers_all_six_tools(tmp_path, monkeypatch):
     registered = set(server._tool_manager._tools.keys())
     expected = {"cc_store", "cc_retrieve", "cc_query", "cc_list", "cc_evict", "cc_pin"}
     assert registered == expected, f"Registered tools: {registered}"
+
+
+def test_facade_query_does_not_return_the_same_content_twice(tmp_path):
+    store = SqliteStore(db_path=str(tmp_path / "cc.db"), embedder=HashingEmbedder(dim=32))
+    facade = build_store_facade(store)
+    for key, text in [("r1", "file body"), ("other", "something else"), ("r2", "file body"),
+                      ("r3", "file body")]:
+        facade.cc_store(key, text)
+    results = facade.cc_query("anything", k=2)
+    assert [r["key"] for r in results] == ["r3", "other"]

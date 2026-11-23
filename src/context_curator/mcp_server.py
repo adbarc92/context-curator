@@ -48,10 +48,12 @@ class _StoreFacade:
         k: int = 10,
         token_budget: int | None = None,
     ) -> list[dict]:
-        """Ranked retrieval (recency v1). Returns a list of chunk dicts."""
+        """Ranked retrieval (recency v1), each distinct content once (newest copy). Returns a
+        list of chunk dicts."""
         return [
             c.model_dump()
-            for c in self._store.query(task_context, tags=tags, k=k, token_budget=token_budget)
+            for c in self._store.query(task_context, tags=tags, k=k, token_budget=token_budget,
+                                       distinct_content=True)
         ]
 
     def cc_list(self, prefix: str) -> list[str]:

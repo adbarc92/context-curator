@@ -44,7 +44,7 @@ class InMemoryStore(Store):
         return c
 
     def query(self, task_context: str, tags: list[str] | None = None, k: int = 10,
-              token_budget: int | None = None) -> list[Chunk]:
+              token_budget: int | None = None, distinct_content: bool = False) -> list[Chunk]:
         cands = [
             c for c in self._data.values()
             if is_within_scope(c.key, self._allowed_prefix)
@@ -52,6 +52,9 @@ class InMemoryStore(Store):
             and (tags is None or set(tags).issubset(set(c.tags)))
         ]
         cands.sort(key=lambda c: self._seq[c.key], reverse=True)  # write-order recency
+        if distinct_content:
+            seen: set[str] = set()
+            cands = [c for c in cands if not (c.content in seen or seen.add(c.content))]
         cands = cands[:k]
         if token_budget is not None:
             out, used = [], 0

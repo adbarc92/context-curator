@@ -33,9 +33,13 @@ class Store(ABC):
         tags: list[str] | None = None,
         k: int = 10,
         token_budget: int | None = None,
+        distinct_content: bool = False,
     ) -> list[Chunk]:
         """Ranked retrieval, with content. v1 ranks by recency (M3 adds similarity).
-        Never returns chunks outside the allowed scope."""
+        Never returns chunks outside the allowed scope. With `distinct_content`, a chunk whose
+        content equals a higher-ranked one is skipped before k/budget apply (live chunks are
+        keyed per tool call, so an unchanged re-read is a new row). Off by default: the replay
+        recency arm reads this method and its published numbers must not move."""
 
     @abstractmethod
     def all_live_chunks(self) -> list[Chunk]:

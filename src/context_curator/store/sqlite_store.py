@@ -136,7 +136,8 @@ class SqliteStore(Store):
         return self._row_to_chunk(row)
 
     def query(self, task_context: str, tags: list[str] | None = None,
-              k: int = 10, token_budget: int | None = None) -> list[Chunk]:
+              k: int = 10, token_budget: int | None = None,
+              distinct_content: bool = False) -> list[Chunk]:
         # tenant scope enforced in SQL
         if self._allowed_prefix is None:
             rows = self._conn.execute(
@@ -149,6 +150,7 @@ class SqliteStore(Store):
                 (p, p + ":%"),
             ).fetchall()
         out: list[Chunk] = []
+        seen: set[str] = set()
         used = 0
         for row in rows:
             if self._is_expired(row):
@@ -160,6 +162,10 @@ class SqliteStore(Store):
             c = self._row_to_chunk(row)
             if tags is not None and not set(tags).issubset(set(c.tags)):
                 continue
+            if distinct_content:
+                if c.content in seen:
+                    continue
+                seen.add(c.content)
             if token_budget is not None:
                 # first-fit: stop at the first chunk that would exceed the budget (intentional;
                 # M3 may revisit). Recency order means newest-first wins the budget.
