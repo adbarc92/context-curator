@@ -36,16 +36,21 @@ def _reference_bm25(prompt, docs, *, k1=1.5, b=0.75):    # frozen copy of the pr
     return out
 
 
-_VOCAB = ["alpha", "beta", "gamma", "Delta", "eps42", "x", "y_z", "the", "a", "file.py", "Ω", ""]
+# Unicode edge cases: lower() maps the Kelvin sign and dotted capital I to ASCII letters, and a lone
+# surrogate must not crash or merge tokens.
+_VOCAB = ["alpha", "beta", "gamma", "Delta", "eps42", "x", "y_z", "the", "a", "file.py", "Ω", "",
+          "\u212a", "\u0130stanbul", "\u00dfa", "a1b2", "--", "\ud800", "ALPHA's", "the-the",
+          "\n\tthe", "  "]
 
 
 def _text(rng):
-    return " ".join(rng.choice(_VOCAB) for _ in range(rng.randint(0, 40)))
+    sep = rng.choice([" ", "", "\n"])
+    return sep.join(rng.choice(_VOCAB) for _ in range(rng.randint(0, 40)))
 
 
 def test_bit_identical_to_reference_on_randomized_inputs():
     rng = random.Random(0)
-    for _ in range(300):
+    for _ in range(3000):
         docs = {f"k{i}": _text(rng) for i in range(rng.randint(0, 12))}
         prompt = _text(rng)
         assert bm25_scores(prompt, docs) == _reference_bm25(prompt, docs)
