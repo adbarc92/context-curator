@@ -31,6 +31,11 @@ stickiness-dominant, BM25 as tie-breaker, not a blend).
 | D7 | **Wiring:** the hook's floor (curator down, flag off, or empty) becomes `stickiness_select`; the decision-log `source` becomes `"stickiness"`. Curator/semantic stays dark behind `CC_CURATOR_ONLOAD`. `recency_select` stays (tests, reference). | Smallest change that makes stickiness the default ranker. |
 | D8 | **Cross-session pool:** the live candidate pool is every live chunk in the per-project store (24 h TTL), not just the current session; refetch counts span that pool. | That is what the store holds; the eval pool is single-session. Recorded as a known difference for the powered run to keep in mind. Pre-existing chunks (no entity tags) score 0 and fall back to BM25 order, which is still better than recency on the evidence. |
 
+**Other eval-vs-live differences** (recorded in the powered pre-registration's addendum): live
+chunk content is `json.dumps(tool_response)` while eval chunks are plain transcript text; relative
+paths resolve against the hook CWD. The token budget counts the rendered body but not the
+`- **[key]** (source):` line prefix, so the injected block can run slightly over 1 500 tokens.
+
 ## Out of scope (recorded, not built)
 - Deduplicating multiple copies of the same file in one selection (older copies are stale). Measure
   with the eval module before changing the measured ranker.

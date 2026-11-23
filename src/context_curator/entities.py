@@ -19,10 +19,13 @@ def canon_path(p: str) -> str:
 
 
 def entities_from_args(args: Mapping[str, object] | None) -> set[str]:
-    """Canonical path entities from a tool call's args. Pattern-only / path-less calls -> set()."""
+    """Canonical path entities from a tool call's args. Pattern-only / path-less calls, and args
+    that are not a mapping, -> set() (capture must never fail on an odd payload)."""
     out: set[str] = set()
+    if not isinstance(args, Mapping):
+        return out
     for key in PATH_ARGS:
-        v = (args or {}).get(key)
+        v = args.get(key)
         if isinstance(v, str) and v:
             out.add(canon_path(v))
     return out

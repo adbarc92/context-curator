@@ -46,3 +46,8 @@ def test_tags_round_trip(tmp_path):
     tags = entity_tags(ents)
     assert tags == sorted(tags) and all(t.startswith(ENTITY_TAG_PREFIX) for t in tags)
     assert entities_from_tags(["read", *tags]) == ents
+
+
+def test_non_mapping_args_yield_no_entities():
+    for bad in (["x"], "str", 5):
+        assert entities_from_args(bad) == set()

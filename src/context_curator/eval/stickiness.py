@@ -3,7 +3,9 @@ docs/superpowers/stickiness-powered-prereg.md. Scores the SHIPPED `stickiness_ra
 the UserPromptSubmit hook runs) against BM25 on real-transcript fixtures, with a session-clustered
 CI, the precision gate, a corpus-size floor, a gap sweep, a replication arm and a sensitivity run.
 
-    uv run python -m context_curator.eval.stickiness [TRANSCRIPT ...] [--min-sessions N]
+    uv run python -m context_curator.eval.stickiness [TRANSCRIPT ...] [--exclude-session ID]
+
+Copy transcripts into _real_local/<project>/ (the parent directory name is the project label).
 
 Deterministic (seed 0). Gold labels are CWD-dependent (relative paths resolve via os.path)."""
 from __future__ import annotations
@@ -26,6 +28,11 @@ from context_curator.replay.capture.transcript import parse_transcript
 # The 5 sessions the hypothesis came from (learned-feasibility-prereg.md), by sha256[:16].
 DISCOVERY_SHAS = frozenset({"47f3cfd7e9fb9c19", "c94080b5cfc8deb5", "529929af76991fe3",
                             "b183be9bdb7ea27a", "4fcc66d424b7e55d"})
+# The same 5 by session id (file-name prefix/suffix as pinned there): a transcript that grew after
+# pinning, or a copy from another machine, has a new sha but the same session id.
+DISCOVERY_SESSIONS = (("7684a379", "86c7222de94a"), ("883d757f", "f7a90d42407a"),
+                      ("95749f90", "7a91f6f6d249"), ("9e9b47ce", "6387b6c121c1"),
+                      ("b70c7330", "aa490d1eea7b"))
 MIN_SESSIONS = 45
 SWEEP_GAPS = (1, 2, 3, 5)
 DEFAULT_GLOB = "src/context_curator/eval/fixtures/_real_local/**/*.jsonl"
@@ -42,8 +49,16 @@ def is_subagent_transcript(path: str) -> bool:
     return "subagents" in os.path.normpath(path).split(os.sep)
 
 
-def _parse_all(paths: Iterable[str], exclude_shas: set[str] | frozenset[str]):
-    """[(sha, project, trace)] for main-session transcripts, deduplicated by session id."""
+def _excluded_session(sid: str, sessions: Iterable[tuple[str, str]], ids: Iterable[str]) -> bool:
+    return sid in set(ids) or any(sid.startswith(a) and sid.endswith(b) for a, b in sessions)
+
+
+def _parse_all(paths: Iterable[str], exclude_shas: set[str] | frozenset[str],
+               exclude_sessions: Iterable[tuple[str, str]] = (),
+               exclude_session_ids: Iterable[str] = ()):
+    """[(sha, project, trace)] for main-session transcripts, deduplicated by session id. A session
+    is excluded if its file sha OR its session id matches an exclusion."""
+    exclude_sessions, exclude_session_ids = list(exclude_sessions), set(exclude_session_ids)
     out, seen = [], set()
     for p in sorted(paths):
         if is_subagent_transcript(p):
@@ -52,7 +67,8 @@ def _parse_all(paths: Iterable[str], exclude_shas: set[str] | frozenset[str]):
         if sha in exclude_shas:
             continue
         trace = parse_transcript(p)
-        if trace.session_id in seen:
+        if trace.session_id in seen or _excluded_session(trace.session_id, exclude_sessions,
+                                                         exclude_session_ids):
             continue
         seen.add(trace.session_id)
         out.append((sha, os.path.basename(os.path.dirname(os.path.abspath(p))), trace))
@@ -68,9 +84,9 @@ def _by_session(parsed, *, gap: int) -> dict[str, list[Fixture]]:
     return by
 
 
-def load_sessions(paths: Iterable[str], *, exclude_shas, gap: int = 0):
+def load_sessions(paths: Iterable[str], *, exclude_shas, exclude_sessions=(), gap: int = 0):
     """(fixtures by session id, {session id: sha16}) — sessions without fixtures are dropped."""
-    parsed = _parse_all(paths, exclude_shas)
+    parsed = _parse_all(paths, exclude_shas, exclude_sessions)
     by = _by_session(parsed, gap=gap)
     return by, {t.session_id: sha for sha, _p, t in parsed if t.session_id in by}
 
@@ -106,10 +122,14 @@ def _lift(by: dict[str, list[Fixture]], seed: int) -> dict:
             "n_fixtures": len(deltas), "deltas": deltas, "sids": sids, "arms": arms}
 
 
-def decide(*, status: str, lo: float, hi: float) -> str | None:
-    """The pre-registered decision rule. None when no verdict may be rendered."""
+def decide(*, status: str, lo: float, hi: float, decaying: bool | None = None) -> str | None:
+    """The pre-registered decision rule. None when no verdict may be rendered. A decaying gap sweep
+    turns a KEEP into keep-pending-review."""
     if status == "verdict":
-        return "KEEP stickiness" if lo > 0 else "REVERT to BM25"
+        if lo <= 0:
+            return "REVERT to BM25"
+        return ("KEEP stickiness, pending review (gap sweep decaying)" if decaying
+                else "KEEP stickiness")
     if status == "inconclusive-underpowered":
         return "HARVEST more"
     return None
@@ -122,41 +142,55 @@ def is_decaying(*, gap0: float, gap5: float, gap5_fixtures: int) -> bool | None:
     return gap0 > 0 and gap5 < gap0 / 2
 
 
-def run(paths: Iterable[str], *, exclude_shas=DISCOVERY_SHAS, min_sessions: int = MIN_SESSIONS,
+def run(paths: Iterable[str], *, exclude_shas=DISCOVERY_SHAS,
+        exclude_sessions=DISCOVERY_SESSIONS, exclude_session_ids=frozenset(),
+        include_discovery: bool = False, min_sessions: int = MIN_SESSIONS,
         mei: float = MEI, seed: int = 0) -> dict:
+    """`exclude_session_ids`: sessions to drop always (e.g. the session running the analysis).
+    `include_discovery`: sensitivity only — the discovery sessions stay in and no decision is
+    rendered."""
     paths = list(paths)
-    parsed = _parse_all(paths, exclude_shas)
+    if include_discovery:
+        exclude_shas, exclude_sessions = set(), ()
+    parsed = _parse_all(paths, exclude_shas, exclude_sessions, exclude_session_ids)
     by = _by_session(parsed, gap=0)
     primary = _lift(by, seed)
     lo, hi = primary["ci"]
     gate = precision_gate(lo=lo, hi=hi, n_sessions=len(by), mei=mei)
-    status = "feasibility-only" if len(by) < min_sessions else gate.status
+    if include_discovery:
+        status = "sensitivity-only"
+    else:
+        status = "feasibility-only" if len(by) < min_sessions else gate.status
     nmin, nmax = needed_n_range(primary["deltas"], primary["sids"], mei=mei, seed=seed)
     gaps = {g: {k: v for k, v in _lift(_by_session(parsed, gap=g), seed).items()
                 if k in ("mean", "ci", "n_fixtures")} for g in SWEEP_GAPS}
-    with_discovery = (_lift(_by_session(_parse_all(paths, set()), gap=0), seed)
-                      if exclude_shas else None)
+    decaying = is_decaying(gap0=primary["mean"], gap5=gaps[5]["mean"],
+                           gap5_fixtures=gaps[5]["n_fixtures"])
+    with_discovery = (None if include_discovery else _lift(_by_session(
+        _parse_all(paths, set(), (), exclude_session_ids), gap=0), seed))
     flat = [fx for fxs in by.values() for fx in fxs]
     lb = lexical_bias(flat, k=3, margin=0.15, seed=seed) if flat else None
     projects: dict[str, int] = {}
+    fixtures_pp: dict[str, int] = {}
     for _sha, proj, t in parsed:
         if t.session_id in by:
             projects[proj] = projects.get(proj, 0) + 1
+            fixtures_pp[proj] = fixtures_pp.get(proj, 0) + len(by[t.session_id])
     return {
         "status": status, "gate": gate.status, "needed_n": gate.needed_n,
-        "needed_n_range": [nmin, nmax], "decision": decide(status=status, lo=lo, hi=hi),
+        "needed_n_range": [nmin, nmax],
+        "decision": decide(status=status, lo=lo, hi=hi, decaying=decaying),
         "mean_delta": primary["mean"], "ci": [lo, hi], "n_sessions": len(by),
         "n_fixtures": primary["n_fixtures"], "min_sessions": min_sessions, "mei": mei,
         "arms": primary["arms"], "gaps": gaps,
-        "decaying": is_decaying(gap0=primary["mean"], gap5=gaps[5]["mean"],
-                                gap5_fixtures=gaps[5]["n_fixtures"]),
+        "decaying": decaying,
         "with_discovery": (None if with_discovery is None else
                            {"mean": with_discovery["mean"], "ci": with_discovery["ci"],
                             "n_sessions": with_discovery["n_sessions"]}),
         "lexical": (None if lb is None else {"gold_r3": lb.gold_recall,
                                              "control_r3": lb.control_recall,
                                              "degenerate": lb.degenerate}),
-        "sessions_per_project": projects,
+        "sessions_per_project": projects, "fixtures_per_project": fixtures_pp,
         "manifest": sorted(sha for sha, _p, t in parsed if t.session_id in by),
         "excluded_discovery": sorted(exclude_shas),
     }
@@ -189,6 +223,7 @@ def format_report(rep: dict) -> str:
         lines.append(f"lexical-bias: gold_R@3={lx['gold_r3']:.3f} control={lx['control_r3']:.3f} "
                      f"degenerate={lx['degenerate']}")
     lines += [f"sessions per project: {rep['sessions_per_project']}",
+              f"fixtures per project: {rep['fixtures_per_project']}",
               f"manifest (sha256[:16]): {rep['manifest']}"]
     return "\n".join(lines)
 
@@ -198,12 +233,15 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("paths", nargs="*", help=f"transcripts (default: {DEFAULT_GLOB})")
     ap.add_argument("--min-sessions", type=int, default=MIN_SESSIONS)
     ap.add_argument("--include-discovery", action="store_true",
-                    help="do not exclude the 5 discovery sessions (sensitivity only)")
+                    help="keep the 5 discovery sessions in (sensitivity only: no decision)")
+    ap.add_argument("--exclude-session", action="append", default=[], metavar="SESSION_ID",
+                    help="drop this session id (repeatable), e.g. the session running this")
     ap.add_argument("--seed", type=int, default=0)
     a = ap.parse_args(argv)
     paths = a.paths or sorted(glob.glob(DEFAULT_GLOB, recursive=True))
-    rep = run(paths, exclude_shas=set() if a.include_discovery else DISCOVERY_SHAS,
-              min_sessions=a.min_sessions, seed=a.seed)
+    rep = run(paths, include_discovery=a.include_discovery,
+              exclude_session_ids=set(a.exclude_session), min_sessions=a.min_sessions,
+              seed=a.seed)
     print(format_report(rep))
 
 

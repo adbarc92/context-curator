@@ -87,3 +87,10 @@ def test_identical_rereads_are_distinct_chunks_when_tool_use_id_is_present():
         post_handle({"tool_name": "Read", "session_id": "s1", "tool_input": {"file_path": "/r/a"},
                      "tool_response": "same content", "tool_use_id": tid}, s)
     assert len(s.list("session:s1")) == 2
+
+
+def test_non_dict_tool_input_still_captures_the_result():
+    s = _store()
+    post_handle({"tool_name": "Read", "session_id": "s1", "tool_input": ["x"],
+                 "tool_response": "r", "tool_use_id": "t"}, s)
+    assert s.retrieve("session:s1:tool:t").tags == ["read"]

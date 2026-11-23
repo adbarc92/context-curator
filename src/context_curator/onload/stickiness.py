@@ -64,8 +64,10 @@ def refetch_counts(entity_sets: Sequence[Iterable[str]]) -> list[int]:
 
 def stickiness_rank(prompt: str, candidates: Sequence[Candidate]) -> list[str]:
     """Keys best-first: refetch count desc, then BM25 vs `prompt` desc, then newer first.
-    `candidates` must be oldest -> newest with unique keys."""
-    cands = list(candidates)
+    `candidates` are oldest -> newest; each key is returned once (a repeated key keeps its last,
+    i.e. newest, candidate) so nDCG can never count a key twice."""
+    last = {k: i for i, (k, _c, _e) in enumerate(candidates)}
+    cands = [c for i, c in enumerate(candidates) if last[c[0]] == i]
     counts = refetch_counts([ents for _k, _c, ents in cands])
     bm = bm25_scores(prompt, {k: c for k, c, _e in cands})
     order = sorted(range(len(cands)), key=lambda i: (-counts[i], -bm[cands[i][0]], -i))

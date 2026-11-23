@@ -123,3 +123,9 @@ def test_select_respects_k_and_breaks_at_the_budget():
 def test_format_block_renders_the_same_body_the_budget_counted():
     c = _ch("k", "w" * (PER_CHUNK_CHARS + 50))
     assert ("w" * PER_CHUNK_CHARS + "…") in format_block([c], title="T")
+
+
+def test_rank_returns_each_key_once_even_if_candidates_repeat_a_key():
+    cands = [("g", "a", {F}), ("x", "b", set()), ("g", "c", {F})]
+    out = stickiness_rank("q", cands)
+    assert sorted(out) == ["g", "x"] and len(out) == 2

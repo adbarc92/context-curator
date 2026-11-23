@@ -76,6 +76,9 @@ def test_below_the_floor_is_feasibility_only_with_no_decision():
 
 def test_decision_rule_matches_the_preregistration():
     assert st.decide(status="verdict", lo=0.01, hi=0.05) == "KEEP stickiness"
+    assert (st.decide(status="verdict", lo=0.01, hi=0.05, decaying=True)
+            == "KEEP stickiness, pending review (gap sweep decaying)")
+    assert st.decide(status="verdict", lo=-0.01, hi=0.05, decaying=True) == "REVERT to BM25"
     assert st.decide(status="verdict", lo=-0.01, hi=0.05) == "REVERT to BM25"
     assert st.decide(status="verdict", lo=-0.09, hi=-0.02) == "REVERT to BM25"
     assert st.decide(status="inconclusive-underpowered", lo=0.2, hi=0.5) == "HARVEST more"
@@ -98,3 +101,31 @@ def test_main_prints_a_report(capsys):
 def test_paths_are_not_required_to_be_absolute():
     rel = os.path.relpath(SAMPLES[0])
     assert st.file_sha16(rel) == st.file_sha16(SAMPLES[0])
+
+
+def test_a_grown_copy_of_a_discovery_session_is_still_excluded(tmp_path, monkeypatch):
+    # a transcript that grew after pinning has a new sha but the same session id
+    grown = tmp_path / "grown.jsonl"
+    grown.write_bytes(Path(SAMPLES[0]).read_bytes() + b"\n")
+    sid = st.parse_transcript(SAMPLES[0]).session_id
+    monkeypatch.setattr(st, "DISCOVERY_SESSIONS", ((sid[:8], sid[-12:]),))
+    by, manifest = st.load_sessions([str(grown), SAMPLES[1]], exclude_shas=set(),
+                                    exclude_sessions=st.DISCOVERY_SESSIONS, gap=0)
+    assert sid not in manifest and sid not in by
+
+
+def test_explicitly_excluded_session_ids_are_dropped():
+    sid = st.parse_transcript(SAMPLES[0]).session_id
+    rep = st.run(SAMPLES, exclude_shas=set(), exclude_session_ids={sid}, min_sessions=45)
+    assert st.file_sha16(SAMPLES[0]) not in rep["manifest"]
+
+
+def test_fixtures_per_project_are_reported():
+    rep = st.run(SAMPLES, exclude_shas=set(), min_sessions=45)
+    assert sum(rep["fixtures_per_project"].values()) == rep["n_fixtures"]
+
+
+def test_include_discovery_is_sensitivity_only_and_renders_no_decision(capsys):
+    st.main([*SAMPLES, "--min-sessions", "1", "--include-discovery"])
+    out = capsys.readouterr().out
+    assert "sensitivity-only" in out and "decision: none" in out

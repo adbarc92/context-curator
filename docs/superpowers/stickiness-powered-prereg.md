@@ -71,5 +71,23 @@ Applies only when the corpus floor is met **and** the precision gate says `verdi
 discovery shas excluded, floor 45, seed 0). The report is written to stdout; record the outcome
 below and in the decision doc.
 
+## Addendum — 2026-11-22, before any powered run (implementation of the rules above)
+An independent review of the analysis module found gaps between this document's intent and the
+first implementation. The analysis, arms, metric, MEI, floor and decision rule are unchanged; these
+make the module do what the text above already says:
+- **Disjointness:** discovery sessions are excluded by sha256[:16] **or** by session id (the
+  pinned file-name prefix/suffix). A discovery transcript that grew after pinning, or a copy from
+  another machine, has a new sha but the same id.
+- **Current session:** excluded with `--exclude-session <id>`; the operator passes it.
+- **Decaying downgrade:** a decaying gap sweep turns KEEP into "KEEP stickiness, pending review".
+- **Sensitivity run** (`--include-discovery`) renders no decision.
+- **Diagnostics:** fixtures and sessions per project; the project is the transcript's parent
+  directory, so copy transcripts into `_real_local/<project>/`.
+- **Further known eval-vs-live differences** (adds to the list above): (4) live chunks store
+  `json.dumps(tool_response)` (escaped newlines and non-ASCII; Edit responses include the original
+  file), while eval chunks are the transcript's plain-text results, so BM25 tie-breaks and dedupe can
+  differ live. (5) Relative paths resolve against the hook process's CWD live and the harvest root
+  in the eval.
+
 ## Outcome
 *(not yet run)*
