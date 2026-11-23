@@ -14,7 +14,11 @@ _TOKEN = re.compile(r"[a-z0-9]+")
 # A token is a maximal [a-z0-9]+ run of the lowercased text. Mapping every other byte of the UTF-8
 # encoding to a space (non-ASCII bytes are all >= 0x80) makes bytes.split() yield exactly those
 # tokens, at C speed and without building a str per token.
-_KEEP = bytes(i if chr(i) in "abcdefghijklmnopqrstuvwxyz0123456789" else 0x20 for i in range(256))
+_ALNUM = "abcdefghijklmnopqrstuvwxyz0123456789"
+_KEEP = bytes(i if chr(i) in _ALNUM else 0x20 for i in range(256))
+# Same split, but every token byte becomes "a": the token count is the number of " a" boundaries,
+# with no per-token allocation. Used for docs that contain no query term (the common case).
+_MARK = bytes(0x61 if chr(i) in _ALNUM else 0x20 for i in range(256))
 
 
 def _tok(text: str) -> list[str]:
@@ -23,14 +27,17 @@ def _tok(text: str) -> list[str]:
 
 def _doc_stats(text: str, qterms: list[tuple[str, bytes]]) -> tuple[int, dict[str, int]]:
     """(token count, term frequency of each query term present) for one doc."""
-    tr = text.lower().encode("utf-8", "surrogatepass").translate(_KEEP)
-    toks = tr.split()
+    low = text.lower().encode("utf-8", "surrogatepass")
+    present = [(term, tb) for term, tb in qterms if tb in low]      # substring: cheap prefilter
+    if not present:
+        marks = low.translate(_MARK)
+        return marks.count(b" a") + (1 if marks[:1] == b"a" else 0), {}
+    toks = low.translate(_KEEP).split()
     tf: dict[str, int] = {}
-    for term, tb in qterms:
-        if tb in tr:
-            n = toks.count(tb)
-            if n:
-                tf[term] = n
+    for term, tb in present:
+        n = toks.count(tb)
+        if n:
+            tf[term] = n
     return len(toks), tf
 
 
