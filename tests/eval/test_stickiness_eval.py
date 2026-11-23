@@ -129,3 +129,21 @@ def test_include_discovery_is_sensitivity_only_and_renders_no_decision(capsys):
     st.main([*SAMPLES, "--min-sessions", "1", "--include-discovery"])
     out = capsys.readouterr().out
     assert "sensitivity-only" in out and "decision: none" in out
+
+
+def test_flat_layout_agent_transcript_does_not_shadow_its_main_session(tmp_path):
+    # Older Claude Code wrote subagent transcripts flat, as <project>/agent-*.jsonl, carrying the
+    # PARENT's sessionId with isSidechain: true on every record. One that sorts before its parent
+    # must not claim the session id and push the real main transcript out as a duplicate.
+    import json
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    lines = [json.loads(ln) for ln in Path(SAMPLES[0]).read_text(encoding="utf-8").splitlines()
+             if ln.strip()]
+    (proj / "agent-0000.jsonl").write_text(
+        "\n".join(json.dumps({**r, "isSidechain": True}) for r in lines), encoding="utf-8")
+    (proj / "zzzz-main.jsonl").write_bytes(Path(SAMPLES[0]).read_bytes())
+    parsed = st._parse_all([str(proj / "agent-0000.jsonl"), str(proj / "zzzz-main.jsonl")],
+                           frozenset())
+    main_id = st.parse_transcript(SAMPLES[0]).session_id
+    assert [t.session_id for _sha, _p, t in parsed if t.events] == [main_id]
