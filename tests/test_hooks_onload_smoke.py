@@ -44,9 +44,9 @@ def test_user_prompt_submit_stdout_is_exactly_inject_json(tmp_path):
     assert "context-curator: onloaded" in r.stderr
 
 
-def test_user_prompt_submit_recency_fallback_injects_any_session_chunk(tmp_path):
-    # M4b: curator is unavailable in subprocess (no running curator) -> recency fallback runs.
-    # Recency-only has no cosine gate, so off-topic session chunks are injected regardless.
+def test_user_prompt_submit_stickiness_floor_injects_any_session_chunk(tmp_path):
+    # M4b: curator is unavailable in subprocess (no running curator) -> the floor runs.
+    # Track A: the floor is stickiness; it has no relevance gate, so off-topic chunks still inject.
     db = str(tmp_path / "s.db")
     env = {**os.environ, "CC_DB_PATH": db}
     SqliteStore(db_path=db, embedder=HashingEmbedder()).store(
@@ -55,11 +55,11 @@ def test_user_prompt_submit_recency_fallback_injects_any_session_chunk(tmp_path)
              {"prompt": "authenticate authorize user session",
               "hook_event_name": "UserPromptSubmit"}, env)
     assert r.returncode == 0
-    # recency fallback: no cosine gate -> off-topic chunk is injected
+    # floor: no relevance gate -> off-topic chunk is injected
     obj = json.loads(r.stdout)                      # parses cleanly => no leading garbage
     assert r.stdout == json.dumps(obj)              # EXACT bytes: no prefix/suffix/trailing newline
     assert "session:s:tool:c" in obj["hookSpecificOutput"]["additionalContext"]
-    assert "[recency]" in r.stderr
+    assert "[stickiness]" in r.stderr
 
 
 def test_session_start_stdout_is_exactly_inject_json(tmp_path):
@@ -90,3 +90,35 @@ def test_onload_latency_ceiling_1000_chunks(tmp_path):
     times.sort()
     p50 = times[len(times) // 2]
     assert p50 < 0.3, f"p50={p50*1000:.0f}ms exceeds 300ms at 1000 chunks"
+
+
+def test_onload_latency_ceiling_realistic_store(tmp_path, monkeypatch):
+    # Track A: the stickiness floor runs BM25 over the whole store each prompt. Real stores hold
+    # ~900 chunks / ~3-4 M chars (most of them entity-tagged Reads/Edits), not 1 000 one-liners,
+    # so hold the same declared ceiling (p50 < 300 ms) at that size.
+    import random
+
+    from context_curator.embeddings import NullEmbedder
+    from context_curator.entities import entity_tags
+    monkeypatch.setattr(ups.client, "request_onload", lambda *a, **k: [])
+    rng = random.Random(0)
+    words = [f"w{i}" for i in range(5000)] + ["def", "return", "import", "class", "self", "the"]
+    paths = [f"/repo/src/mod{i}/file{j}.py" for i in range(30) for j in range(6)]
+    s = SqliteStore(db_path=str(tmp_path / "real.db"), embedder=NullEmbedder())
+    total = 0
+    for i in range(900):
+        body = " ".join(rng.choice(words) for _ in range(min(int(rng.lognormvariate(7.6, 1.1)),
+                                                             32_768) // 6))
+        total += len(body)
+        tags = ["read", *entity_tags({rng.choice(paths)})] if rng.random() < 0.6 else ["bash"]
+        s.store(f"session:x:tool:t{i}", body, tags=tags)
+    assert total > 3_000_000
+    event = {"prompt": "fix the w12 w400 import in mod3", "hook_event_name": "UserPromptSubmit"}
+    times = []
+    for _ in range(5):
+        t0 = time.perf_counter()
+        ups.handle(event, s)
+        times.append(time.perf_counter() - t0)
+    times.sort()
+    p50 = times[len(times) // 2]
+    assert p50 < 0.3, f"p50={p50*1000:.0f}ms exceeds 300ms on a realistic-size store"
