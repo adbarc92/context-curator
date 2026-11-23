@@ -3,8 +3,16 @@ from __future__ import annotations
 
 from context_curator.models import Chunk
 
+PER_CHUNK_CHARS = 1200
 
-def format_block(chunks: list[Chunk], *, title: str, per_chunk_chars: int = 1200) -> str:
+
+def rendered_body(c: Chunk, per_chunk_chars: int = PER_CHUNK_CHARS) -> str:
+    """The text of `c` as it is actually injected (head-truncated). The stickiness selector
+    budgets on this, not the full content (Track A design D6)."""
+    return c.content if len(c.content) <= per_chunk_chars else c.content[:per_chunk_chars] + "…"
+
+
+def format_block(chunks: list[Chunk], *, title: str, per_chunk_chars: int = PER_CHUNK_CHARS) -> str:
     """Render selected chunks as an additionalContext block, or "" if empty. Each line names
     the source key/provenance so the model knows this is auto-onloaded curated context.
 
@@ -15,6 +23,5 @@ def format_block(chunks: list[Chunk], *, title: str, per_chunk_chars: int = 1200
         return ""
     lines = [f"## {title}", "_(auto-onloaded by ContextCurator)_"]
     for c in chunks:
-        body = c.content if len(c.content) <= per_chunk_chars else c.content[:per_chunk_chars] + "…"
-        lines.append(f"- **[{c.key}]** ({c.source}): {body}")
+        lines.append(f"- **[{c.key}]** ({c.source}): {rendered_body(c, per_chunk_chars)}")
     return "\n".join(lines)
