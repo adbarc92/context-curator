@@ -1,5 +1,7 @@
 # ContextCurator — project instructions
 
+Read [docs/ROUTER.md](docs/ROUTER.md) first; it routes to every doc.
+
 > M7 shipped (`v0.0.2`, [PR #13](https://github.com/adbarc92/context-curator/pull/13) merged to `main`).
 > Both #14 exit criteria are verified **YES** (`CLAUDE_PROJECT_DIR` reaches `cc-mcp`; plugin resolves
 > bare `cc-*` on PATH — [`docs/plugin-install.md`](docs/plugin-install.md) §5), but **#14 stays open**:
